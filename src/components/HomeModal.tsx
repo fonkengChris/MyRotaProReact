@@ -185,17 +185,9 @@ const HomeModal: React.FC<HomeModalProps> = ({
     }
     localStorage.setItem('lastHomeSubmission', JSON.stringify(submissionLog))
     
-    console.log('🚀 HomeModal: Form submission started')
-    console.log('📝 HomeModal: Form data:', formData)
-    console.log('🔐 HomeModal: Current token:', localStorage.getItem('token'))
-    console.log('👤 HomeModal: Current user:', localStorage.getItem('user'))
-    
     if (!validateForm()) {
-      console.log('❌ HomeModal: Form validation failed')
       return
     }
-
-    console.log('✅ HomeModal: Form validation passed')
     setIsLoading(true)
     
     try {
