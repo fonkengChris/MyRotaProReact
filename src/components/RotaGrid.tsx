@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { format, addDays, startOfWeek } from 'date-fns'
-import { Card, CardContent } from '@/components/ui/Card'
+import { format, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { 
@@ -10,13 +9,13 @@ import {
   UserIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User, ShiftAssignment } from '@/types'
+import { Shift, User } from '@/types'
 
 interface RotaGridProps {
   weekStart: Date
   shifts: Shift[]
   staff: User[]
-  assignments: ShiftAssignment[]
+  currentUser: User
   onAddShift: (date: Date, time: string) => void
   onEditShift: (shift: Shift) => void
   onDeleteShift: (shiftId: string) => void
@@ -29,7 +28,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   weekStart,
   shifts,
   staff,
-  assignments,
+  currentUser,
   onAddShift,
   onEditShift,
   onDeleteShift,
@@ -37,7 +36,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   onUnassignStaff,
   canEdit
 }) => {
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; time: string } | null>(null)
+  
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
 
   // Generate week days
@@ -51,10 +50,51 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     '21:00', '22:00', '23:00'
   ]
 
+  // Filter shifts based on user role and permissions
+  const getFilteredShifts = () => {
+    if (!currentUser) return shifts
+
+    switch (currentUser.role) {
+      case 'admin':
+      case 'home_manager':
+        // Admins and managers see all shifts
+        return shifts
+      
+      case 'senior_staff':
+        // Senior staff see shifts for all users in their home
+        if (currentUser.home_id) {
+          const homeStaffIds = staff
+            .filter(member => member.home_id === currentUser.home_id)
+            .map(member => member.id)
+          
+          return shifts.filter(shift => {
+            // Check if the shift has any assignments to users in the same home
+            return shift.assigned_staff && shift.assigned_staff.some(assignment => 
+              homeStaffIds.includes(assignment.user_id)
+            )
+          })
+        }
+        return []
+      
+      case 'support_worker':
+        // Regular users only see shifts allocated to themselves
+        return shifts.filter(shift => {
+          return shift.assigned_staff && shift.assigned_staff.some(assignment => 
+            assignment.user_id === currentUser.id
+          )
+        })
+      
+      default:
+        return []
+    }
+  }
+
+  const filteredShifts = getFilteredShifts()
+
   // Get shifts for a specific date and time
   const getShiftsForSlot = (date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd')
-    return shifts.filter(shift => {
+    return filteredShifts.filter(shift => {
               const shiftDate = shift.date
       const shiftStart = shift.start_time.substring(0, 5)
       return shiftDate === dateStr && shiftStart === time
@@ -63,7 +103,8 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
   // Get assignments for a shift
   const getAssignmentsForShift = (shiftId: string) => {
-    return assignments.filter(assignment => assignment.shift_id === shiftId)
+    const shift = shifts.find(s => s.id === shiftId)
+    return shift?.assigned_staff || []
   }
 
   // Get staff member by ID
@@ -174,11 +215,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
                             {/* Staff assignments */}
                             <div className="space-y-1">
-                              {shiftAssignments.map((assignment) => {
+                              {shiftAssignments.map((assignment, index) => {
                                 const staffMember = getStaffMember(assignment.user_id)
                                 return (
                                   <div
-                                    key={assignment.id}
+                                    key={`${shift.id}-${assignment.user_id}-${index}`}
                                     className="flex items-center justify-between bg-white rounded px-2 py-1 border"
                                   >
                                     <div className="flex items-center space-x-1">

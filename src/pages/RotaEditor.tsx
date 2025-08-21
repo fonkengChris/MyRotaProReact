@@ -77,9 +77,9 @@ const RotaEditor: React.FC = () => {
 
   // Fetch services
   const { data: services, isLoading: servicesLoading } = useQuery({
-    queryKey: ['services', user?.home_id],
-    queryFn: () => servicesApi.getAll(user?.home_id),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    queryKey: ['services'],
+    queryFn: () => servicesApi.getAll(), // Fetch all services for home filtering
+    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
   })
 
   const weekRota = rota?.[0]
@@ -175,15 +175,14 @@ const RotaEditor: React.FC = () => {
         toast.success('Shift updated successfully')
       } else {
         // Create new shift
-        if (!user?.home_id) {
-          toast.error('Home ID is required to create a shift')
+        if (!data.home_id) {
+          toast.error('Home selection is required to create a shift')
           return
         }
         
         await shiftsApi.create({
           ...data,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          home_id: user.home_id
+          date: format(selectedDate, 'yyyy-MM-dd')
         })
         toast.success('Shift created successfully')
       }
@@ -380,12 +379,12 @@ const RotaEditor: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {shifts && staff && services ? (
+            {shifts && staff && services && user ? (
               <RotaGrid
                 weekStart={currentWeekStart}
                 shifts={shifts}
                 staff={staff}
-                assignments={[]} // TODO: Get assignments from rota
+                currentUser={user}
                 onAddShift={handleAddShift}
                 onEditShift={handleEditShift}
                 onDeleteShift={handleDeleteShift}

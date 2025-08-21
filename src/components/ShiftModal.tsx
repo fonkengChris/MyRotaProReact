@@ -11,9 +11,10 @@ import {
   UserGroupIcon,
   TagIcon
 } from '@heroicons/react/24/outline'
-import { Shift, Service } from '@/types'
+import { Shift, Service, Home } from '@/types'
 
 const shiftSchema = z.object({
+  home_id: z.string().min(1, 'Home is required'),
   service_id: z.string().min(1, 'Service is required'),
   start_time: z.string().min(1, 'Start time is required'),
   end_time: z.string().min(1, 'End time is required'),
@@ -43,6 +44,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   services,
   isLoading = false
 }) => {
+  
+
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
@@ -55,6 +58,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   } = useForm<ShiftFormData>({
     resolver: zodResolver(shiftSchema),
     defaultValues: {
+      home_id: '',
       service_id: '',
       start_time: '09:00',
       end_time: '17:00',
@@ -66,6 +70,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
   const startTime = watch('start_time')
   const endTime = watch('end_time')
+  const selectedServiceId = watch('service_id')
 
   // Calculate duration
   const calculateDuration = () => {
@@ -86,7 +91,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     if (isOpen) {
       if (shift) {
         // Editing existing shift
-        setValue('service_id', shift.service_id)
+        setValue('home_id', typeof shift.home_id === 'string' ? shift.home_id : shift.home_id?.id || '')
+        setValue('service_id', typeof shift.service_id === 'string' ? shift.service_id : shift.service_id?.id || '')
         setValue('start_time', shift.start_time.substring(0, 5))
         setValue('end_time', shift.end_time.substring(0, 5))
         setValue('required_staff_count', shift.required_staff_count || 1)
@@ -102,6 +108,23 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
       }
     }
   }, [isOpen, shift, setValue, reset])
+
+  // Reset home_id when service changes
+  useEffect(() => {
+    if (selectedServiceId) {
+      // Check if current home_id is valid for the selected service
+      const selectedService = services.find(s => s.id === selectedServiceId)
+      if (selectedService && typeof selectedService !== 'string') {
+        const currentHomeId = watch('home_id')
+        if (currentHomeId && selectedService.home_ids && !selectedService.home_ids.includes(currentHomeId)) {
+          setValue('home_id', '')
+        }
+      }
+    } else {
+      // If no service selected, clear home selection
+      setValue('home_id', '')
+    }
+  }, [selectedServiceId, services, setValue, watch])
 
   const handleFormSubmit = async (data: ShiftFormData) => {
     try {
@@ -164,6 +187,72 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   {errors.service_id && (
                     <p className="mt-1 text-sm text-danger-600">{errors.service_id.message}</p>
                   )}
+                </div>
+
+                {/* Home Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Home
+                  </label>
+                  <select
+                    {...register('home_id')}
+                    className="input w-full"
+                    disabled={!watch('service_id')}
+                  >
+                    <option value="">Select a home</option>
+                    {(() => {
+                      const selectedService = services.find(s => s.id === watch('service_id'))
+                      if (!selectedService || typeof selectedService === 'string') {
+                        return null
+                      }
+                      
+                      // Use the populated home_ids from the service and deduplicate them
+                      const availableHomes = selectedService.home_ids || []
+                      
+                      // Deduplicate homes by ID to prevent React key warnings
+                      const uniqueHomes = availableHomes.reduce((acc: any[], home: any) => {
+                        const homeId = home.id || home
+                        if (!acc.find(h => (h.id || h) === homeId)) {
+                          acc.push(home)
+                        }
+                        return acc
+                      }, [])
+                      
+
+                      
+                      return uniqueHomes.map((home: any) => (
+                        <option key={home.id || home} value={home.id || home}>
+                          {typeof home === 'string' ? home : `${home.name} - ${home.location?.city || 'Unknown'}`}
+                        </option>
+                      ))
+                    })()}
+                  </select>
+                  {errors.home_id && (
+                    <p className="mt-1 text-sm text-danger-600">{errors.home_id.message}</p>
+                  )}
+                  {!watch('service_id') && (
+                    <p className="mt-1 text-sm text-gray-500">Please select a service first</p>
+                  )}
+                  {watch('service_id') && (() => {
+                    const selectedService = services.find(s => s.id === watch('service_id'))
+                    if (!selectedService || typeof selectedService === 'string') return null
+                    const availableHomes = selectedService.home_ids || []
+                    
+                    // Deduplicate homes by ID for accurate count
+                    const uniqueHomes = availableHomes.reduce((acc: any[], home: any) => {
+                      const homeId = home.id || home
+                      if (!acc.find(h => (h.id || h) === homeId)) {
+                        acc.push(home)
+                      }
+                      return acc
+                    }, [])
+                    
+                    return (
+                      <p className="mt-1 text-sm text-gray-500">
+                        Available homes: {uniqueHomes.length}
+                      </p>
+                    )
+                  })()}
                 </div>
 
                 {/* Time Selection */}

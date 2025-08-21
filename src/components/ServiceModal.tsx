@@ -63,10 +63,15 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     if (isOpen) {
       fetchHomes()
       if (service) {
+        // Ensure home_ids is always an array of strings
+        const homeIds = Array.isArray(service.home_ids) 
+          ? service.home_ids.map(id => typeof id === 'string' ? id : id.id || id)
+          : []
+        
         setFormData({
           name: service.name,
           description: service.description,
-          home_ids: service.home_ids,
+          home_ids: homeIds,
           category: service.category,
           required_skills: service.required_skills,
           min_staff_count: service.min_staff_count,
@@ -152,13 +157,15 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     
     if (!validateForm()) return
 
+
+
     setIsLoading(true)
     try {
       if (service) {
-        await servicesApi.update(service.id, formData)
+        const result = await servicesApi.update(service.id, formData)
         toast.success('Service updated successfully')
       } else {
-        await servicesApi.create(formData)
+        const result = await servicesApi.create(formData)
         toast.success('Service created successfully')
       }
       onSuccess()

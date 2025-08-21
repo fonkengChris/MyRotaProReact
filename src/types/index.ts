@@ -110,6 +110,7 @@ export type PriorityLevel = 'low' | 'medium' | 'high' | 'critical'
 // Shift types
 export interface Shift {
   id: string
+  home_id: string | { id: string; name: string; location: { city: string } }
   service_id: string | { id: string; name: string; category: string }
   date: string
   start_time: string
