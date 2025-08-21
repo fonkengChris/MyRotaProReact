@@ -153,7 +153,7 @@ const AvailabilityPage: React.FC = () => {
   const handleViewTimeOffDetails = (request: TimeOffRequest) => {
     setSelectedRequest(request)
     // TODO: Implement detailed view modal
-    console.log('View details for request:', request)
+
   }
 
   const isLoading = availabilitiesLoading || requestsLoading || staffLoading

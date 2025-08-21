@@ -27,44 +27,26 @@ const Homes: React.FC = () => {
   }, [currentUser])
 
   const fetchData = async () => {
-    console.log('📊 Homes: fetchData started')
-    console.log('🔐 Homes: Token for fetchData:', localStorage.getItem('token'))
-    
     try {
       setIsLoading(true)
-      console.log('📤 Homes: Fetching homes and services...')
       
       const [homesData, servicesData] = await Promise.all([
         homesApi.getAll(),
         servicesApi.getAll()
       ])
       
-      console.log('✅ Homes: Data fetched successfully')
-      console.log('🏠 Homes: Homes data:', homesData)
-      console.log('🔧 Homes: Services data:', servicesData)
-      
       setHomes(homesData)
       setServices(servicesData)
     } catch (error: any) {
-      console.error('❌ Homes: Failed to fetch data:', error)
-      console.error('❌ Homes: Error response:', error.response)
-      console.error('❌ Homes: Error status:', error.response?.status)
       toast.error('Failed to fetch data')
     } finally {
-      console.log('🏁 Homes: fetchData completed')
       setIsLoading(false)
     }
   }
 
   const handleCreateHome = () => {
-    console.log('🏠 Homes: Create home button clicked')
-    console.log('🔐 Homes: Current token:', localStorage.getItem('token'))
-    console.log('👤 Homes: Current user:', currentUser)
-    console.log('🔑 Homes: User permissions:', permissions)
-    
     setSelectedHome(null)
     setIsModalOpen(true)
-    console.log('🚪 Homes: Modal opened for home creation')
   }
 
   const handleEditHome = (home: Home) => {

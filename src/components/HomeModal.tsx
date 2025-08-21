@@ -42,14 +42,10 @@ const HomeModal: React.FC<HomeModalProps> = ({
   })
 
   useEffect(() => {
-    console.log('🔄 HomeModal: useEffect triggered', { isOpen, home: home?.id })
-    
     if (isOpen) {
-      console.log('🚪 HomeModal: Modal opened, fetching managers...')
       fetchManagers()
       
       if (home) {
-        console.log('✏️ HomeModal: Editing existing home:', home)
         setFormData({
           name: home.name,
           location: {
@@ -70,7 +66,6 @@ const HomeModal: React.FC<HomeModalProps> = ({
           is_active: home.is_active
         })
       } else {
-        console.log('🆕 HomeModal: Creating new home, setting default form data')
         setFormData({
           name: '',
           location: {
@@ -91,24 +86,14 @@ const HomeModal: React.FC<HomeModalProps> = ({
           is_active: true
         })
       }
-    } else {
-      console.log('🚪 HomeModal: Modal closed')
     }
   }, [isOpen, home])
 
   const fetchManagers = async () => {
-    console.log('👥 HomeModal: Fetching managers started')
-    console.log('🔐 HomeModal: Token for managers fetch:', localStorage.getItem('token'))
-    
     try {
-      console.log('📤 HomeModal: Sending managers API request...')
       const managersData = await usersApi.getAll({ role: 'home_manager' })
-      console.log('✅ HomeModal: Managers fetched successfully:', managersData)
       setManagers(managersData)
     } catch (error: any) {
-      console.error('❌ HomeModal: Failed to fetch managers:', error)
-      console.error('❌ HomeModal: Managers error response:', error.response)
-      console.error('❌ HomeModal: Managers error status:', error.response?.status)
       toast.error('Failed to fetch managers')
     }
   }
@@ -215,21 +200,13 @@ const HomeModal: React.FC<HomeModalProps> = ({
     
     try {
       if (home) {
-        console.log('🔄 HomeModal: Updating existing home with ID:', home.id)
-        console.log('📤 HomeModal: Sending update request to API...')
         const result = await homesApi.update(home.id, formData)
-        console.log('✅ HomeModal: Home update successful:', result)
         toast.success('Home updated successfully')
       } else {
-        console.log('🆕 HomeModal: Creating new home')
-        console.log('📤 HomeModal: Sending create request to API...')
         const result = await homesApi.create(formData)
-        console.log('✅ HomeModal: Home creation successful:', result)
         toast.success('Home created successfully')
       }
-      console.log('🎯 HomeModal: Calling onSuccess callback')
       onSuccess()
-      console.log('🚪 HomeModal: Closing modal')
       onClose()
     } catch (error: any) {
       // Store error details in localStorage for debugging
@@ -249,23 +226,14 @@ const HomeModal: React.FC<HomeModalProps> = ({
       }
       localStorage.setItem('lastHomeSubmissionError', JSON.stringify(errorLog))
       
-      console.error('❌ HomeModal: API call failed with error:', error)
-      console.error('❌ HomeModal: Error response:', error.response)
-      console.error('❌ HomeModal: Error status:', error.response?.status)
-      console.error('❌ HomeModal: Error data:', error.response?.data)
-      console.error('❌ HomeModal: Error message:', error.message)
-      
       if (error.response?.status === 401) {
-        console.log('🔐 HomeModal: 401 Unauthorized - User not authenticated')
         toast.error('Authentication required. Please login again.')
       } else if (error.response?.status === 403) {
-        console.log('🚫 HomeModal: 403 Forbidden - Insufficient permissions')
         toast.error('Insufficient permissions to manage homes.')
       } else {
         toast.error(home ? 'Failed to update home' : 'Failed to create home')
       }
     } finally {
-      console.log('🏁 HomeModal: Form submission completed')
       setIsLoading(false)
     }
   }

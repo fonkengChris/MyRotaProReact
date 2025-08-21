@@ -56,24 +56,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     availability.end_time
   )
 
-  // Debug logging
-  console.log('🔍 AvailabilityCalendar: Raw availabilities:', availabilities)
-  console.log('🔍 AvailabilityCalendar: Valid availabilities:', validAvailabilities)
-  
-  // Log the first availability record structure if it exists
-  if (availabilities.length > 0) {
-    console.log('🔍 AvailabilityCalendar: First availability structure:', {
-      id: availabilities[0].id,
-      user_id: availabilities[0].user_id,
-      date: availabilities[0].date,
-      start_time: availabilities[0].start_time,
-      end_time: availabilities[0].end_time,
-      is_available: availabilities[0].is_available,
-      preferred_shift_type: availabilities[0].preferred_shift_type,
-      notes: availabilities[0].notes,
-      allKeys: Object.keys(availabilities[0])
-    })
-  }
+
 
   // Get availability for a specific date and time
   const getAvailabilityForSlot = (date: Date, time: string) => {

@@ -30,24 +30,14 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
-    console.log('📤 API Request Interceptor:', {
-      url: config.url,
-      method: config.method,
-      hasToken: !!token,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'none'
-    })
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.log('🔐 API Request: Authorization header set')
-    } else {
-      console.log('⚠️ API Request: No token found')
     }
 
     return config
   },
   (error) => {
-    console.error('❌ API Request Interceptor Error:', error)
     return Promise.reject(error)
   }
 )
@@ -58,74 +48,20 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
-    // Store error details in localStorage for debugging
-    const errorLog = {
-      timestamp: new Date().toISOString(),
-      status: error.response?.status,
-      url: error.config?.url,
-      method: error.config?.method,
-      currentPath: window.location.pathname,
-      hasToken: !!localStorage.getItem('token'),
-      errorMessage: error.message,
-      errorData: error.response?.data
-    }
-    
-    // Store the last 5 errors
-    const existingLogs = JSON.parse(localStorage.getItem('apiErrorLogs') || '[]')
-    existingLogs.push(errorLog)
-    if (existingLogs.length > 5) {
-      existingLogs.shift() // Keep only last 5
-    }
-    localStorage.setItem('apiErrorLogs', JSON.stringify(existingLogs))
-    
-    console.log('🚨 API Interceptor: Error caught:', error.response?.status, error.config?.url)
-    console.log('🚨 API Interceptor: Error details:', errorLog)
-    
     // Handle authentication errors only for protected routes
     if (error.response?.status === 401) {
-      console.log('🔐 API Interceptor: 401 Unauthorized error detected')
-      
       // Only redirect if we're not on a public page AND we have a token
       const currentPath = window.location.pathname
       const publicPaths = ['/login', '/register', '/setup']
       const hasToken = localStorage.getItem('token')
       
-      console.log('🔐 API Interceptor: Redirect check:', {
-        currentPath,
-        isPublicPath: publicPaths.includes(currentPath),
-        hasToken,
-        shouldRedirect: !publicPaths.includes(currentPath) && hasToken
-      })
-      
       if (!publicPaths.includes(currentPath) && hasToken) {
-        console.log('🔄 API Interceptor: Redirecting to login...')
-        console.log('🗑️ API Interceptor: Clearing token and user data')
-        
-        // Store the token before clearing it for debugging
-        const tokenBeforeClear = localStorage.getItem('token')
-        localStorage.setItem('lastClearedToken', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          token: tokenBeforeClear,
-          reason: '401 Unauthorized redirect',
-          errorDetails: errorLog
-        }))
-        
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        
-        // Store redirect info for debugging
-        localStorage.setItem('lastRedirectReason', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          from: currentPath,
-          reason: '401 Unauthorized',
-          errorDetails: errorLog
-        }))
         
         // Use window.location.href for now, but we'll improve this
         window.location.href = '/login'
         toast.error('Session expired. Please login again.')
-      } else {
-        console.log('⏸️ API Interceptor: No redirect needed')
       }
     }
 
