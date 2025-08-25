@@ -32,6 +32,8 @@ interface ShiftModalProps {
   shift?: Shift | null
   date: Date
   services: Service[]
+  homeId?: string // Add homeId prop for pre-filling
+  existingShifts?: Shift[] // Add existing shifts for overlap validation
   isLoading?: boolean
 }
 
@@ -42,6 +44,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   shift,
   date,
   services,
+  homeId,
+  existingShifts,
   isLoading = false
 }) => {
   
@@ -58,7 +62,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   } = useForm<ShiftFormData>({
     resolver: zodResolver(shiftSchema),
     defaultValues: {
-      home_id: '',
+      home_id: homeId || '',
       service_id: '',
       start_time: '09:00',
       end_time: '17:00',
@@ -72,11 +76,17 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   const endTime = watch('end_time')
   const selectedServiceId = watch('service_id')
 
-  // Calculate duration
+  // Calculate duration (handles overnight shifts)
   const calculateDuration = () => {
     if (startTime && endTime) {
       const start = new Date(`2000-01-01T${startTime}`)
-      const end = new Date(`2000-01-01T${endTime}`)
+      let end = new Date(`2000-01-01T${endTime}`)
+      
+      // If end time is before start time, it means the shift crosses midnight
+      if (end < start) {
+        end.setDate(end.getDate() + 1)
+      }
+      
       const diffMs = end.getTime() - start.getTime()
       const diffHours = diffMs / (1000 * 60 * 60)
       return Math.max(0, diffHours)
@@ -85,6 +95,126 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   }
 
   const duration = calculateDuration()
+
+  // Helper function to format time display (handles midnight crossing)
+  const formatTimeDisplay = (start: string, end: string) => {
+    if (!start || !end) return ''
+    
+    const startTime = new Date(`2000-01-01T${start}`)
+    const endTime = new Date(`2000-01-01T${end}`)
+    
+    // If end time is before start time, it crosses midnight
+    if (endTime < startTime) {
+      return `${start} - ${end} (next day)`
+    }
+    
+    return `${start} - ${end}`
+  }
+
+  // Check for shift overlaps (handles multi-day shifts)
+  const checkShiftOverlap = (startTime: string, endTime: string, date: string) => {
+    if (!existingShifts || !homeId) return null
+    
+    // Convert current shift times to minutes since midnight
+    const currentStartMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1])
+    let currentEndMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1])
+    
+    // Handle overnight shifts
+    if (currentEndMinutes < currentStartMinutes) {
+      currentEndMinutes += 24 * 60 // Add 24 hours (1440 minutes)
+    }
+    
+    const overlappingShift = existingShifts.find(existingShift => {
+      // Skip the current shift being edited
+      if (shift && existingShift.id === shift.id) return false
+      
+      // Check if it's the same home
+      if (existingShift.home_id !== homeId) return false
+      
+      // Check for overlaps on the same date
+      if (existingShift.date === date) {
+        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
+        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
+        
+        // Handle overnight shifts for existing shifts
+        if (existingEndMinutes < existingStartMinutes) {
+          existingEndMinutes += 24 * 60
+        }
+        
+        // Check for overlap
+        const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
+        return hasOverlap
+      }
+      
+      // Check for overlaps on the next day (for overnight shifts)
+      // We need to check the next day in two scenarios:
+      // 1. Current shift crosses midnight (spans into next day)
+      // 2. Current shift might overlap with overnight shifts that start on current day and span into next day
+      const nextDay = new Date(date)
+      nextDay.setDate(nextDay.getDate() + 1)
+      const nextDayStr = nextDay.toISOString().split('T')[0]
+      
+      if (existingShift.date === nextDayStr) {
+        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
+        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
+        
+        // Handle overnight shifts for existing shifts
+        if (existingEndMinutes < existingStartMinutes) {
+          existingEndMinutes += 24 * 60
+        }
+        
+        // Check for overlap with next day shifts
+        const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
+        return hasOverlap
+      }
+      
+      // Check for overlaps with overnight shifts that start on the current day and span into the next day
+      if (existingShift.date === date) {
+        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
+        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
+        
+        // If this existing shift crosses midnight (spans into next day)
+        if (existingEndMinutes < existingStartMinutes) {
+          // Adjust the end time to be relative to the next day
+          existingEndMinutes += 24 * 60
+          
+          // Check for overlap with the portion of the overnight shift that's in the next day
+          const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
+          return hasOverlap
+        }
+      }
+      
+      // Check for overlaps with shifts from the previous day that span into the current day
+      const previousDay = new Date(date)
+      previousDay.setDate(previousDay.getDate() - 1)
+      const previousDayStr = previousDay.toISOString().split('T')[0]
+      
+      if (existingShift.date === previousDayStr) {
+        // Check if this existing shift spans into the current day (overnight shift)
+        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
+        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
+        
+        // If end time is before start time, it's an overnight shift that spans into the current day
+        if (existingEndMinutes < existingStartMinutes) {
+          // This shift spans from previous day into current day
+          // The existing shift starts at midnight of the previous day and ends at existingEndMinutes of the current day
+          // We need to check if the current shift overlaps with the portion that's in the current day (00:00 to existingEndMinutes)
+          
+          // For overlap calculation, we need to adjust the start time to be relative to the current day
+          const adjustedExistingStartMinutes = 0 // Start at midnight of current day (00:00)
+          
+          // Check for overlap with the portion of the overnight shift that's in the current day
+          // adjustedExistingStartMinutes is 0 (midnight), existingEndMinutes is the end time in current day
+          const hasOverlap = !(currentEndMinutes <= adjustedExistingStartMinutes || currentStartMinutes >= existingEndMinutes)
+          return hasOverlap
+        }
+      }
+      
+      return false
+    })
+    
+    return overlappingShift
+  }
 
   // Reset form when modal opens/closes or shift changes
   useEffect(() => {
@@ -105,9 +235,25 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         setValue('end_time', '17:00')
         setValue('required_staff_count', 1)
         setValue('shift_type', 'morning')
+        
+        // Auto-fill home and service if homeId is provided
+        if (homeId && services.length > 0) {
+          setValue('home_id', homeId)
+          
+          // Find the first service that supports this home
+          const availableService = services.find(service => 
+            service.home_ids && service.home_ids.some((home: any) => 
+              (typeof home === 'string' ? home : home.id) === homeId
+            )
+          )
+          
+          if (availableService) {
+            setValue('service_id', availableService.id)
+          }
+        }
       }
     }
-  }, [isOpen, shift, setValue, reset])
+  }, [isOpen, shift, setValue, reset, homeId, services])
 
   // Reset home_id when service changes
   useEffect(() => {
@@ -128,11 +274,22 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
   const handleFormSubmit = async (data: ShiftFormData) => {
     try {
+      // Check for shift overlaps before submitting
+      const overlap = checkShiftOverlap(data.start_time, data.end_time, format(date, 'yyyy-MM-dd'))
+      
+      if (overlap) {
+        const overlapStart = overlap.start_time.substring(0, 5)
+        const overlapEnd = overlap.end_time.substring(0, 5)
+        throw new Error(`Shift overlaps with existing shift: ${overlapStart} - ${overlapEnd}`)
+      }
+      
       setIsSubmitting(true)
       await onSubmit(data)
       onClose()
     } catch (error) {
       console.error('Error submitting shift:', error)
+      // Show error to user (you can use toast or form error display)
+      alert(error instanceof Error ? error.message : 'Failed to save shift')
     } finally {
       setIsSubmitting(false)
     }
@@ -176,6 +333,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   <select
                     {...register('service_id')}
                     className="input w-full"
+                    disabled={!shift && !!homeId} // Disable for new shifts when home is pre-filled
                   >
                     <option value="">Select a service</option>
                     {services.map((service) => (
@@ -187,6 +345,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   {errors.service_id && (
                     <p className="mt-1 text-sm text-danger-600">{errors.service_id.message}</p>
                   )}
+                  {!shift && homeId && (
+                    <p className="mt-1 text-sm text-gray-500">Service automatically selected for this home</p>
+                  )}
                 </div>
 
                 {/* Home Selection */}
@@ -197,7 +358,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   <select
                     {...register('home_id')}
                     className="input w-full"
-                    disabled={!watch('service_id')}
+                    disabled={!watch('service_id') || (!shift && !!homeId)} // Disable for new shifts when home is pre-filled
                   >
                     <option value="">Select a home</option>
                     {(() => {
@@ -232,6 +393,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   )}
                   {!watch('service_id') && (
                     <p className="mt-1 text-sm text-gray-500">Please select a service first</p>
+                  )}
+                  {!shift && homeId && (
+                    <p className="mt-1 text-sm text-gray-500">Home automatically selected</p>
                   )}
                   {watch('service_id') && (() => {
                     const selectedService = services.find(s => s.id === watch('service_id'))
@@ -285,12 +449,44 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     )}
                   </div>
                 </div>
+                
+                {/* Overnight Shift Info */}
+                {startTime && endTime && (
+                  <div className="text-xs text-gray-500 text-center">
+                    {(() => {
+                      const start = new Date(`2000-01-01T${startTime}`)
+                      const end = new Date(`2000-01-01T${endTime}`)
+                      if (end < start) {
+                        return "⏰ This shift crosses midnight to the next day"
+                      }
+                      return null
+                    })()}
+                  </div>
+                )}
+
+                {/* Overlap Warning */}
+                {startTime && endTime && existingShifts && homeId && (() => {
+                  const overlap = checkShiftOverlap(startTime, endTime, format(date, 'yyyy-MM-dd'))
+                  if (overlap) {
+                    return (
+                      <div className="text-xs text-red-600 text-center bg-red-50 p-2 rounded border border-red-200">
+                        ⚠️ Overlaps with existing shift: {overlap.start_time.substring(0, 5)} - {overlap.end_time.substring(0, 5)}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 {/* Duration Display */}
                 <div className="bg-gray-50 p-3 rounded-md">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <ClockIcon className="h-4 w-4" />
-                    <span>Duration: {duration.toFixed(1)} hours</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <ClockIcon className="h-4 w-4" />
+                      <span>Duration: {duration.toFixed(1)} hours</span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {formatTimeDisplay(startTime, endTime)}
+                    </div>
                   </div>
                 </div>
 

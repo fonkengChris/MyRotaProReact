@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
@@ -15,7 +15,7 @@ import {
   DocumentArrowUpIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
-import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi } from '@/lib/api'
+import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, } from 'date-fns'
 import toast from 'react-hot-toast'
 import RotaGrid from '@/components/RotaGrid'
@@ -39,51 +39,70 @@ const RotaEditor: React.FC = () => {
 
   const currentWeekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 })
 
+  // Home selection state
+  const [selectedHomeId, setSelectedHomeId] = useState<string>('')
+
+  // Auto-select user's home if they have one assigned
+  useEffect(() => {
+    if (user?.home_id && !selectedHomeId) {
+      setSelectedHomeId(user.home_id)
+    }
+  }, [user?.home_id, selectedHomeId])
+
   // Modal state
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string>('09:00')
 
+  // Fetch all homes for selector
+  const { data: homes, isLoading: homesLoading } = useQuery({
+    queryKey: ['homes'],
+    queryFn: () => homesApi.getAll(),
+    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+  })
+
   // Fetch rota data for current week
   const { data: rota, isLoading: rotaLoading } = useQuery({
-    queryKey: ['rota', 'week', format(currentWeekStart, 'yyyy-MM-dd')],
+    queryKey: ['rota', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => rotasApi.getAll({
-      home_id: user?.home_id,
+      home_id: selectedHomeId,
       week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
   })
 
   // Fetch shifts for the week
   const { data: shifts, isLoading: shiftsLoading } = useQuery({
-    queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd')],
+    queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => shiftsApi.getAll({
+      home_id: selectedHomeId,
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
   })
 
   // Fetch staff members
   const { data: staff, isLoading: staffLoading } = useQuery({
-    queryKey: ['staff', user?.home_id],
+    queryKey: ['staff', selectedHomeId],
     queryFn: () => usersApi.getAll({ 
-      home_id: user?.home_id // Only filter by home if user has one
+      home_id: selectedHomeId
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
   })
 
   // Fetch services
   const { data: services, isLoading: servicesLoading } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => servicesApi.getAll(), // Fetch all services for home filtering
-    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    queryKey: ['services', selectedHomeId],
+    queryFn: () => servicesApi.getAll(selectedHomeId), // Fetch services for selected home
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
   })
 
   const weekRota = rota?.[0]
-  const isPageLoading = rotaLoading || shiftsLoading || staffLoading || servicesLoading
+  // Only show loading spinner when we have a selected home and are loading its data
+  const isPageLoading = selectedHomeId && (rotaLoading || shiftsLoading || staffLoading || servicesLoading)
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -108,8 +127,8 @@ const RotaEditor: React.FC = () => {
   // AI Generation
   const handleAIGenerate = async () => {
     try {
-      if (!user?.home_id) {
-        toast.error('Home ID is required to generate rota')
+      if (!selectedHomeId) {
+        toast.error('Please select a care home first')
         return
       }
       
@@ -118,7 +137,7 @@ const RotaEditor: React.FC = () => {
       const result = await aiSolverApi.generateRota({
         week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
         week_end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
-        home_id: user.home_id,
+        home_id: selectedHomeId,
         service_id: 'default' // TODO: Get from selected service
       })
 
@@ -175,13 +194,9 @@ const RotaEditor: React.FC = () => {
         toast.success('Shift updated successfully')
       } else {
         // Create new shift
-        if (!data.home_id) {
-          toast.error('Home selection is required to create a shift')
-          return
-        }
-        
         await shiftsApi.create({
           ...data,
+          home_id: selectedHomeId,
           date: format(selectedDate, 'yyyy-MM-dd')
         })
         toast.success('Shift created successfully')
@@ -217,6 +232,26 @@ const RotaEditor: React.FC = () => {
       console.error('Failed to unassign staff:', error)
       toast.error('Failed to unassign staff')
     }
+  }
+
+  // Check if user has permissions to access rota editor
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+        <p className="text-gray-600">
+          You don't have permission to access the rota editor.
+        </p>
+      </div>
+    )
   }
 
   if (isPageLoading) {
@@ -260,42 +295,138 @@ const RotaEditor: React.FC = () => {
         )}
       </div>
 
-      {/* Week Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousWeek}
-            >
-              <ChevronLeftIcon className="h-4 w-4 mr-1" />
-              Previous Week
-            </Button>
-
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
-              </p>
+      {/* Home Selector - Only show when homes are loaded */}
+      {!homesLoading && homes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Care Home</CardTitle>
+            <CardDescription>
+              Choose a care home to view and manage its weekly schedule
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              <div className="flex-1">
+                <select
+                  value={selectedHomeId}
+                  onChange={(e) => setSelectedHomeId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  disabled={homes.length === 0}
+                >
+                  <option value="">Select a care home...</option>
+                  {homes.map((home) => (
+                    <option key={home.id} value={home.id}>
+                      {home.name} - {home.location.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedHomeId && (
+                <div className="text-sm text-gray-600">
+                  {homes.find(h => h.id === selectedHomeId)?.name}
+                </div>
+              )}
             </div>
+          </CardContent>
+        </Card>
+      )}
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextWeek}
-            >
-              Next Week
-              <ChevronRightIcon className="h-4 w-4 ml-1" />
+      {/* Homes Loading State */}
+      {homesLoading && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <LoadingSpinner size="lg" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Care Homes</h3>
+            <p className="text-gray-500">
+              Please wait while we fetch the available care homes...
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Home Selected Message */}
+      {!selectedHomeId && !homesLoading && homes && homes.length > 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+              <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Care Home</h3>
+            <p className="text-gray-500">
+              Choose a care home from the dropdown above to view and manage its weekly schedule.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Homes Available Message */}
+      {!homesLoading && homes && homes.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+              <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Care Homes Available</h3>
+            <p className="text-gray-500 mb-4">
+              There are no care homes set up in the system yet.
+            </p>
+            {permissions.canManageHomes && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate('/homes')}
+              >
+                Manage Homes
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Week Navigation - Only show when home is selected */}
+      {selectedHomeId && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousWeek}
+              >
+                <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                Previous Week
+              </Button>
+
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextWeek}
+              >
+                Next Week
+                <ChevronRightIcon className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Rota Status and Actions */}
-      {weekRota && (
+      {/* Rota Status and Actions - Only show when home is selected */}
+      {selectedHomeId && weekRota && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -351,13 +482,23 @@ const RotaEditor: React.FC = () => {
         </Card>
       )}
 
-              {/* Rota Editor Interface */}
+      {/* Rota Editor Interface - Only show when home is selected */}
+      {selectedHomeId && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Weekly Schedule</CardTitle>
+                <CardTitle>
+                  Weekly Schedule - {homes?.find(h => h.id === selectedHomeId)?.name}
+                </CardTitle>
                 <CardDescription>
+                  {homes?.find(h => h.id === selectedHomeId)?.location?.city && (
+                    <>
+                      {homes.find(h => h.id === selectedHomeId)?.location.address}, 
+                      {homes.find(h => h.id === selectedHomeId)?.location.city}
+                      <br />
+                    </>
+                  )}
                   {weekRota ? 'Edit staff assignments and shifts' : 'Create new weekly rota'}
                 </CardDescription>
               </div>
@@ -438,56 +579,63 @@ const RotaEditor: React.FC = () => {
             )}
           </CardContent>
         </Card>
+      )}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary-600">0</p>
-              <p className="text-sm text-gray-600">Shifts Today</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Quick Stats - Only show when home is selected */}
+      {selectedHomeId && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-primary-600">0</p>
+                <p className="text-sm text-gray-600">Shifts Today</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-success-600">0</p>
-              <p className="text-sm text-gray-600">Staff Available</p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-success-600">0</p>
+                <p className="text-sm text-gray-600">Staff Available</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-warning-600">0</p>
-              <p className="text-sm text-gray-600">Pending Requests</p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-warning-600">0</p>
+                <p className="text-sm text-gray-600">Pending Requests</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-secondary-600">0</p>
-              <p className="text-sm text-gray-600">Total Hours</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-secondary-600">0</p>
+                <p className="text-sm text-gray-600">Total Hours</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Shift Modal */}
-      <ShiftModal
-        isOpen={isShiftModalOpen}
-        onClose={() => setIsShiftModalOpen(false)}
-        onSubmit={handleShiftSubmit}
-        shift={selectedShift}
-        date={selectedDate}
-        services={services || []}
-        isLoading={false}
-      />
+      {/* Shift Modal - Only show when home is selected */}
+      {selectedHomeId && (
+        <ShiftModal
+          isOpen={isShiftModalOpen}
+          onClose={() => setIsShiftModalOpen(false)}
+          onSubmit={handleShiftSubmit}
+          shift={selectedShift}
+          date={selectedDate}
+          services={services || []}
+          homeId={selectedHomeId}
+          existingShifts={shifts || []}
+          isLoading={false}
+        />
+      )}
     </div>
   )
 }

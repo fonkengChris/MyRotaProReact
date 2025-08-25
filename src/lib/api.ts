@@ -165,6 +165,7 @@ export const servicesApi = {
 // Shifts API
 export const shiftsApi = {
   getAll: async (params?: {
+    home_id?: string
     service_id?: string
     date?: string
     start_date?: string

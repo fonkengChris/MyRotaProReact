@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { format, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -22,6 +23,7 @@ interface RotaGridProps {
   onAssignStaff: (shiftId: string, userId: string) => void
   onUnassignStaff: (shiftId: string, userId: string) => void
   canEdit: boolean
+  isLoading?: boolean
 }
 
 const RotaGrid: React.FC<RotaGridProps> = ({

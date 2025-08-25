@@ -139,7 +139,7 @@ const Homes: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {homes.length === 0 ? (
           <div className="col-span-full">
             <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -158,22 +158,23 @@ const Homes: React.FC = () => {
           </div>
         ) : (
           homes.map((home) => (
-            <div key={home.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div key={home.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
               <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{home.name}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">{home.name}</h3>
                     <div className="flex items-center text-sm text-gray-500 mb-2">
-                      <MapPinIcon className="h-4 w-4 mr-1" />
+                      <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="truncate">
                         {home.location.address}, {home.location.city} {home.location.postcode}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end sm:justify-start space-x-1 flex-shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="p-2 min-w-0 hover:bg-gray-50"
                       onClick={() => handleWeeklySchedule(home)}
                       title="Weekly Schedule"
                     >
@@ -182,14 +183,18 @@ const Homes: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="p-2 min-w-0 hover:bg-gray-50"
                       onClick={() => handleEditHome(home)}
+                      title="Edit Home"
                     >
                       <PencilIcon className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="p-2 min-w-0 hover:bg-gray-50"
                       onClick={() => handleDeleteHome(home.id)}
+                      title="Delete Home"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </Button>

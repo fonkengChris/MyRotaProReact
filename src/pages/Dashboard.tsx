@@ -223,16 +223,16 @@ const Dashboard: React.FC = () => {
       </Card>
 
       {/* Quick Actions */}
-      {permissions.canManageRotas && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Common tasks and shortcuts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Common tasks and shortcuts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {permissions.canManageRotas && (
               <Link to="/rota">
                 <Button
                   variant="outline"
@@ -243,7 +243,20 @@ const Dashboard: React.FC = () => {
                   Create New Rota
                 </Button>
               </Link>
+            )}
+            
+            <Link to="/my-schedule">
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-20 flex-col justify-center"
+              >
+                <CalendarIcon className="h-6 w-6 mb-2" />
+                View My Schedule
+              </Button>
+            </Link>
 
+            {permissions.canManageUsers && (
               <Link to="/staff">
                 <Button
                   variant="outline"
@@ -254,34 +267,34 @@ const Dashboard: React.FC = () => {
                   Manage Staff
                 </Button>
               </Link>
+            )}
 
-              <Link to="/availability">
+            <Link to="/availability">
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-20 flex-col justify-center"
+              >
+                <ClockIcon className="h-6 w-6 mb-2" />
+                Availability
+              </Button>
+            </Link>
+
+            {permissions.canUseAISolver && (
+              <Link to="/rota">
                 <Button
                   variant="outline"
                   size="lg"
                   className="h-20 flex-col justify-center"
                 >
-                  <ClockIcon className="h-6 w-6 mb-2" />
-                  Availability
+                  <PlusIcon className="h-6 w-6 mb-2" />
+                  AI Generate Rota
                 </Button>
               </Link>
-
-              {permissions.canUseAISolver && (
-                <Link to="/rota">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="h-20 flex-col justify-center"
-                  >
-                    <PlusIcon className="h-6 w-6 mb-2" />
-                    AI Generate Rota
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Activity */}
       <Card>
