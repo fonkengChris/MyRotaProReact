@@ -5,7 +5,13 @@ export interface User {
   email: string
   phone: string
   role: UserRole
-  home_id?: string
+  homes: Array<{
+    home_id: string
+    is_default: boolean
+  }>
+  default_home_id?: string
+  type: 'fulltime' | 'parttime' | 'bank'
+  min_hours_per_week: number
   is_active: boolean
   skills: Skill[]
   preferred_shift_types: ShiftType[]
@@ -18,7 +24,7 @@ export type UserRole = 'admin' | 'home_manager' | 'senior_staff' | 'support_work
 
 export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'social_support' | 'specialist_care'
 
-export type ShiftType = 'morning' | 'day' | 'afternoon' | 'evening' | 'night' | 'overtime' | 'long_day'
+export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'night' | 'overtime' | 'long_day' | 'split'
 
 // Authentication types
 export interface LoginCredentials {
@@ -32,7 +38,11 @@ export interface RegisterData {
   phone: string
   password: string
   role: UserRole
-  home_id?: string
+  homes?: Array<{
+    home_id: string
+    is_default: boolean
+  }>
+  type?: 'fulltime' | 'parttime' | 'bank'
 }
 
 export interface AuthResponse {
@@ -154,8 +164,8 @@ export interface WeeklyScheduleDay {
 }
 
 export interface WeeklySchedule {
-  id: string
-  home_id: string | { id: string; name: string; location: { city: string } }
+  _id: string
+  home_id: string | { _id: string; name: string; location: { city: string } }
   schedule: {
     monday: WeeklyScheduleDay
     tuesday: WeeklyScheduleDay
@@ -211,13 +221,13 @@ export interface Availability {
 // Time off types
 export interface TimeOffRequest {
   id: string
-  user_id: string
+  user_id: string | User
   start_date: string
   end_date: string
   reason: string
   request_type: TimeOffType
   status: RequestStatus
-  approved_by?: string
+  approved_by?: string | User
   approved_at?: string
   denial_reason?: string
   is_urgent: boolean
@@ -240,11 +250,14 @@ export interface AIGenerationRequest {
 }
 
 export interface AIGenerationResult {
-  success: boolean
-  assignments: RotaAssignment[]
-  total_penalty: number
-  constraints_violated: ConstraintViolation[]
-  error?: string
+  message: string
+  data: {
+    success: boolean
+    assignments: RotaAssignment[]
+    total_penalty: number
+    constraints_violated: ConstraintViolation[]
+    error?: string
+  }
 }
 
 export interface RotaAssignment {
@@ -330,3 +343,30 @@ export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
 export type LoadingSize = 'sm' | 'md' | 'lg'
+
+// Utility functions
+export const extractHomeId = (homeId: string | { id: string; name: string; location: { city: string } } | undefined): string | undefined => {
+  if (!homeId) return undefined
+  return typeof homeId === 'string' ? homeId : homeId.id
+}
+
+export const extractUserDefaultHomeId = (user: User | undefined): string | undefined => {
+  if (!user || !user.homes || user.homes.length === 0) return undefined
+  const defaultHome = user.homes.find(home => home.is_default)
+  return defaultHome ? defaultHome.home_id : user.homes[0].home_id
+}
+
+export const extractServiceId = (serviceId: string | { id: string; name: string; category: string } | undefined): string | undefined => {
+  if (!serviceId) return undefined
+  return typeof serviceId === 'string' ? serviceId : serviceId.id
+}
+
+export const extractServiceName = (serviceId: string | { id: string; name: string; category: string } | undefined): string | undefined => {
+  if (!serviceId) return undefined
+  return typeof serviceId === 'string' ? undefined : serviceId.name
+}
+
+export const extractManagerId = (managerId: string | { id: string; name: string; email: string } | undefined): string | undefined => {
+  if (!managerId) return undefined
+  return typeof managerId === 'string' ? managerId : managerId.id
+}

@@ -15,12 +15,13 @@ import {
   DocumentArrowUpIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
-import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi } from '@/lib/api'
-import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, } from 'date-fns'
+import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi, weeklySchedulesApi } from '@/lib/api'
+import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import toast from 'react-hot-toast'
 import RotaGrid from '@/components/RotaGrid'
 import ShiftModal from '@/components/ShiftModal'
-import { Shift } from '@/types'
+import ConflictAlert from '@/components/ConflictAlert'
+import { Shift, extractUserDefaultHomeId } from '@/types'
 
 const RotaEditor: React.FC = () => {
   const { weekStart: weekStartParam } = useParams()
@@ -44,10 +45,13 @@ const RotaEditor: React.FC = () => {
 
   // Auto-select user's home if they have one assigned
   useEffect(() => {
-    if (user?.home_id && !selectedHomeId) {
-      setSelectedHomeId(user.home_id)
+    if (user && !selectedHomeId) {
+      const homeId = extractUserDefaultHomeId(user)
+      if (homeId) {
+        setSelectedHomeId(homeId)
+      }
     }
-  }, [user?.home_id, selectedHomeId])
+  }, [user, selectedHomeId])
 
   // Modal state
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
@@ -56,53 +60,72 @@ const RotaEditor: React.FC = () => {
   const [selectedTime, setSelectedTime] = useState<string>('09:00')
 
   // Fetch all homes for selector
-  const { data: homes, isLoading: homesLoading } = useQuery({
+  const { data: homes = [], isLoading: homesLoading } = useQuery({
     queryKey: ['homes'],
     queryFn: () => homesApi.getAll(),
-    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch rota data for current week
-  const { data: rota, isLoading: rotaLoading } = useQuery({
+  const { data: rota = [], isLoading: rotaLoading } = useQuery({
     queryKey: ['rota', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => rotasApi.getAll({
       home_id: selectedHomeId,
       week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch shifts for the week
-  const { data: shifts, isLoading: shiftsLoading } = useQuery({
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => shiftsApi.getAll({
       home_id: selectedHomeId,
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch staff members
-  const { data: staff, isLoading: staffLoading } = useQuery({
+  const { data: staff = [], isLoading: staffLoading } = useQuery({
     queryKey: ['staff', selectedHomeId],
     queryFn: () => usersApi.getAll({ 
       home_id: selectedHomeId
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch services
-  const { data: services, isLoading: servicesLoading } = useQuery({
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services', selectedHomeId],
     queryFn: () => servicesApi.getAll(selectedHomeId), // Fetch services for selected home
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
+  })
+
+  // Fetch scheduling conflicts
+  const { data: conflicts = { totalConflicts: 0, conflicts: [] }, isLoading: conflictsLoading } = useQuery({
+    queryKey: ['conflicts', selectedHomeId, format(currentWeekStart, 'yyyy-MM-dd'), format(currentWeekEnd, 'yyyy-MM-dd')],
+    queryFn: () => shiftsApi.checkConflicts({
+      home_id: selectedHomeId,
+      start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+      end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+    }),
+    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    refetchInterval: 30000 // Refresh every 30 seconds
   })
 
   const weekRota = rota?.[0]
   // Only show loading spinner when we have a selected home and are loading its data
-  const isPageLoading = selectedHomeId && (rotaLoading || shiftsLoading || staffLoading || servicesLoading)
+  const isPageLoading = selectedHomeId && (rotaLoading || shiftsLoading || staffLoading || servicesLoading || conflictsLoading)
+
+
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -132,26 +155,124 @@ const RotaEditor: React.FC = () => {
         return
       }
       
-      toast.loading('Generating rota with AI...')
+      if (services.length === 0) {
+        toast.error('No services available for this care home')
+        return
+      }
+      
+      // Check if we need to create shifts from weekly schedule
+      if (shifts.length === 0) {
+        const shouldCreateShifts = window.confirm(
+          'No shifts found for this week. Would you like to create shifts from the weekly schedule first?'
+        )
+        
+        if (shouldCreateShifts) {
+          await createShiftsFromWeeklySchedule()
+        } else {
+          toast.error('Please create shifts first before using AI generation.')
+          return
+        }
+      }
+      
+      // Use the first available service for AI generation
+      const selectedService = services[0]
+      
+      // Always use current week for AI generation to avoid past date issues
+      const now = new Date()
+      const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
+      const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
+      
+      toast.loading('Generating rota with AI for current week...')
       
       const result = await aiSolverApi.generateRota({
         week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
         week_end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
         home_id: selectedHomeId,
-        service_id: 'default' // TODO: Get from selected service
+        service_id: selectedService.id,
+        existing_shifts: shifts // Pass existing shifts from rota grid
       })
 
       toast.dismiss()
       
-      if (result.success) {
+      if (result.data?.success) {
         toast.success('AI rota generated successfully!')
-        // TODO: Apply the generated rota
+        // Refresh the shifts data to show new assignments
+        queryClient.invalidateQueries({ queryKey: ['shifts'] })
       } else {
-        toast.error(result.error || 'Failed to generate rota')
+        toast.error(result.data?.error || 'Failed to generate rota')
       }
     } catch (error: any) {
       toast.dismiss()
       toast.error(error.response?.data?.error || 'Failed to generate rota')
+    }
+  }
+
+  // Create shifts from weekly schedule
+  const createShiftsFromWeeklySchedule = async () => {
+    try {
+      toast.loading('Creating shifts from weekly schedule...')
+      
+      // Get weekly schedule for the home
+      const weeklySchedule = await weeklySchedulesApi.getByHome(selectedHomeId)
+      
+      if (!weeklySchedule || !weeklySchedule.schedule) {
+        toast.error('No weekly schedule found for this home')
+        return
+      }
+      
+      // Use the current week dates from the RotaEditor
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      const createdShifts = []
+      
+      // Create shifts for each day of the week
+      for (let i = 0; i < 7; i++) {
+        const currentDate = addDays(currentWeekStart, i)
+        const dayName = dayNames[currentDate.getDay()]
+        const daySchedule = weeklySchedule.schedule[dayName as keyof typeof weeklySchedule.schedule]
+        
+        if (daySchedule && daySchedule.is_active && daySchedule.shifts) {
+          for (const shiftPattern of daySchedule.shifts) {
+            const shiftData = {
+              home_id: selectedHomeId,
+              service_id: shiftPattern.service_id,
+              date: format(currentDate, 'yyyy-MM-dd'),
+              start_time: shiftPattern.start_time,
+              end_time: shiftPattern.end_time,
+              shift_type: shiftPattern.shift_type,
+              required_staff_count: shiftPattern.required_staff_count,
+              notes: shiftPattern.notes || '',
+              is_active: true,
+              assigned_staff: [],
+              is_urgent: false,
+              status: 'unassigned' as const,
+              duration_hours: 0
+            }
+            
+            try {
+              const newShift = await shiftsApi.create(shiftData)
+              createdShifts.push(newShift)
+            } catch (error: any) {
+              console.error('Failed to create shift:', error)
+              // Continue with other shifts even if one fails
+            }
+          }
+        }
+      }
+      
+      toast.dismiss()
+      
+      if (createdShifts.length > 0) {
+        toast.success(`Created ${createdShifts.length} shifts from weekly schedule`)
+        // Refresh shifts data
+        queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      } else {
+        toast.error('No shifts were created from weekly schedule')
+      }
+      
+    } catch (error: any) {
+      toast.dismiss()
+      toast.error('Failed to create shifts from weekly schedule')
+      console.error('Error creating shifts:', error)
     }
   }
 
@@ -216,9 +337,58 @@ const RotaEditor: React.FC = () => {
       toast.success('Staff assigned successfully')
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      return { success: true }
     } catch (error: any) {
       console.error('Failed to assign staff:', error)
-      toast.error('Failed to assign staff')
+      
+      // Handle different types of errors with specific messages
+      if (error.response?.status === 409) {
+        // Conflict error - show detailed conflict information
+        const conflictData = error.response.data
+        if (conflictData.conflict) {
+          const conflict = conflictData.conflict
+          let errorMessage = 'Scheduling conflict detected: '
+          
+          switch (conflict.conflictType) {
+            case 'time_off':
+              errorMessage += `This staff member has approved time off on ${conflict.conflicts[0]?.start_date || 'the requested date'}. Please reassign to another staff member or cancel the time-off request.`
+              break
+            case 'overlapping_shift':
+              errorMessage += `This staff member already has overlapping shifts on the same date. Please check the schedule for time conflicts.`
+              break
+            case 'max_hours_exceeded':
+              errorMessage += `Assigning this shift would exceed the maximum daily hours (${conflict.message}). Please reduce shift duration or assign to different staff.`
+              break
+            default:
+              errorMessage += conflict.message || 'Unknown conflict type'
+          }
+          
+          toast.error(errorMessage, { duration: 8000 })
+        } else {
+          toast.error(conflictData.message || 'Scheduling conflict detected')
+        }
+      } else if (error.response?.status === 400) {
+        // Bad request - show validation error
+        const errorData = error.response.data
+        if (errorData.details && Array.isArray(errorData.details)) {
+          toast.error(`Validation failed: ${errorData.details.join(', ')}`)
+        } else if (errorData.message) {
+          toast.error(errorData.message)
+        } else {
+          toast.error(errorData.error || 'Invalid request data')
+        }
+      } else if (error.response?.status === 404) {
+        // Not found
+        toast.error('Shift or staff member not found')
+      } else if (error.response?.status === 403) {
+        // Forbidden
+        toast.error('You do not have permission to assign staff to this shift')
+      } else {
+        // Generic error
+        toast.error(error.response?.data?.error || 'Failed to assign staff. Please try again.')
+      }
+      
+      return { success: false, error: error.response?.data?.error || 'Unknown error' }
     }
   }
 
@@ -230,7 +400,14 @@ const RotaEditor: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
     } catch (error: any) {
       console.error('Failed to unassign staff:', error)
-      toast.error('Failed to unassign staff')
+      
+      if (error.response?.status === 404) {
+        toast.error('Shift or staff assignment not found')
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to unassign staff from this shift')
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to unassign staff. Please try again.')
+      }
     }
   }
 
@@ -283,6 +460,16 @@ const RotaEditor: React.FC = () => {
               Current Week
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/weekly-schedules')}
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Weekly Schedules
+            </Button>
+            <Button
               variant="primary"
               size="sm"
               onClick={handleAIGenerate}
@@ -291,6 +478,9 @@ const RotaEditor: React.FC = () => {
               <CogIcon className="h-4 w-4 mr-2" />
               AI Generate
             </Button>
+            <p className="text-xs text-gray-500 mt-1">
+              Generates rota for current week
+            </p>
           </div>
         )}
       </div>
@@ -347,7 +537,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* No Home Selected Message */}
-      {!selectedHomeId && !homesLoading && homes && homes.length > 0 && (
+      {!selectedHomeId && !homesLoading && homes.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
@@ -364,7 +554,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* No Homes Available Message */}
-      {!homesLoading && homes && homes.length === 0 && (
+      {!homesLoading && homes.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
@@ -423,6 +613,21 @@ const RotaEditor: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      )}
+
+      {/* Scheduling Conflicts Alert - Only show when home is selected */}
+      {selectedHomeId && conflicts && conflicts.totalConflicts > 0 && (
+        <ConflictAlert
+          conflicts={conflicts.conflicts}
+          onResolveConflict={(conflict) => {
+            // Navigate to the specific shift or show modal to resolve
+            toast.success('Use the shift editor to resolve this conflict')
+          }}
+          onDismiss={() => {
+            // Invalidate conflicts query to refresh
+            queryClient.invalidateQueries({ queryKey: ['conflicts'] })
+          }}
+        />
       )}
 
       {/* Rota Status and Actions - Only show when home is selected */}
@@ -520,7 +725,7 @@ const RotaEditor: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {shifts && staff && services && user ? (
+            {shifts.length > 0 && staff.length > 0 && services.length > 0 && user ? (
               <RotaGrid
                 weekStart={currentWeekStart}
                 shifts={shifts}
@@ -532,6 +737,9 @@ const RotaEditor: React.FC = () => {
                 onAssignStaff={handleAssignStaff}
                 onUnassignStaff={handleUnassignStaff}
                 canEdit={permissions.canManageRotas || false}
+                conflicts={conflicts?.conflicts || []}
+                homeId={selectedHomeId}
+                onCreateShiftsFromSchedule={createShiftsFromWeeklySchedule}
               />
             ) : (
               <div className="text-center py-12">
@@ -545,7 +753,7 @@ const RotaEditor: React.FC = () => {
                   {weekRota 
                     ? 'Please wait while we load the schedule data'
                     : permissions.canManageRotas 
-                      ? 'Create a new rota to get started with staff scheduling'
+                      ? 'Create shifts from your weekly schedule or add them manually to get started'
                       : 'Contact your manager to create a rota for this week'
                   }
                 </p>
@@ -553,6 +761,14 @@ const RotaEditor: React.FC = () => {
                   <div className="space-x-2">
                     <Button
                       variant="primary"
+                      size="sm"
+                      onClick={createShiftsFromWeeklySchedule}
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Create from Weekly Schedule
+                    </Button>
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         setSelectedDate(new Date())
@@ -562,7 +778,7 @@ const RotaEditor: React.FC = () => {
                       }}
                     >
                       <PlusIcon className="h-4 w-4 mr-2" />
-                      Create New Rota
+                      Add Shift Manually
                     </Button>
                     <Button
                       variant="outline"

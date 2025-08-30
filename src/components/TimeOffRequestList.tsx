@@ -132,7 +132,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
           ) : (
             <div className="space-y-4">
               {pendingRequests.map((request) => {
-                const staffMember = getStaffMember(request.user_id)
+                const staffMember = typeof request.user_id === 'string' ? getStaffMember(request.user_id) : request.user_id
                 const duration = calculateDuration(request.start_date, request.end_date)
                 
                 return (
@@ -288,7 +288,8 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
           <CardContent>
             <div className="space-y-3">
               {approvedRequests.slice(0, 5).map((request) => {
-                const staffMember = getStaffMember(request.user_id)
+                const staffMember = typeof request.user_id === 'string' ? getStaffMember(request.user_id) : request.user_id
+                const approver = typeof request.approved_by === 'string' ? getStaffMember(request.approved_by) : request.approved_by
                 const duration = calculateDuration(request.start_date, request.end_date)
                 
                 return (
@@ -304,6 +305,16 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         <p className="text-xs text-green-700">
                           {format(parseISO(request.start_date), 'MMM d')} - {format(parseISO(request.end_date), 'MMM d')} ({duration} days)
                         </p>
+                        {approver && (
+                          <p className="text-xs text-green-600">
+                            Approved by: {approver.name}
+                            {request.approved_at && (
+                              <span className="ml-2">
+                                on {format(parseISO(request.approved_at), 'MMM d, yyyy')}
+                              </span>
+                            )}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Badge variant="success">Approved</Badge>
@@ -335,7 +346,8 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
           <CardContent>
             <div className="space-y-3">
               {deniedRequests.slice(0, 5).map((request) => {
-                const staffMember = getStaffMember(request.user_id)
+                const staffMember = typeof request.user_id === 'string' ? getStaffMember(request.user_id) : request.user_id
+                const denier = typeof request.approved_by === 'string' ? getStaffMember(request.approved_by) : request.approved_by
                 const duration = calculateDuration(request.start_date, request.end_date)
                 
                 return (
@@ -351,6 +363,21 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         <p className="text-xs text-red-700">
                           {format(parseISO(request.start_date), 'MMM d')} - {format(parseISO(request.end_date), 'MMM d')} ({duration} days)
                         </p>
+                        {denier && (
+                          <p className="text-xs text-red-600">
+                            Denied by: {denier.name}
+                            {request.approved_at && (
+                              <span className="ml-2">
+                                on {format(parseISO(request.approved_at), 'MMM d, yyyy')}
+                              </span>
+                            )}
+                          </p>
+                        )}
+                        {request.denial_reason && (
+                          <p className="text-xs text-red-500 mt-1">
+                            Reason: {request.denial_reason}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Badge variant="danger">Denied</Badge>

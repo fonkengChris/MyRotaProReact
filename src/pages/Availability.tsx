@@ -13,7 +13,7 @@ import {
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { availabilityApi, timeOffApi, usersApi } from '@/lib/api'
-import { Availability, TimeOffRequest } from '@/types'
+import { Availability, TimeOffRequest, extractUserDefaultHomeId } from '@/types'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import TimeOffRequestForm from '@/components/TimeOffRequestForm'
 import TimeOffRequestList from '@/components/TimeOffRequestList'
@@ -28,28 +28,45 @@ const AvailabilityPage: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<TimeOffRequest | null>(null)
 
   // Fetch availability data
-  const { data: availabilities, isLoading: availabilitiesLoading } = useQuery({
+  const { data: availabilities = [], isLoading: availabilitiesLoading, error: availabilitiesError } = useQuery({
     queryKey: ['availabilities', user?.id],
     queryFn: () => availabilityApi.getAll({ user_id: user?.id }),
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    retry: 1,
+    retryDelay: 1000,
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch time-off requests
-  const { data: timeOffRequests, isLoading: requestsLoading } = useQuery({
-    queryKey: ['timeOffRequests', user?.home_id],
-    queryFn: () => timeOffApi.getAll({ 
-      home_id: user?.home_id // Only filter by home if user has one
-    }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+  const { data: timeOffRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery({
+    queryKey: ['timeOffRequests', user?.id, extractUserDefaultHomeId(user), user?.role],
+    queryFn: async () => {
+      // Different query based on user role
+      if (['admin', 'home_manager', 'senior_staff'].includes(user?.role || '')) {
+        // Managers see all requests for their home
+        const homeId = extractUserDefaultHomeId(user)
+        return await timeOffApi.getAll({ home_id: homeId })
+      } else {
+        // Regular users see only their own requests
+        return await timeOffApi.getAll({ user_id: user?.id })
+      }
+    },
+    enabled: !!user,
+    retry: 1,
+    retryDelay: 1000,
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch staff members (for managers)
-  const { data: staff, isLoading: staffLoading } = useQuery({
-    queryKey: ['staff', user?.home_id],
+  const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery({
+    queryKey: ['staff', extractUserDefaultHomeId(user)],
     queryFn: () => usersApi.getAll({ 
-      home_id: user?.home_id // Only filter by home if user has one
+      home_id: extractUserDefaultHomeId(user) // Only filter by home if user has one
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff
+    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
+    retry: 1,
+    retryDelay: 1000,
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Save availability mutation
@@ -99,6 +116,7 @@ const AvailabilityPage: React.FC = () => {
   const approveTimeOffMutation = useMutation({
     mutationFn: (requestId: string) => timeOffApi.approve(requestId),
     onSuccess: () => {
+      // Invalidate all time-off request queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
       toast.success('Time-off request approved')
     },
@@ -112,6 +130,7 @@ const AvailabilityPage: React.FC = () => {
     mutationFn: ({ requestId, reason }: { requestId: string; reason: string }) => 
       timeOffApi.deny(requestId, reason),
     onSuccess: () => {
+      // Invalidate all time-off request queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
       toast.success('Time-off request denied')
     },
@@ -156,9 +175,36 @@ const AvailabilityPage: React.FC = () => {
 
   }
 
-  const isLoading = availabilitiesLoading || requestsLoading || staffLoading
+  // Only show loading for the first essential query (availabilities)
+  const isInitialLoading = availabilitiesLoading && !availabilities && !availabilitiesError
+  
+  // Show error state if there are critical errors
+  if (availabilitiesError && !availabilities) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Availability</h3>
+          <p className="text-gray-600 mb-4">
+            {availabilitiesError?.message || 'There was an error loading your availability data.'}
+          </p>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -216,7 +262,7 @@ const AvailabilityPage: React.FC = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary-600">
-                {availabilities?.filter(a => a.is_available).length || 0}
+                {availabilities.filter(a => a.is_available).length || 0}
               </p>
               <p className="text-sm text-gray-600">Available Slots</p>
             </div>
@@ -226,10 +272,18 @@ const AvailabilityPage: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-warning-600">
-                {timeOffRequests?.filter(r => r.status === 'pending').length || 0}
-              </p>
-              <p className="text-sm text-gray-600">Pending Requests</p>
+              {requestsLoading ? (
+                <div className="flex items-center justify-center">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-warning-600">
+                    {timeOffRequests.filter(r => r.status === 'pending').length || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Pending Requests</p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -237,10 +291,18 @@ const AvailabilityPage: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-success-600">
-                {timeOffRequests?.filter(r => r.status === 'approved').length || 0}
-              </p>
-              <p className="text-sm text-gray-600">Approved Requests</p>
+              {requestsLoading ? (
+                <div className="flex items-center justify-center">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-success-600">
+                    {timeOffRequests.filter(r => r.status === 'approved').length || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Approved Requests</p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -248,10 +310,18 @@ const AvailabilityPage: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-danger-600">
-                {timeOffRequests?.filter(r => r.status === 'denied').length || 0}
-              </p>
-              <p className="text-sm text-gray-600">Denied Requests</p>
+              {requestsLoading ? (
+                <div className="flex items-center justify-center">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-danger-600">
+                    {timeOffRequests.filter(r => r.status === 'denied').length || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Denied Requests</p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -269,14 +339,24 @@ const AvailabilityPage: React.FC = () => {
       )}
 
       {activeTab === 'requests' && (
-        <TimeOffRequestList
-          requests={timeOffRequests || []}
-          staff={staff || []}
-          onApprove={handleApproveTimeOff}
-          onDeny={handleDenyTimeOff}
-          onViewDetails={handleViewTimeOffDetails}
-          canManage={permissions.canManageTimeOff}
-        />
+        <div>
+          {staffLoading && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center">
+                <LoadingSpinner size="sm" />
+                <span className="ml-2 text-sm text-blue-700">Loading staff information...</span>
+              </div>
+            </div>
+          )}
+          <TimeOffRequestList
+            requests={timeOffRequests}
+            staff={staff || []}
+            onApprove={handleApproveTimeOff}
+            onDeny={handleDenyTimeOff}
+            onViewDetails={handleViewTimeOffDetails}
+            canManage={permissions.canManageTimeOff}
+          />
+        </div>
       )}
 
       {activeTab === 'submit' && (

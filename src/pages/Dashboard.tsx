@@ -16,10 +16,23 @@ import {
 } from '@heroicons/react/24/outline'
 import { rotasApi, shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
+import { extractUserDefaultHomeId } from '@/types'
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const permissions = usePermissions()
+  
+
+  
+  // Safety check - don't render if user is not loaded
+  if (!user) {
+
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
   
   // Get current week dates
   const now = new Date()
@@ -27,39 +40,44 @@ const Dashboard: React.FC = () => {
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
 
   // Fetch dashboard data
-  const { data: currentRota, isLoading: rotaLoading } = useQuery({
+  const { data: currentRota = [], isLoading: rotaLoading } = useQuery({
     queryKey: ['rota', 'current', weekStart.toISOString()],
     queryFn: () => rotasApi.getAll({
-      home_id: user?.home_id,
+      home_id: extractUserDefaultHomeId(user),
       week_start_date: weekStart.toISOString(),
       week_end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
-  const { data: shifts, isLoading: shiftsLoading } = useQuery({
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts', 'current', weekStart.toISOString()],
     queryFn: () => shiftsApi.getAll({
       start_date: weekStart.toISOString(),
       end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
-  const { data: staff, isLoading: staffLoading } = useQuery({
-    queryKey: ['staff', user?.home_id],
+  const { data: staff = [], isLoading: staffLoading } = useQuery({
+    queryKey: ['staff', extractUserDefaultHomeId(user)],
     queryFn: () => usersApi.getAll({ 
-      home_id: user?.home_id // Only filter by home if user has one
+      home_id: extractUserDefaultHomeId(user) // Only filter by home if user has one
     }),
-    enabled: !!user && (!!user.home_id || ['admin', 'home_manager', 'senior_staff'].includes(user.role))
+    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   const isLoading = rotaLoading || shiftsLoading || staffLoading
 
-  // Calculate statistics
-  const totalShifts = shifts?.length || 0
-  const totalHours = shifts?.reduce((sum, shift) => sum + (shift.duration_hours || 0), 0) || 0
-  const activeStaff = staff?.filter(s => s.is_active).length || 0
+
+
+  // Calculate statistics (data should now be guaranteed arrays from select option)
+  const totalShifts = staff.length || 0
+  const totalHours = shifts.reduce((sum, shift) => sum + (shift.duration_hours || 0), 0) || 0
+  const activeStaff = staff.filter(s => s.is_active).length || 0
   const pendingRequests = 0 // TODO: Implement time off requests
 
   // Get current week rota
@@ -81,7 +99,7 @@ const Dashboard: React.FC = () => {
           Welcome back, {user?.name}! 👋
         </h1>
         <p className="text-gray-600 mt-2">
-          Here's what's happening this week at {user?.home_id ? 'your care home' : 'MyRotaPro'}
+          Here's what's happening this week at {extractUserDefaultHomeId(user) ? 'your care home' : 'MyRotaPro'}
         </p>
       </div>
 
@@ -144,83 +162,85 @@ const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Current Week Rota */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Current Week Rota</CardTitle>
-              <CardDescription>
-                Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-              </CardDescription>
-            </div>
-            <div className="flex space-x-2">
-              {weekRota && (
-                <Badge 
-                  variant={weekRota.status === 'published' ? 'success' : 'warning'}
-                >
-                  {weekRota.status}
-                </Badge>
-              )}
-              <Link to={`/rota/${weekStart.toISOString()}`}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                >
-                  <EyeIcon className="h-4 w-4 mr-2" />
-                  View Rota
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {weekRota ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-primary-600">{weekRota.total_shifts}</p>
-                  <p className="text-sm text-gray-600">Total Shifts</p>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-success-600">{weekRota.total_hours}</p>
-                  <p className="text-sm text-gray-600">Total Hours</p>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-secondary-600">
-                    {format(new Date(weekRota.created_at), 'MMM d')}
-                  </p>
-                  <p className="text-sm text-gray-600">Created</p>
-                </div>
+      {/* Current Week Rota - Only show for non-regular users */}
+      {!permissions.isSupportWorker && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Current Week Rota</CardTitle>
+                <CardDescription>
+                  Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                </CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                {weekRota && (
+                  <Badge 
+                    variant={weekRota.status === 'published' ? 'success' : 'warning'}
+                  >
+                    {weekRota.status}
+                  </Badge>
+                )}
+                <Link to={`/rota/${weekStart.toISOString()}`}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                  >
+                    <EyeIcon className="h-4 w-4 mr-2" />
+                    View Rota
+                  </Button>
+                </Link>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No rota for this week</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {permissions.canManageRotas 
-                  ? 'Create a new rota to get started'
-                  : 'Contact your manager to create a rota'
-                }
-              </p>
-              {permissions.canManageRotas && (
-                <div className="mt-6">
-                                <Link to="/rota">
-                <Button
-                  variant="primary"
-                  size="sm"
-                >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Create Rota
-                </Button>
-              </Link>
+          </CardHeader>
+          <CardContent>
+            {weekRota ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-primary-600">{weekRota.total_shifts}</p>
+                    <p className="text-sm text-gray-600">Total Shifts</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-success-600">{weekRota.total_hours}</p>
+                    <p className="text-sm text-gray-600">Total Hours</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-secondary-600">
+                      {format(new Date(weekRota.created_at), 'MMM d')}
+                    </p>
+                    <p className="text-sm text-gray-600">Created</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No rota for this week</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {permissions.canManageRotas 
+                    ? 'Create a new rota to get started'
+                    : 'Contact your manager to create a rota'
+                  }
+                </p>
+                {permissions.canManageRotas && (
+                  <div className="mt-6">
+                                  <Link to="/rota">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                  >
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Create Rota
+                  </Button>
+                </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card>

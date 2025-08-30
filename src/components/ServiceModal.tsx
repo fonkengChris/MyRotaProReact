@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Service, ServiceCategory, PriorityLevel, Skill } from '@/types'
+import { Service, ServiceCategory, PriorityLevel, Skill, extractHomeId } from '@/types'
 import { homesApi, servicesApi } from '@/lib/api'
 import { Home } from '@/types'
 import toast from 'react-hot-toast'
@@ -65,7 +65,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
       if (service) {
         // Ensure home_ids is always an array of strings
         const homeIds = Array.isArray(service.home_ids) 
-          ? service.home_ids.map(id => typeof id === 'string' ? id : id.id || id)
+          ? service.home_ids.map(id => extractHomeId(id) || '')
           : []
         
         setFormData({

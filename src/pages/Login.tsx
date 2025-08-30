@@ -49,11 +49,14 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true)
+      
       await login(data)
+      
       toast.success('Login successful!')
       navigate('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Login failed. Please try again.')
+      console.error('🚀 Login: Error during login:', error)
+      toast.error(error.response?.data?.error || error.message || 'Login failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -79,79 +82,6 @@ const Login: React.FC = () => {
             <CardTitle className="text-center">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
-            
-            {/* Debug Section - Only show if there are error logs */}
-            {(() => {
-              const apiErrorLogs = JSON.parse(localStorage.getItem('apiErrorLogs') || '[]')
-              const lastHomeSubmission = localStorage.getItem('lastHomeSubmission')
-              const lastHomeSubmissionError = localStorage.getItem('lastHomeSubmissionError')
-              const lastRedirectReason = localStorage.getItem('lastRedirectReason')
-              const lastClearedToken = localStorage.getItem('lastClearedToken')
-              
-              if (apiErrorLogs.length > 0 || lastHomeSubmission || lastHomeSubmissionError || lastRedirectReason || lastClearedToken) {
-                return (
-                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <h3 className="text-sm font-medium text-yellow-800 mb-2">🐛 Debug Information</h3>
-                    <div className="space-y-2 text-xs text-yellow-700">
-                      {apiErrorLogs.length > 0 && (
-                        <div>
-                          <strong>API Errors ({apiErrorLogs.length}):</strong>
-                          <pre className="mt-1 bg-white p-2 rounded text-xs overflow-auto max-h-20">
-                            {JSON.stringify(apiErrorLogs, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                      {lastHomeSubmission && (
-                        <div>
-                          <strong>Last Home Submission:</strong>
-                          <pre className="mt-1 bg-white p-2 rounded text-xs overflow-auto max-h-20">
-                            {lastHomeSubmission}
-                          </pre>
-                        </div>
-                      )}
-                      {lastHomeSubmissionError && (
-                        <div>
-                          <strong>Last Home Submission Error:</strong>
-                          <pre className="mt-1 bg-white p-2 rounded text-xs overflow-auto max-h-20">
-                            {lastHomeSubmissionError}
-                          </pre>
-                        </div>
-                      )}
-                      {lastRedirectReason && (
-                        <div>
-                          <strong>Last Redirect Reason:</strong>
-                          <pre className="mt-1 bg-white p-2 rounded text-xs overflow-auto max-h-20">
-                            {lastRedirectReason}
-                          </pre>
-                        </div>
-                      )}
-                      {lastClearedToken && (
-                        <div>
-                          <strong>Last Cleared Token:</strong>
-                          <pre className="mt-1 bg-white p-2 rounded text-xs overflow-auto max-h-20">
-                            {lastClearedToken}
-                          </pre>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem('apiErrorLogs')
-                          localStorage.removeItem('lastHomeSubmission')
-                          localStorage.removeItem('lastHomeSubmissionError')
-                          localStorage.removeItem('lastRedirectReason')
-                          localStorage.removeItem('lastClearedToken')
-                          window.location.reload()
-                        }}
-                        className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
-                      >
-                        Clear Debug Logs
-                      </button>
-                    </div>
-                  </div>
-                )
-              }
-              return null
-            })()}
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">

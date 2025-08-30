@@ -29,7 +29,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' },
     ...(permissions.canManageRotas 
-      ? [{ name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') }]
+      ? [
+          { name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') },
+          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' }
+        ]
       : []
     ),
     { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },

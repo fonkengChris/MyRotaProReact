@@ -12,6 +12,7 @@ import Settings from '@/pages/Settings'
 import Availability from '@/pages/Availability'
 import Services from '@/pages/Services'
 import Homes from '@/pages/Homes'
+import WeeklySchedules from '@/pages/WeeklySchedules'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/rota/:weekStart?" element={<RotaEditor />} />
+        <Route path="/weekly-schedules" element={<WeeklySchedules />} />
         <Route path="/my-schedule" element={<MySchedule />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/staff" element={<StaffManagement />} />

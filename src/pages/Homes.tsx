@@ -35,8 +35,8 @@ const Homes: React.FC = () => {
         servicesApi.getAll()
       ])
       
-      setHomes(homesData)
-      setServices(servicesData)
+      setHomes(homesData || [])
+      setServices(servicesData || [])
     } catch (error: any) {
       toast.error('Failed to fetch data')
     } finally {

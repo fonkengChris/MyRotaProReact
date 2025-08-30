@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { XMarkIcon, PlusIcon, TrashIcon, ClockIcon, UsersIcon, TagIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { WeeklySchedule, WeeklyScheduleShift, Service } from '@/types'
+import { WeeklySchedule, WeeklyScheduleShift, Service, extractServiceId } from '@/types'
 import { weeklySchedulesApi, servicesApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -275,7 +275,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                                       Service
                                     </label>
                                     <select
-                                      value={typeof shift.service_id === 'string' ? shift.service_id : shift.service_id.id}
+                                      value={extractServiceId(shift.service_id) || ''}
                                       onChange={(e) => handleShiftChange(dayName, shiftIndex, 'service_id', e.target.value)}
                                       className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                                     >

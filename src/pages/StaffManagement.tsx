@@ -12,10 +12,12 @@ import {
   UserPlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  UsersIcon
+  UsersIcon,
+  HomeIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
-import { User, UserRole, Home } from '@/types'
+import { User, UserRole, Home, extractHomeId } from '@/types'
 import toast from 'react-hot-toast'
 
 const StaffManagement: React.FC = () => {
@@ -26,24 +28,31 @@ const StaffManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'fulltime' | 'parttime' | 'bank'>('all')
+  const [homeFilter, setHomeFilter] = useState<string>('all')
   const [selectedUserForHomeAllocation, setSelectedUserForHomeAllocation] = useState<User | null>(null)
-  const [selectedHomeForAllocation, setSelectedHomeForAllocation] = useState<string>('')
   const [showHomeAllocationModal, setShowHomeAllocationModal] = useState(false)
+  const [newHomeAllocation, setNewHomeAllocation] = useState<{
+    homeId: string;
+    isDefault: boolean;
+  }>({ homeId: '', isDefault: false })
 
   // Fetch staff data
-  const { data: staff, isLoading } = useQuery({
-    queryKey: ['staff', currentUser?.home_id],
+  const { data: staff = [], isLoading } = useQuery({
+    queryKey: ['staff', currentUser?.default_home_id],
     queryFn: () => usersApi.getAll({ 
-      home_id: currentUser?.home_id // Only filter by home if user has one
+      home_id: extractHomeId(currentUser?.default_home_id) // Only filter by home if user has one
     }),
-    enabled: !!currentUser && (!!currentUser.home_id || ['admin', 'home_manager', 'senior_staff'].includes(currentUser.role))
+    enabled: !!currentUser && (!!currentUser.default_home_id || ['admin', 'home_manager', 'senior_staff'].includes(currentUser.role)),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch homes for allocation
-  const { data: homes } = useQuery({
+  const { data: homes = [] } = useQuery({
     queryKey: ['homes'],
     queryFn: () => homesApi.getAll(),
-    enabled: permissions.canAllocateHomes
+    enabled: permissions.canAllocateHomes,
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Delete user mutation
@@ -71,43 +80,59 @@ const StaffManagement: React.FC = () => {
   })
 
   // Home allocation mutations
-  const allocateHomeMutation = useMutation({
-    mutationFn: ({ userId, homeId }: { userId: string; homeId: string }) => 
-      usersApi.allocateHome(userId, homeId),
+  const addHomeMutation = useMutation({
+    mutationFn: ({ userId, homeId, isDefault }: { userId: string; homeId: string; isDefault: boolean }) => 
+      usersApi.addHome(userId, { home_id: homeId, is_default: isDefault }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
-      toast.success('Home allocated successfully')
+      toast.success('Home added successfully')
       setShowHomeAllocationModal(false)
       setSelectedUserForHomeAllocation(null)
-      setSelectedHomeForAllocation('')
+      setNewHomeAllocation({ homeId: '', isDefault: false })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to allocate home')
+      toast.error(error.response?.data?.error || 'Failed to add home')
     }
   })
 
-  const removeHomeAllocationMutation = useMutation({
-    mutationFn: (userId: string) => usersApi.removeHomeAllocation(userId),
+  const removeHomeMutation = useMutation({
+    mutationFn: ({ userId, homeId }: { userId: string; homeId: string }) => 
+      usersApi.removeHome(userId, homeId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
-      toast.success('Home allocation removed successfully')
+      toast.success('Home removed successfully')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to remove home allocation')
+      toast.error(error.response?.data?.error || 'Failed to remove home')
+    }
+  })
+
+  const setDefaultHomeMutation = useMutation({
+    mutationFn: ({ userId, homeId }: { userId: string; homeId: string }) => 
+      usersApi.setDefaultHome(userId, { home_id: homeId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+      toast.success('Default home updated successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update default home')
     }
   })
 
   // Filter staff based on search and filters
-  const filteredStaff = staff?.filter(member => {
+  const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = roleFilter === 'all' || member.role === roleFilter
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'active' && member.is_active) ||
                          (statusFilter === 'inactive' && !member.is_active)
+    const matchesType = typeFilter === 'all' || member.type === typeFilter
+    const matchesHome = homeFilter === 'all' || 
+                       member.homes?.some(home => home.home_id === homeFilter)
     
-    return matchesSearch && matchesRole && matchesStatus
-  }) || []
+    return matchesSearch && matchesRole && matchesStatus && matchesType && matchesHome
+  })
 
   const handleDeleteUser = (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
@@ -124,23 +149,28 @@ const StaffManagement: React.FC = () => {
 
   const handleHomeAllocation = (user: User) => {
     setSelectedUserForHomeAllocation(user)
-    setSelectedHomeForAllocation(user.home_id || '')
+    setNewHomeAllocation({ homeId: '', isDefault: false })
     setShowHomeAllocationModal(true)
   }
 
-  const handleAllocateHome = () => {
-    if (!selectedUserForHomeAllocation || !selectedHomeForAllocation) return
+  const handleAddHome = () => {
+    if (!selectedUserForHomeAllocation || !newHomeAllocation.homeId) return
     
-    allocateHomeMutation.mutate({
+    addHomeMutation.mutate({
       userId: selectedUserForHomeAllocation.id,
-      homeId: selectedHomeForAllocation
+      homeId: newHomeAllocation.homeId,
+      isDefault: newHomeAllocation.isDefault
     })
   }
 
-  const handleRemoveHomeAllocation = (userId: string, userName: string) => {
-    if (window.confirm(`Are you sure you want to remove the home allocation for ${userName}?`)) {
-      removeHomeAllocationMutation.mutate(userId)
+  const handleRemoveHome = (userId: string, homeId: string, userName: string, homeName: string) => {
+    if (window.confirm(`Are you sure you want to remove ${userName} from ${homeName}?`)) {
+      removeHomeMutation.mutate({ userId, homeId })
     }
+  }
+
+  const handleSetDefaultHome = (userId: string, homeId: string) => {
+    setDefaultHomeMutation.mutate({ userId, homeId })
   }
 
   const getRoleBadgeVariant = (role: UserRole) => {
@@ -163,10 +193,43 @@ const StaffManagement: React.FC = () => {
     }
   }
 
+  const getTypeDisplayName = (type: string) => {
+    switch (type) {
+      case 'fulltime': return 'Full Time'
+      case 'parttime': return 'Part Time'
+      case 'bank': return 'Bank'
+      default: return type
+    }
+  }
+
+  const getHomeDisplayName = (homeId: string) => {
+    if (!homes) return 'Unknown Home'
+    const home = homes.find(h => h.id === homeId)
+    return home ? home.name : 'Unknown Home'
+  }
+
   const getHomeName = (homeId: string | undefined) => {
     if (!homeId || !homes) return 'No home allocated'
     const home = homes.find(h => h.id === homeId)
     return home ? `${home.name} - ${home.location.city}` : 'Unknown home'
+  }
+
+  const getUserHomes = (user: User) => {
+    if (!user.homes || !homes) return []
+    return user.homes.map(userHome => {
+      const home = homes.find(h => h.id === userHome.home_id)
+      return {
+        ...userHome,
+        home: home,
+        name: home ? `${home.name} - ${home.location.city}` : 'Unknown home'
+      }
+    }).filter(userHome => userHome.home) // Only return homes that exist
+  }
+
+  const getAvailableHomes = (user: User) => {
+    if (!homes) return []
+    const userHomeIds = user.homes?.map(h => h.home_id) || []
+    return homes.filter(home => !userHomeIds.includes(home.id))
   }
 
   if (!permissions.canManageUsers) {
@@ -213,7 +276,7 @@ const StaffManagement: React.FC = () => {
       {/* Filters and Search */}
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -244,6 +307,47 @@ const StaffManagement: React.FC = () => {
               </select>
             </div>
 
+            {/* Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type
+              </label>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as 'all' | 'fulltime' | 'parttime' | 'bank')}
+                className="input"
+              >
+                <option value="all">All Types</option>
+                <option value="fulltime">Full Time</option>
+                <option value="parttime">Part Time</option>
+                <option value="bank">Bank</option>
+              </select>
+            </div>
+
+            {/* Home Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Home
+              </label>
+              <select
+                value={homeFilter}
+                onChange={(e) => setHomeFilter(e.target.value)}
+                className="input"
+              >
+                <option value="all">All Homes ({staff.length || 0})</option>
+                {homes.map((home) => {
+                  const homeStaffCount = staff.filter(member => 
+                    member.homes?.some(h => h.home_id === home.id)
+                  ).length || 0
+                  return (
+                    <option key={home.id} value={home.id}>
+                      {home.name} ({homeStaffCount})
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
+
             {/* Status Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -270,12 +374,40 @@ const StaffManagement: React.FC = () => {
             <div>
               <CardTitle>Staff Members</CardTitle>
               <CardDescription>
-                {filteredStaff.length} of {staff?.length || 0} staff members
+                {filteredStaff.length} of {staff.length || 0} staff members
+                {typeFilter !== 'all' && (
+                  <span className="ml-2 text-primary-600">
+                    • {typeFilter === 'fulltime' ? 'Full Time' : 
+                       typeFilter === 'parttime' ? 'Part Time' : 
+                       typeFilter === 'bank' ? 'Bank' : typeFilter}
+                  </span>
+                )}
+                {homeFilter !== 'all' && homes && (
+                  <span className="ml-2 text-primary-600">
+                    • {getHomeDisplayName(homeFilter)}
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
               <FunnelIcon className="h-5 w-5 text-gray-400" />
               <span className="text-sm text-gray-500">Filtered</span>
+              {(searchTerm || roleFilter !== 'all' || typeFilter !== 'all' || homeFilter !== 'all' || statusFilter !== 'all') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm('')
+                    setRoleFilter('all')
+                    setTypeFilter('all')
+                    setHomeFilter('all')
+                    setStatusFilter('all')
+                  }}
+                  className="ml-2 text-xs h-6 px-2"
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -303,13 +435,16 @@ const StaffManagement: React.FC = () => {
                       Role
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Contact
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Home
+                      Homes
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Skills
@@ -329,7 +464,7 @@ const StaffManagement: React.FC = () => {
                               <span className="text-sm font-medium text-white">
                                 {member.name.charAt(0)}
                               </span>
-                                </div>
+                            </div>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
@@ -347,6 +482,11 @@ const StaffManagement: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant="secondary">
+                          {getTypeDisplayName(member.type)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{member.email}</div>
                         <div className="text-sm text-gray-500">{member.phone}</div>
                       </td>
@@ -355,32 +495,60 @@ const StaffManagement: React.FC = () => {
                           {member.is_active ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {getHomeName(member.home_id)}
-                        </div>
-                        {permissions.canAllocateHomes && (
-                          <div className="mt-1">
+                      <td className="px-6 py-4">
+                        <div className="space-y-2">
+                          {getUserHomes(member).map((userHome) => (
+                            <div key={userHome.home_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                              <div className="flex items-center space-x-2">
+                                <HomeIcon className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-900">
+                                  {userHome.name}
+                                </span>
+                                {userHome.is_default && (
+                                  <StarIcon className="h-4 w-4 text-yellow-500" title="Default home" />
+                                )}
+                                {permissions.canAllocateHomes && (
+                                  <div className="flex space-x-1">
+                                    {!userHome.is_default && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleSetDefaultHome(member.id, userHome.home_id)}
+                                        className="text-xs h-6 px-2"
+                                        title="Set as default"
+                                      >
+                                        <StarIcon className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleRemoveHome(member.id, userHome.home_id, member.name, userHome.name)}
+                                      className="text-xs h-6 px-2 text-red-600 hover:text-red-700"
+                                      title="Remove from home"
+                                    >
+                                      <TrashIcon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {getUserHomes(member).length === 0 && (
+                            <span className="text-sm text-gray-500">No homes allocated</span>
+                          )}
+                          {permissions.canAllocateHomes && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleHomeAllocation(member)}
                               className="text-xs h-6 px-2"
                             >
-                              {member.home_id ? 'Change' : 'Allocate'}
+                              <PlusIcon className="h-3 w-3 mr-1" />
+                              Add Home
                             </Button>
-                            {member.home_id && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRemoveHomeAllocation(member.id, member.name)}
-                                className="text-xs h-6 px-2 ml-1 text-red-600 hover:text-red-700"
-                              >
-                                Remove
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-wrap gap-1">
@@ -440,50 +608,122 @@ const StaffManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Home Allocation Modal */}
+      {/* Enhanced Home Allocation Modal */}
       {showHomeAllocationModal && selectedUserForHomeAllocation && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Allocate Home to {selectedUserForHomeAllocation.name}
+          <div className="relative top-20 mx-auto p-6 border w-[500px] shadow-lg rounded-md bg-white">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Manage Homes for {selectedUserForHomeAllocation.name}
               </h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Home
-                </label>
-                <select
-                  value={selectedHomeForAllocation}
-                  onChange={(e) => setSelectedHomeForAllocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">No home (remove allocation)</option>
-                  {homes?.map((home) => (
-                    <option key={home.id} value={home.id}>
-                      {home.name} - {home.location.city}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>Role: <Badge variant={getRoleBadgeVariant(selectedUserForHomeAllocation.role)} className="ml-1">
+                  {getRoleDisplayName(selectedUserForHomeAllocation.role)}
+                </Badge></span>
+                <span>Type: <Badge variant="secondary" className="ml-1">
+                  {getTypeDisplayName(selectedUserForHomeAllocation.type)}
+                </Badge></span>
               </div>
-              <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowHomeAllocationModal(false)
-                    setSelectedUserForHomeAllocation(null)
-                    setSelectedHomeForAllocation('')
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleAllocateHome}
-                  disabled={allocateHomeMutation.isPending}
-                >
-                  {allocateHomeMutation.isPending ? 'Allocating...' : 'Allocate Home'}
-                </Button>
+              <p className="text-sm text-gray-600 mt-2">
+                Add new homes or manage existing allocations
+              </p>
+            </div>
+
+            {/* Current Homes */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Current Homes</h4>
+              <div className="space-y-2">
+                {getUserHomes(selectedUserForHomeAllocation).map((userHome) => (
+                  <div key={userHome.home_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <HomeIcon className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{userHome.name}</span>
+                      {userHome.is_default && (
+                        <Badge variant="success" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      {!userHome.is_default && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSetDefaultHome(selectedUserForHomeAllocation.id, userHome.home_id)}
+                          className="text-xs h-6 px-2"
+                        >
+                          Set Default
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveHome(selectedUserForHomeAllocation.id, userHome.home_id, selectedUserForHomeAllocation.name, userHome.name)}
+                        className="text-xs h-6 px-2 text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {getUserHomes(selectedUserForHomeAllocation).length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-3">No homes allocated yet</p>
+                )}
               </div>
+            </div>
+
+            {/* Add New Home */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Add New Home</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Home
+                  </label>
+                  <select
+                    value={newHomeAllocation.homeId}
+                    onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, homeId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Choose a home...</option>
+                    {getAvailableHomes(selectedUserForHomeAllocation).map((home) => (
+                      <option key={home.id} value={home.id}>
+                        {home.name} - {home.location.city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    checked={newHomeAllocation.isDefault}
+                    onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, isDefault: e.target.checked }))}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="isDefault" className="text-sm text-gray-700">
+                    Set as default home
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowHomeAllocationModal(false)
+                  setSelectedUserForHomeAllocation(null)
+                  setNewHomeAllocation({ homeId: '', isDefault: false })
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleAddHome}
+                disabled={!newHomeAllocation.homeId || addHomeMutation.isPending}
+              >
+                {addHomeMutation.isPending ? 'Adding...' : 'Add Home'}
+              </Button>
             </div>
           </div>
         </div>

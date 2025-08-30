@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { format, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -10,7 +10,8 @@ import {
   UserIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User } from '@/types'
+import { Shift, User, extractServiceId, extractServiceName, WeeklySchedule } from '@/types'
+import { weeklySchedulesApi } from '@/lib/api'
 
 interface RotaGridProps {
   weekStart: Date
@@ -20,10 +21,13 @@ interface RotaGridProps {
   onAddShift: (date: Date, time: string) => void
   onEditShift: (shift: Shift) => void
   onDeleteShift: (shiftId: string) => void
-  onAssignStaff: (shiftId: string, userId: string) => void
+  onAssignStaff: (shiftId: string, userId: string) => Promise<{ success: boolean; error?: string }>
   onUnassignStaff: (shiftId: string, userId: string) => void
   canEdit: boolean
   isLoading?: boolean
+  conflicts?: any[]
+  homeId: string // Add homeId prop
+  onCreateShiftsFromSchedule?: () => Promise<void> // Add callback for creating shifts
 }
 
 const RotaGrid: React.FC<RotaGridProps> = ({
@@ -36,10 +40,59 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   onDeleteShift,
   onAssignStaff,
   onUnassignStaff,
-  canEdit
+  canEdit,
+  conflicts = [],
+  homeId,
+  onCreateShiftsFromSchedule
 }) => {
   
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
+  const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule | null>(null)
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
+  const [isCreatingShifts, setIsCreatingShifts] = useState(false)
+
+  // Load weekly schedule when homeId changes
+  useEffect(() => {
+    if (homeId) {
+      loadWeeklySchedule()
+    }
+  }, [homeId])
+
+  // Auto-create shifts from weekly schedule when no shifts exist
+  useEffect(() => {
+    if (weeklySchedule && shifts.length === 0 && onCreateShiftsFromSchedule && canEdit) {
+      // Check if weekly schedule has any active shifts
+      const hasActiveShifts = Object.values(weeklySchedule.schedule).some(day => 
+        day.is_active && day.shifts.length > 0
+      )
+      
+      if (hasActiveShifts) {
+        console.log('Auto-creating shifts from weekly schedule...')
+        setIsCreatingShifts(true)
+        onCreateShiftsFromSchedule()
+          .then(() => {
+            setIsCreatingShifts(false)
+          })
+          .catch(() => {
+            setIsCreatingShifts(false)
+          })
+      }
+    }
+  }, [weeklySchedule, shifts.length, onCreateShiftsFromSchedule, canEdit])
+
+  const loadWeeklySchedule = async () => {
+    try {
+      setIsLoadingSchedule(true)
+      const schedule = await weeklySchedulesApi.getByHome(homeId)
+      setWeeklySchedule(schedule)
+    } catch (error) {
+      console.error('Failed to load weekly schedule:', error)
+      // If no weekly schedule exists, create empty structure
+      setWeeklySchedule(null)
+    } finally {
+      setIsLoadingSchedule(false)
+    }
+  }
 
   // Generate week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -64,9 +117,10 @@ const RotaGrid: React.FC<RotaGridProps> = ({
       
       case 'senior_staff':
         // Senior staff see shifts for all users in their home
-        if (currentUser.home_id) {
+        if (currentUser.homes && currentUser.homes.length > 0) {
+          const userHomeIds = currentUser.homes.map(home => home.home_id)
           const homeStaffIds = staff
-            .filter(member => member.home_id === currentUser.home_id)
+            .filter(member => member.homes && member.homes.some(home => userHomeIds.includes(home.home_id)))
             .map(member => member.id)
           
           return shifts.filter(shift => {
@@ -93,13 +147,34 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
   const filteredShifts = getFilteredShifts()
 
+  // Check if a shift has conflicts
+  const hasShiftConflicts = (shiftId: string) => {
+    return conflicts.some(conflict => conflict.shift?.id === shiftId)
+  }
+
   // Get shifts for a specific date and time
   const getShiftsForSlot = (date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd')
     return filteredShifts.filter(shift => {
-              const shiftDate = shift.date
+      const shiftDate = shift.date
       const shiftStart = shift.start_time.substring(0, 5)
       return shiftDate === dateStr && shiftStart === time
+    })
+  }
+
+  // Get weekly schedule shifts for a specific date and time
+  const getWeeklyScheduleShiftsForSlot = (date: Date, time: string) => {
+    if (!weeklySchedule) return []
+    
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const dayName = dayNames[date.getDay()]
+    const daySchedule = weeklySchedule.schedule[dayName as keyof typeof weeklySchedule.schedule]
+    
+    if (!daySchedule || !daySchedule.is_active) return []
+    
+    return daySchedule.shifts.filter(shift => {
+      const shiftStart = shift.start_time.substring(0, 5)
+      return shiftStart === time
     })
   }
 
@@ -115,14 +190,46 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   }
 
   // Handle staff assignment
-  const handleAssignStaff = (shiftId: string, userId: string) => {
-    onAssignStaff(shiftId, userId)
-    setShowStaffSelector(null)
+  const handleAssignStaff = async (shiftId: string, userId: string) => {
+    try {
+      const result = await onAssignStaff(shiftId, userId)
+      if (result.success) {
+        setShowStaffSelector(null)
+      } else {
+        // Error will be handled by the parent component via toast
+        console.error('Staff assignment failed:', result.error)
+      }
+    } catch (error) {
+      console.error('Unexpected error during staff assignment:', error)
+    }
   }
 
   // Handle staff unassignment
   const handleUnassignStaff = (shiftId: string, userId: string) => {
     onUnassignStaff(shiftId, userId)
+  }
+
+  // Check if a slot has weekly schedule shifts
+  const hasWeeklyScheduleShifts = (date: Date, time: string) => {
+    const weeklyShifts = getWeeklyScheduleShiftsForSlot(date, time)
+    return weeklyShifts.length > 0
+  }
+
+  // Get the first weekly schedule shift for a slot (for display purposes)
+  const getFirstWeeklyScheduleShift = (date: Date, time: string) => {
+    const weeklyShifts = getWeeklyScheduleShiftsForSlot(date, time)
+    return weeklyShifts[0] || null
+  }
+
+  if (isLoadingSchedule || isCreatingShifts) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+        <div className="ml-3 text-gray-600">
+          {isCreatingShifts ? 'Creating shifts from weekly schedule...' : 'Loading weekly schedule...'}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -154,20 +261,47 @@ const RotaGrid: React.FC<RotaGridProps> = ({
             {/* Day columns */}
             {weekDays.map((day) => {
               const dayShifts = getShiftsForSlot(day, time)
+              const hasWeeklySchedule = hasWeeklyScheduleShifts(day, time)
+              const weeklyShift = getFirstWeeklyScheduleShift(day, time)
               
               return (
                 <div key={`${day.toISOString()}-${time}`} className="min-h-[80px] border-b border-r relative">
                   {dayShifts.length === 0 ? (
-                    // Empty slot - show add button if can edit
-                    canEdit && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
-                        onClick={() => onAddShift(day, time)}
-                      >
-                        <PlusIcon className="h-4 w-4 text-gray-400" />
-                      </Button>
+                    // No actual shifts - show weekly schedule if exists, otherwise add button
+                    hasWeeklySchedule ? (
+                      // Show weekly schedule shift template
+                      <div className="p-2 text-xs bg-gray-100 border border-gray-300 rounded">
+                        <div className="text-gray-600 mb-1">
+                          <ClockIcon className="inline h-3 w-3 mr-1" />
+                          {weeklyShift?.start_time.substring(0, 5)} - {weeklyShift?.end_time.substring(0, 5)}
+                        </div>
+                        <div className="text-gray-500 mb-1">
+                          {weeklyShift?.shift_type} • {weeklyShift?.required_staff_count} staff needed
+                        </div>
+                        {canEdit && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-full text-xs border-dashed border-gray-400 hover:border-primary-400 hover:bg-primary-50"
+                            onClick={() => onAddShift(day, time)}
+                          >
+                            <PlusIcon className="h-3 w-3 mr-1" />
+                            Create Shift
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      // Empty slot - show add button if can edit
+                      canEdit && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
+                          onClick={() => onAddShift(day, time)}
+                        >
+                          <PlusIcon className="h-4 w-4 text-gray-400" />
+                        </Button>
+                      )
                     )
                   ) : (
                     // Show shifts in this time slot
@@ -178,7 +312,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                         return (
                           <div
                             key={shift.id}
-                            className="bg-primary-50 border border-primary-200 rounded p-2 text-xs"
+                            className={`rounded p-2 text-xs ${
+                              hasShiftConflicts(shift.id)
+                                ? 'bg-red-50 border-2 border-red-300'
+                                : 'bg-primary-50 border border-primary-200'
+                            }`}
                           >
                             {/* Shift header */}
                             <div className="flex items-center justify-between mb-1">
@@ -187,6 +325,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                 <span className="font-medium text-primary-900">
                                   {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                 </span>
+                                {hasShiftConflicts(shift.id) && (
+                                  <Badge variant="danger" className="text-xs ml-2">
+                                    Conflict
+                                  </Badge>
+                                )}
                               </div>
                               {canEdit && (
                                 <div className="flex space-x-1">
@@ -212,7 +355,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
                             {/* Service info */}
                             <div className="text-primary-700 mb-2">
-                              Service: {typeof shift.service_id === 'string' ? shift.service_id : shift.service_id.name || 'Unknown Service'}
+                              Service: {extractServiceName(shift.service_id) || 'Unknown Service'}
                             </div>
 
                             {/* Staff assignments */}

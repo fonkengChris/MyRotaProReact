@@ -15,7 +15,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
-import { Shift, Home, Service } from '@/types'
+import { extractUserDefaultHomeId } from '@/types'
+import { Shift, Home, Service, extractServiceId } from '@/types'
 
 const MySchedule: React.FC = () => {
   const { user } = useAuth()
@@ -28,31 +29,34 @@ const MySchedule: React.FC = () => {
   const currentWeekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 })
 
   // Fetch user's assigned shifts for the current week
-  const { data: shifts, isLoading: shiftsLoading } = useQuery({
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['myShifts', format(currentWeekStart, 'yyyy-MM-dd'), user?.id],
     queryFn: () => shiftsApi.getAll({
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch user's home details
   const { data: home } = useQuery({
-    queryKey: ['home', user?.home_id],
-    queryFn: () => homesApi.getById(user!.home_id!),
-    enabled: !!user?.home_id
+    queryKey: ['home', extractUserDefaultHomeId(user)],
+    queryFn: () => homesApi.getById(extractUserDefaultHomeId(user)!),
+    enabled: !!extractUserDefaultHomeId(user),
+    select: (data) => data || null
   })
 
   // Fetch services for shift details
-  const { data: services } = useQuery({
-    queryKey: ['services', user?.home_id],
-    queryFn: () => servicesApi.getAll(user!.home_id!),
-    enabled: !!user?.home_id
+  const { data: services = [] } = useQuery({
+    queryKey: ['services', extractUserDefaultHomeId(user)],
+    queryFn: () => servicesApi.getAll(extractUserDefaultHomeId(user)!),
+    enabled: !!extractUserDefaultHomeId(user),
+    select: (data) => Array.isArray(data) ? data : []
   })
 
   // Filter shifts to only show those assigned to the current user
-  const myShifts = shifts?.filter(shift => 
+  const myShifts = shifts.filter(shift => 
     shift.assigned_staff?.some(assignment => assignment.user_id === user?.id)
   ) || []
 
@@ -82,11 +86,12 @@ const MySchedule: React.FC = () => {
 
   // Get service name by ID
   const getServiceName = (serviceId: string | { id: string; name: string }) => {
-    if (typeof serviceId === 'string') {
-      const service = services?.find(s => s.id === serviceId)
+    const serviceIdStr = extractServiceId(serviceId)
+    if (serviceIdStr) {
+      const service = services?.find(s => s.id === serviceIdStr)
       return service?.name || 'Unknown Service'
     }
-    return serviceId.name || 'Unknown Service'
+    return 'Unknown Service'
   }
 
   if (!user) {

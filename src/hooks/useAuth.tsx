@@ -22,18 +22,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (token) {
+    if (token && !user) {
       checkAuth()
     } else {
       setIsLoading(false)
     }
-  }, [])
+  }, [user])
 
   const checkAuth = async () => {
     try {
       const userData = await authApi.getCurrentUser()
       setUser(userData)
     } catch (error) {
+      console.error('🔐 useAuth: checkAuth error:', error)
       localStorage.removeItem('token')
     } finally {
       setIsLoading(false)
@@ -41,14 +42,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await authApi.login(credentials)
-    const { user: userData, token } = response
-    
-    localStorage.setItem('token', token)
-    setUser(userData)
-    
-    // Clear any existing queries
-    queryClient.clear()
+    try {
+      const response = await authApi.login(credentials)
+      
+      // Check if response has the expected structure
+      if (!response || !response.user || !response.token) {
+        console.error('🔐 useAuth: Invalid response structure:', response)
+        throw new Error('Invalid response structure from login API')
+      }
+      
+      const { user: userData, token } = response
+      
+      localStorage.setItem('token', token)
+      
+      setUser(userData)
+      
+      // Clear any existing queries
+      queryClient.clear()
+    } catch (error) {
+      console.error('🔐 useAuth: Login error:', error)
+      throw error
+    }
   }
 
   const register = async (data: RegisterData) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Home, User } from '@/types'
+import { Home, User, extractManagerId } from '@/types'
 import { homesApi, usersApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -53,7 +53,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
             city: home.location.city,
             postcode: home.location.postcode
           },
-          manager_id: typeof home.manager_id === 'string' ? home.manager_id : home.manager_id.id,
+          manager_id: extractManagerId(home.manager_id) || '',
           contact_info: {
             phone: home.contact_info.phone,
             email: home.contact_info.email

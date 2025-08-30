@@ -8,10 +8,9 @@ import Button from '@/components/ui/Button'
 import { 
   XMarkIcon,
   ClockIcon,
-  UserGroupIcon,
-  TagIcon
+ 
 } from '@heroicons/react/24/outline'
-import { Shift, Service, Home } from '@/types'
+import { Shift, Service, extractHomeId, extractServiceId } from '@/types'
 
 const shiftSchema = z.object({
   home_id: z.string().min(1, 'Home is required'),
@@ -221,8 +220,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     if (isOpen) {
       if (shift) {
         // Editing existing shift
-        setValue('home_id', typeof shift.home_id === 'string' ? shift.home_id : shift.home_id?.id || '')
-        setValue('service_id', typeof shift.service_id === 'string' ? shift.service_id : shift.service_id?.id || '')
+        setValue('home_id', extractHomeId(shift.home_id) || '')
+        setValue('service_id', extractServiceId(shift.service_id) || '')
         setValue('start_time', shift.start_time.substring(0, 5))
         setValue('end_time', shift.end_time.substring(0, 5))
         setValue('required_staff_count', shift.required_staff_count || 1)
@@ -243,7 +242,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
           // Find the first service that supports this home
           const availableService = services.find(service => 
             service.home_ids && service.home_ids.some((home: any) => 
-              (typeof home === 'string' ? home : home.id) === homeId
+              extractHomeId(home) === homeId
             )
           )
           
@@ -363,7 +362,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     <option value="">Select a home</option>
                     {(() => {
                       const selectedService = services.find(s => s.id === watch('service_id'))
-                      if (!selectedService || typeof selectedService === 'string') {
+                      if (!selectedService) {
                         return null
                       }
                       
@@ -372,8 +371,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                       
                       // Deduplicate homes by ID to prevent React key warnings
                       const uniqueHomes = availableHomes.reduce((acc: any[], home: any) => {
-                        const homeId = home.id || home
-                        if (!acc.find(h => (h.id || h) === homeId)) {
+                        const homeId = extractHomeId(home) || home
+                        if (!acc.find(h => extractHomeId(h) === homeId)) {
                           acc.push(home)
                         }
                         return acc
@@ -382,7 +381,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
                       
                       return uniqueHomes.map((home: any) => (
-                        <option key={home.id || home} value={home.id || home}>
+                        <option key={extractHomeId(home) || home} value={extractHomeId(home) || home}>
                           {typeof home === 'string' ? home : `${home.name} - ${home.location?.city || 'Unknown'}`}
                         </option>
                       ))
@@ -399,13 +398,13 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   )}
                   {watch('service_id') && (() => {
                     const selectedService = services.find(s => s.id === watch('service_id'))
-                    if (!selectedService || typeof selectedService === 'string') return null
+                    if (!selectedService) return null
                     const availableHomes = selectedService.home_ids || []
                     
                     // Deduplicate homes by ID for accurate count
                     const uniqueHomes = availableHomes.reduce((acc: any[], home: any) => {
-                      const homeId = home.id || home
-                      if (!acc.find(h => (h.id || h) === homeId)) {
+                      const homeId = extractHomeId(home) || home
+                      if (!acc.find(h => extractHomeId(h) === homeId)) {
                         acc.push(home)
                       }
                       return acc

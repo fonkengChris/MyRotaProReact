@@ -204,6 +204,16 @@ export const shiftsApi = {
     const response = await api.delete<Shift>(`/shifts/${shiftId}/assign/${userId}`)
     return response.data
   },
+
+  // Check for scheduling conflicts
+  checkConflicts: async (params: {
+    home_id: string
+    start_date: string
+    end_date: string
+  }): Promise<any> => {
+    const response = await api.get('/shifts/conflicts/check', { params })
+    return response.data
+  },
 }
 
 // Rotas API
@@ -299,6 +309,7 @@ export const availabilityApi = {
 export const timeOffApi = {
   getAll: async (params?: {
     user_id?: string
+    home_id?: string
     status?: string
     start_date?: string
     end_date?: string
@@ -412,13 +423,31 @@ export const usersApi = {
     return response.data
   },
 
+  // Legacy methods for backward compatibility
   allocateHome: async (userId: string, homeId: string): Promise<User> => {
-    const response = await api.post<User>(`/users/${userId}/allocate-home`, { home_id: homeId })
+    const response = await api.post<User>(`/users/${userId}/add-home`, { home_id: homeId, is_default: false })
     return response.data
   },
 
   removeHomeAllocation: async (userId: string): Promise<User> => {
+    // This method is deprecated - use removeHome instead
     const response = await api.delete<User>(`/users/${userId}/allocate-home`)
+    return response.data
+  },
+
+  // New home management methods
+  addHome: async (userId: string, data: { home_id: string; is_default: boolean }): Promise<User> => {
+    const response = await api.post<User>(`/users/${userId}/add-home`, data)
+    return response.data
+  },
+
+  removeHome: async (userId: string, homeId: string): Promise<User> => {
+    const response = await api.delete<User>(`/users/${userId}/remove-home/${homeId}`)
+    return response.data
+  },
+
+  setDefaultHome: async (userId: string, data: { home_id: string }): Promise<User> => {
+    const response = await api.post<User>(`/users/${userId}/set-default-home`, data)
     return response.data
   },
 }
@@ -435,7 +464,7 @@ export const weeklySchedulesApi = {
     return response.data;
   },
 
-  create: async (data: Omit<WeeklySchedule, 'id' | 'created_at' | 'updated_at'>): Promise<WeeklySchedule> => {
+  create: async (data: Omit<WeeklySchedule, '_id' | 'created_at' | 'updated_at'>): Promise<WeeklySchedule> => {
     const response = await api.post('/weekly-schedules', data);
     return response.data;
   },
