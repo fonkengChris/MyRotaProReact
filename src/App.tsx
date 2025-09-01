@@ -7,6 +7,7 @@ import Setup from '@/pages/Setup'
 import Dashboard from '@/pages/Dashboard'
 import RotaEditor from '@/pages/RotaEditor'
 import MySchedule from '@/pages/MySchedule'
+import MyHours from '@/pages/MyHours'
 import StaffManagement from '@/pages/StaffManagement'
 import Settings from '@/pages/Settings'
 import Availability from '@/pages/Availability'
@@ -45,6 +46,7 @@ function App() {
         <Route path="/rota/:weekStart?" element={<RotaEditor />} />
         <Route path="/weekly-schedules" element={<WeeklySchedules />} />
         <Route path="/my-schedule" element={<MySchedule />} />
+        <Route path="/my-hours" element={<MyHours />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/staff" element={<StaffManagement />} />
         <Route path="/homes" element={<Homes />} />

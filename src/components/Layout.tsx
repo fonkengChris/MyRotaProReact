@@ -12,7 +12,8 @@ import {
   ArrowRightOnRectangleIcon,
   ClockIcon,
   BuildingOfficeIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -36,6 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       : []
     ),
     { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },
+    { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),

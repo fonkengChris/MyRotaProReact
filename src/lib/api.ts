@@ -170,6 +170,7 @@ export const shiftsApi = {
     date?: string
     start_date?: string
     end_date?: string
+    user_id?: string
   }): Promise<Shift[]> => {
     const response = await api.get<Shift[]>('/shifts', { params })
     return response.data

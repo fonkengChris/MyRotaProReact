@@ -67,7 +67,6 @@ const RotaGrid: React.FC<RotaGridProps> = ({
       )
       
       if (hasActiveShifts) {
-        console.log('Auto-creating shifts from weekly schedule...')
         setIsCreatingShifts(true)
         onCreateShiftsFromSchedule()
           .then(() => {
