@@ -14,7 +14,8 @@ import {
   FunnelIcon,
   UsersIcon,
   HomeIcon,
-  StarIcon
+  StarIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
 import { User, UserRole, Home, extractHomeId } from '@/types'
@@ -36,6 +37,11 @@ const StaffManagement: React.FC = () => {
     homeId: string;
     isDefault: boolean;
   }>({ homeId: '', isDefault: false })
+
+  // User editing state
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editFormData, setEditFormData] = useState<Partial<User>>({})
 
   // Fetch staff data
   const { data: staff = [], isLoading } = useQuery({
@@ -119,6 +125,22 @@ const StaffManagement: React.FC = () => {
     }
   })
 
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: Partial<User> }) => 
+      usersApi.update(userId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+      toast.success('Staff member updated successfully')
+      setShowEditModal(false)
+      setSelectedUserForEdit(null)
+      setEditFormData({})
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update staff member')
+    }
+  })
+
   // Filter staff based on search and filters
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,7 +151,10 @@ const StaffManagement: React.FC = () => {
                          (statusFilter === 'inactive' && !member.is_active)
     const matchesType = typeFilter === 'all' || member.type === typeFilter
     const matchesHome = homeFilter === 'all' || 
-                       member.homes?.some(home => home.home_id === homeFilter)
+                       member.homes?.some(home => {
+                         const userHomeId = typeof home.home_id === 'string' ? home.home_id : String(home.home_id)
+                         return userHomeId === homeFilter
+                       })
     
     return matchesSearch && matchesRole && matchesStatus && matchesType && matchesHome
   })
@@ -171,6 +196,38 @@ const StaffManagement: React.FC = () => {
 
   const handleSetDefaultHome = (userId: string, homeId: string) => {
     setDefaultHomeMutation.mutate({ userId, homeId })
+  }
+
+  const handleEditUser = (user: User) => {
+    setSelectedUserForEdit(user)
+    setEditFormData({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      type: user.type,
+      min_hours_per_week: user.min_hours_per_week,
+      max_hours_per_week: user.max_hours_per_week,
+      skills: user.skills,
+      preferred_shift_types: user.preferred_shift_types,
+      is_active: user.is_active
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateUser = () => {
+    if (!selectedUserForEdit) return
+    
+    updateUserMutation.mutate({
+      userId: selectedUserForEdit.id,
+      data: editFormData
+    })
+  }
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false)
+    setSelectedUserForEdit(null)
+    setEditFormData({})
   }
 
   const getRoleBadgeVariant = (role: UserRole) => {
@@ -217,7 +274,8 @@ const StaffManagement: React.FC = () => {
   const getUserHomes = (user: User) => {
     if (!user.homes || !homes) return []
     return user.homes.map(userHome => {
-      const home = homes.find(h => h.id === userHome.home_id)
+      const userHomeId = typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)
+      const home = homes.find(h => h.id === userHomeId)
       return {
         ...userHome,
         home: home,
@@ -228,7 +286,9 @@ const StaffManagement: React.FC = () => {
 
   const getAvailableHomes = (user: User) => {
     if (!homes) return []
-    const userHomeIds = user.homes?.map(h => h.home_id) || []
+    const userHomeIds = user.homes?.map(h => 
+      typeof h.home_id === 'string' ? h.home_id : String(h.home_id)
+    ) || []
     return homes.filter(home => !userHomeIds.includes(home.id))
   }
 
@@ -260,16 +320,6 @@ const StaffManagement: React.FC = () => {
           <p className="text-gray-600 mt-1">
             Manage staff members, roles, and permissions
           </p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Button
-            variant="primary"
-            size="sm"
-            className="w-full sm:w-auto"
-          >
-            <UserPlusIcon className="h-4 w-4 mr-2" />
-            Add Staff Member
-          </Button>
         </div>
       </div>
 
@@ -337,7 +387,10 @@ const StaffManagement: React.FC = () => {
                 <option value="all">All Homes ({staff.length || 0})</option>
                 {homes.map((home) => {
                   const homeStaffCount = staff.filter(member => 
-                    member.homes?.some(h => h.home_id === home.id)
+                    member.homes?.some(h => {
+        const userHomeId = typeof h.home_id === 'string' ? h.home_id : String(h.home_id)
+        return userHomeId === home.id
+      })
                   ).length || 0
                   return (
                     <option key={home.id} value={home.id}>
@@ -441,13 +494,7 @@ const StaffManagement: React.FC = () => {
                       Contact
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Homes
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Skills
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -490,15 +537,10 @@ const StaffManagement: React.FC = () => {
                         <div className="text-sm text-gray-900">{member.email}</div>
                         <div className="text-sm text-gray-500">{member.phone}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={member.is_active ? 'success' : 'danger'}>
-                          {member.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
                           {getUserHomes(member).map((userHome) => (
-                            <div key={userHome.home_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                            <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                               <div className="flex items-center space-x-2">
                                 <HomeIcon className="h-4 w-4 text-gray-400" />
                                 <span className="text-sm text-gray-900">
@@ -513,7 +555,7 @@ const StaffManagement: React.FC = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleSetDefaultHome(member.id, userHome.home_id)}
+                                        onClick={() => handleSetDefaultHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id))}
                                         className="text-xs h-6 px-2"
                                         title="Set as default"
                                       >
@@ -523,7 +565,7 @@ const StaffManagement: React.FC = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleRemoveHome(member.id, userHome.home_id, member.name, userHome.name)}
+                                      onClick={() => handleRemoveHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id), member.name, userHome.name)}
                                       className="text-xs h-6 px-2 text-red-600 hover:text-red-700"
                                       title="Remove from home"
                                     >
@@ -550,29 +592,13 @@ const StaffManagement: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {member.skills.slice(0, 2).map((skill) => (
-                            <span
-                              key={skill}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                            >
-                              {skill.replace('_', ' ')}
-                            </span>
-                          ))}
-                          {member.skills.length > 2 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              +{member.skills.length - 2} more
-                            </span>
-                          )}
-                        </div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            onClick={() => handleEditUser(member)}
                             title="Edit"
                           >
                             <PencilIcon className="h-4 w-4" />
@@ -634,7 +660,7 @@ const StaffManagement: React.FC = () => {
               <h4 className="text-sm font-medium text-gray-700 mb-3">Current Homes</h4>
               <div className="space-y-2">
                 {getUserHomes(selectedUserForHomeAllocation).map((userHome) => (
-                  <div key={userHome.home_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                     <div className="flex items-center space-x-2">
                       <HomeIcon className="h-4 w-4 text-gray-400" />
                       <span className="text-sm text-gray-900">{userHome.name}</span>
@@ -647,7 +673,7 @@ const StaffManagement: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleSetDefaultHome(selectedUserForHomeAllocation.id, userHome.home_id)}
+                          onClick={() => handleSetDefaultHome(selectedUserForHomeAllocation.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id))}
                           className="text-xs h-6 px-2"
                         >
                           Set Default
@@ -656,7 +682,7 @@ const StaffManagement: React.FC = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveHome(selectedUserForHomeAllocation.id, userHome.home_id, selectedUserForHomeAllocation.name, userHome.name)}
+                        onClick={() => handleRemoveHome(selectedUserForHomeAllocation.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id), selectedUserForHomeAllocation.name, userHome.name)}
                         className="text-xs h-6 px-2 text-red-600 hover:text-red-700"
                       >
                         Remove
@@ -723,6 +749,225 @@ const StaffManagement: React.FC = () => {
                 disabled={!newHomeAllocation.homeId || addHomeMutation.isPending}
               >
                 {addHomeMutation.isPending ? 'Adding...' : 'Add Home'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Edit Modal */}
+      {showEditModal && selectedUserForEdit && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-[600px] shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-medium text-gray-900">
+                Edit Staff Member: {selectedUserForEdit.name}
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleCloseEditModal}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Basic Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.name || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="input w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={editFormData.email || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="input w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={editFormData.phone || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={editFormData.is_active ? 'active' : 'inactive'}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, is_active: e.target.value === 'active' }))}
+                      className="input w-full"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Role and Type */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Role & Employment</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Role
+                    </label>
+                    <select
+                      value={editFormData.role || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
+                      className="input w-full"
+                      required
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="home_manager">Home Manager</option>
+                      <option value="senior_staff">Senior Staff</option>
+                      <option value="support_worker">Support Worker</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Employment Type
+                    </label>
+                    <select
+                      value={editFormData.type || ''}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, type: e.target.value as 'fulltime' | 'parttime' | 'bank' }))}
+                      className="input w-full"
+                      required
+                    >
+                      <option value="fulltime">Full Time</option>
+                      <option value="parttime">Part Time</option>
+                      <option value="bank">Bank</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hours */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Hours Requirements</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Minimum Hours per Week
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={editFormData.min_hours_per_week || 0}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, min_hours_per_week: parseInt(e.target.value) || 0 }))}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Maximum Hours per Week
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={editFormData.max_hours_per_week || 0}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, max_hours_per_week: parseInt(e.target.value) || 0 }))}
+                      className="input w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Skills</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['medication', 'personal_care', 'domestic_support', 'social_support', 'specialist_care'].map((skill) => (
+                    <label key={skill} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={editFormData.skills?.includes(skill as any) || false}
+                        onChange={(e) => {
+                          const currentSkills = editFormData.skills || []
+                          if (e.target.checked) {
+                            setEditFormData(prev => ({ ...prev, skills: [...currentSkills, skill as any] }))
+                          } else {
+                            setEditFormData(prev => ({ ...prev, skills: currentSkills.filter(s => s !== skill) }))
+                          }
+                        }}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">
+                        {skill.replace('_', ' ')}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preferred Shift Types */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Preferred Shift Types</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['morning', 'afternoon', 'evening', 'night', 'overtime', 'long_day', 'split'].map((shiftType) => (
+                    <label key={shiftType} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={editFormData.preferred_shift_types?.includes(shiftType as any) || false}
+                        onChange={(e) => {
+                          const currentShiftTypes = editFormData.preferred_shift_types || []
+                          if (e.target.checked) {
+                            setEditFormData(prev => ({ ...prev, preferred_shift_types: [...currentShiftTypes, shiftType as any] }))
+                          } else {
+                            setEditFormData(prev => ({ ...prev, preferred_shift_types: currentShiftTypes.filter(s => s !== shiftType) }))
+                          }
+                        }}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">
+                        {shiftType.replace('_', ' ')}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+              <Button
+                variant="outline"
+                onClick={handleCloseEditModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleUpdateUser}
+                disabled={updateUserMutation.isPending}
+              >
+                {updateUserMutation.isPending ? 'Updating...' : 'Update Staff Member'}
               </Button>
             </div>
           </div>

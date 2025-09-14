@@ -21,6 +21,7 @@ import toast from 'react-hot-toast'
 import RotaGrid from '@/components/RotaGrid'
 import ShiftModal from '@/components/ShiftModal'
 import ConflictAlert from '@/components/ConflictAlert'
+import MultiHomeSelector from '@/components/MultiHomeSelector'
 import { Shift, extractUserDefaultHomeId } from '@/types'
 
 const RotaEditor: React.FC = () => {
@@ -29,6 +30,13 @@ const RotaEditor: React.FC = () => {
   const { user } = useAuth()
   const permissions = usePermissions()
   const queryClient = useQueryClient()
+  
+  // Helper function to ensure home ID is always a string
+  const ensureStringHomeId = (homeId: any): string => {
+    if (typeof homeId === 'string') return homeId
+    if (homeId && typeof homeId === 'object' && homeId.id) return String(homeId.id)
+    return String(homeId || '')
+  }
   
   // Parse week start date from URL or use current week
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -42,13 +50,17 @@ const RotaEditor: React.FC = () => {
 
   // Home selection state
   const [selectedHomeId, setSelectedHomeId] = useState<string>('')
+  const [selectedHomesForAI, setSelectedHomesForAI] = useState<string[]>([])
+  const [showMultiHomeSelector, setShowMultiHomeSelector] = useState(false)
 
   // Auto-select user's home if they have one assigned
   useEffect(() => {
     if (user && !selectedHomeId) {
       const homeId = extractUserDefaultHomeId(user)
       if (homeId) {
-        setSelectedHomeId(homeId)
+        // Ensure homeId is always a string
+        const stringHomeId = typeof homeId === 'string' ? homeId : String(homeId)
+        setSelectedHomeId(stringHomeId)
       }
     }
   }, [user, selectedHomeId])
@@ -70,11 +82,14 @@ const RotaEditor: React.FC = () => {
   // Fetch rota data for current week
   const { data: rota = [], isLoading: rotaLoading } = useQuery({
     queryKey: ['rota', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
-    queryFn: () => rotasApi.getAll({
-      home_id: selectedHomeId,
-      week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
-      week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
-    }),
+    queryFn: () => {
+      const homeId = ensureStringHomeId(selectedHomeId)
+      return rotasApi.getAll({
+        home_id: homeId,
+        week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+        week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+      })
+    },
     enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
@@ -83,7 +98,7 @@ const RotaEditor: React.FC = () => {
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => shiftsApi.getAll({
-      home_id: selectedHomeId,
+      home_id: ensureStringHomeId(selectedHomeId),
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
@@ -95,7 +110,7 @@ const RotaEditor: React.FC = () => {
   const { data: staff = [], isLoading: staffLoading } = useQuery({
     queryKey: ['staff', selectedHomeId],
     queryFn: () => usersApi.getAll({ 
-      home_id: selectedHomeId
+      home_id: ensureStringHomeId(selectedHomeId)
     }),
     enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
@@ -104,7 +119,7 @@ const RotaEditor: React.FC = () => {
   // Fetch services
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services', selectedHomeId],
-    queryFn: () => servicesApi.getAll(selectedHomeId), // Fetch services for selected home
+    queryFn: () => servicesApi.getAll(ensureStringHomeId(selectedHomeId)), // Fetch services for selected home
     enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
@@ -113,7 +128,7 @@ const RotaEditor: React.FC = () => {
   const { data: conflicts = { totalConflicts: 0, conflicts: [] }, isLoading: conflictsLoading } = useQuery({
     queryKey: ['conflicts', selectedHomeId, format(currentWeekStart, 'yyyy-MM-dd'), format(currentWeekEnd, 'yyyy-MM-dd')],
     queryFn: () => shiftsApi.checkConflicts({
-      home_id: selectedHomeId,
+      home_id: ensureStringHomeId(selectedHomeId),
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
@@ -147,7 +162,7 @@ const RotaEditor: React.FC = () => {
     navigate(`/rota/${format(weekStart, 'yyyy-MM-dd')}`)
   }
 
-  // AI Generation
+  // AI Generation for single home
   const handleAIGenerate = async () => {
     try {
       if (!selectedHomeId) {
@@ -177,17 +192,17 @@ const RotaEditor: React.FC = () => {
       // Use the first available service for AI generation
       const selectedService = services[0]
       
-      // Always use current week for AI generation to avoid past date issues
-      const now = new Date()
-      const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
-      const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
+      // Use the component's current week state (the week the user is viewing)
+      // const now = new Date()
+      // const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
+      // const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
       
-      toast.loading('Generating rota with AI for current week...')
+      toast.loading(`Generating rota with AI for ${selectedHomeId}...`)
       
       const result = await aiSolverApi.generateRota({
         week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
         week_end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
-        home_id: selectedHomeId,
+        home_ids: ensureStringHomeId(selectedHomeId),
         service_id: selectedService.id,
         existing_shifts: shifts // Pass existing shifts from rota grid
       })
@@ -195,9 +210,109 @@ const RotaEditor: React.FC = () => {
       toast.dismiss()
       
       if (result.data?.success) {
-        toast.success('AI rota generated successfully!')
+        // Show success message with employment type distribution if available
+        let successMessage = 'AI rota generated successfully!'
+        
+        if (result.summary) {
+          successMessage += ` ${result.summary}`
+        }
+        
+        // Add note about automatic shift creation
+        if (shifts.length === 0) {
+          successMessage += ' Shifts were automatically created from weekly schedules where needed.'
+        }
+        
+        // Add information about double booking prevention
+        if (result.data.total_homes_considered && result.data.total_homes_considered > 1) {
+          successMessage += ` Considered ${result.data.total_homes_considered} total homes to prevent double booking.`
+        }
+        
+        toast.success(successMessage, { duration: 8000 })
+        
         // Refresh the shifts data to show new assignments
         queryClient.invalidateQueries({ queryKey: ['shifts'] })
+        queryClient.invalidateQueries({ queryKey: ['rota'] })
+        queryClient.invalidateQueries({ queryKey: ['shifts', 'week'] })
+        
+        // Force immediate refetch of current week's shifts
+        queryClient.refetchQueries({ 
+          queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId] 
+        })
+      } else {
+        toast.error(result.data?.error || 'Failed to generate rota')
+      }
+    } catch (error: any) {
+      toast.dismiss()
+      toast.error(error.response?.data?.error || 'Failed to generate rota')
+    }
+  }
+
+  // Multi-home AI Generation
+  const handleMultiHomeAIGenerate = async () => {
+    try {
+      if (selectedHomesForAI.length === 0) {
+        toast.error('Please select at least one home for multi-home generation')
+        return
+      }
+      
+      if (services.length === 0) {
+        toast.error('No services available for the selected homes')
+        return
+      }
+      
+      // Use the first available service for AI generation
+      const selectedService = services[0]
+      
+      // Use the component's current week state (the week the user is viewing)
+      // const now = new Date()
+      // const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
+      // const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
+      
+      toast.loading(`Generating rota with AI for ${selectedHomesForAI.length} home(s)...`)
+      
+      const result = await aiSolverApi.generateRota({
+        week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+        week_end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
+        home_ids: selectedHomesForAI,
+        service_id: selectedService.id,
+        existing_shifts: [] // Don't pass existing shifts for multi-home generation
+      })
+
+      toast.dismiss()
+      
+      if (result.data?.success) {
+        // Show success message with employment type distribution if available
+        let successMessage = `AI rota generated successfully for ${selectedHomesForAI.length} home(s)!`
+        
+        if (result.summary) {
+          successMessage += ` ${result.summary}`
+        }
+        
+        // Add information about double booking prevention
+        if (result.data.total_homes_considered && result.data.total_homes_considered > selectedHomesForAI.length) {
+          successMessage += ` Considered ${result.data.total_homes_considered} total homes to prevent double booking.`
+        }
+        
+        toast.success(successMessage, { duration: 8000 })
+        
+        // Refresh the shifts data to show new assignments
+        queryClient.invalidateQueries({ queryKey: ['shifts'] })
+        queryClient.invalidateQueries({ queryKey: ['rota'] })
+        queryClient.invalidateQueries({ queryKey: ['shifts', 'week'] })
+        
+        // Force immediate refetch of current week's shifts for all selected homes
+        selectedHomesForAI.forEach(homeId => {
+          queryClient.refetchQueries({ 
+            queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), homeId] 
+          })
+        })
+        
+        // Also refetch for the currently selected home if it's different
+        if (selectedHomeId && !selectedHomesForAI.includes(selectedHomeId)) {
+          queryClient.refetchQueries({ 
+            queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId] 
+          })
+        }
       } else {
         toast.error(result.data?.error || 'Failed to generate rota')
       }
@@ -213,7 +328,7 @@ const RotaEditor: React.FC = () => {
       toast.loading('Creating shifts from weekly schedule...')
       
       // Get weekly schedule for the home
-      const weeklySchedule = await weeklySchedulesApi.getByHome(selectedHomeId)
+      const weeklySchedule = await weeklySchedulesApi.getByHome(ensureStringHomeId(selectedHomeId))
       
       if (!weeklySchedule || !weeklySchedule.schedule) {
         toast.error('No weekly schedule found for this home')
@@ -233,7 +348,7 @@ const RotaEditor: React.FC = () => {
         if (daySchedule && daySchedule.is_active && daySchedule.shifts) {
           for (const shiftPattern of daySchedule.shifts) {
             const shiftData = {
-              home_id: selectedHomeId,
+              home_id: ensureStringHomeId(selectedHomeId),
               service_id: shiftPattern.service_id,
               date: format(currentDate, 'yyyy-MM-dd'),
               start_time: shiftPattern.start_time,
@@ -317,7 +432,7 @@ const RotaEditor: React.FC = () => {
         // Create new shift
         await shiftsApi.create({
           ...data,
-          home_id: selectedHomeId,
+          home_id: ensureStringHomeId(selectedHomeId),
           date: format(selectedDate, 'yyyy-MM-dd')
         })
         toast.success('Shift created successfully')
@@ -411,6 +526,70 @@ const RotaEditor: React.FC = () => {
     }
   }
 
+  // Reset all assignments for the week
+  const handleResetWeek = async () => {
+    try {
+      toast.loading('Resetting all assignments for the week...')
+      
+      // Get all shifts for the current week
+      const weekShifts = await shiftsApi.getAll({
+        home_id: ensureStringHomeId(selectedHomeId),
+        start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+        end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+      })
+      
+      // Unassign all staff from all shifts
+      const unassignPromises = weekShifts.flatMap(shift => 
+        (shift.assigned_staff || []).map(assignment => 
+          shiftsApi.removeStaff(shift.id, assignment.user_id)
+        )
+      )
+      
+      await Promise.all(unassignPromises)
+      
+      toast.dismiss()
+      toast.success('All assignments reset successfully')
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+    } catch (error: any) {
+      toast.dismiss()
+      console.error('Failed to reset week:', error)
+      toast.error('Failed to reset assignments. Please try again.')
+    }
+  }
+
+  // Delete all shifts for the week
+  const handleDeleteWeek = async () => {
+    try {
+      toast.loading('Deleting all shifts for the week...')
+      
+      // Get all shifts for the current week
+      const weekShifts = await shiftsApi.getAll({
+        home_id: ensureStringHomeId(selectedHomeId),
+        start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+        end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+      })
+      
+      // Delete all shifts
+      const deletePromises = weekShifts.map(shift => 
+        shiftsApi.delete(shift.id)
+      )
+      
+      await Promise.all(deletePromises)
+      
+      toast.dismiss()
+      toast.success('All shifts deleted successfully')
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+    } catch (error: any) {
+      toast.dismiss()
+      console.error('Failed to delete week:', error)
+      toast.error('Failed to delete shifts. Please try again.')
+    }
+  }
+
   // Check if user has permissions to access rota editor
   if (!user) {
     return (
@@ -478,6 +657,15 @@ const RotaEditor: React.FC = () => {
               <CogIcon className="h-4 w-4 mr-2" />
               AI Generate
             </Button>
+            {user?.role === 'admin' && homes.length > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMultiHomeSelector(!showMultiHomeSelector)}
+              >
+                Multi-Home AI
+              </Button>
+            )}
             <p className="text-xs text-gray-500 mt-1">
               Generates rota for current week
             </p>
@@ -577,6 +765,17 @@ const RotaEditor: React.FC = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Multi-Home Selector for AI Generation - Only show for admin users */}
+      {showMultiHomeSelector && user?.role === 'admin' && homes.length > 1 && (
+        <MultiHomeSelector
+          homes={homes}
+          selectedHomes={selectedHomesForAI}
+          onHomesChange={setSelectedHomesForAI}
+          onGenerate={handleMultiHomeAIGenerate}
+          isLoading={false}
+        />
       )}
 
       {/* Week Navigation - Only show when home is selected */}
@@ -736,6 +935,8 @@ const RotaEditor: React.FC = () => {
                 onDeleteShift={handleDeleteShift}
                 onAssignStaff={handleAssignStaff}
                 onUnassignStaff={handleUnassignStaff}
+                onResetWeek={handleResetWeek}
+                onDeleteWeek={handleDeleteWeek}
                 canEdit={permissions.canManageRotas || false}
                 conflicts={conflicts?.conflicts || []}
                 homeId={selectedHomeId}

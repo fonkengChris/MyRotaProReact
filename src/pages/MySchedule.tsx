@@ -39,19 +39,14 @@ const MySchedule: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
-  // Fetch user's home details
-  const { data: home } = useQuery({
-    queryKey: ['home', extractUserDefaultHomeId(user)],
-    queryFn: () => homesApi.getById(extractUserDefaultHomeId(user)!),
-    enabled: !!extractUserDefaultHomeId(user),
-    select: (data) => data || null
-  })
+  // Get user's home ID (for services fetching)
+  const userHomeId = user ? extractUserDefaultHomeId(user) : undefined
 
   // Fetch services for shift details
   const { data: services = [] } = useQuery({
-    queryKey: ['services', extractUserDefaultHomeId(user)],
-    queryFn: () => servicesApi.getAll(extractUserDefaultHomeId(user)!),
-    enabled: !!extractUserDefaultHomeId(user),
+    queryKey: ['services', userHomeId],
+    queryFn: () => servicesApi.getAll(userHomeId!),
+    enabled: !!userHomeId,
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -59,6 +54,64 @@ const MySchedule: React.FC = () => {
   const myShifts = shifts.filter(shift => 
     shift.assigned_staff?.some(assignment => assignment.user_id === user?.id)
   ) || []
+
+  // Get unique home IDs from shifts
+  const uniqueHomeIds = [...new Set(myShifts.map(shift => {
+    if (typeof shift.home_id === 'string') {
+      return shift.home_id
+    } else if (shift.home_id && typeof shift.home_id === 'object' && shift.home_id.id) {
+      return shift.home_id.id
+    }
+    return null
+  }).filter(Boolean))]
+
+  // Fetch homes data for all shifts
+  const { data: homes = [] } = useQuery({
+    queryKey: ['homes', uniqueHomeIds],
+    queryFn: async () => {
+      if (uniqueHomeIds.length === 0) return []
+      const homesData = await Promise.all(
+        uniqueHomeIds.map(homeId => homesApi.getById(homeId!))
+      )
+      return homesData.filter(Boolean)
+    },
+    enabled: uniqueHomeIds.length > 0,
+    select: (data) => Array.isArray(data) ? data : []
+  })
+
+  // Get home information from shift data
+  const getHomeFromShift = (shift: Shift) => {
+    // If home_id is already a populated object
+    if (shift.home_id && typeof shift.home_id === 'object' && shift.home_id.name) {
+      return {
+        name: shift.home_id.name,
+        location: { city: shift.home_id.location.city }
+      }
+    }
+    
+    // If home_id is a string ID, find the home in the fetched homes data
+    if (typeof shift.home_id === 'string') {
+      const home = homes.find(h => h.id === shift.home_id)
+      if (home) {
+        return {
+          name: home.name,
+          location: { city: home.location.city }
+        }
+      }
+    }
+    
+    return null
+  }
+
+  // Get service name by ID
+  const getServiceName = (serviceId: string | { id: string; name: string; category: string }): string => {
+    const serviceIdStr = extractServiceId(serviceId)
+    if (serviceIdStr) {
+      const service = services?.find(s => s.id === serviceIdStr)
+      return service?.name || 'Unknown Service'
+    }
+    return 'Unknown Service'
+  }
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -82,16 +135,6 @@ const MySchedule: React.FC = () => {
   const getShiftsForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd')
     return myShifts.filter(shift => shift.date === dateStr)
-  }
-
-  // Get service name by ID
-  const getServiceName = (serviceId: string | { id: string; name: string }) => {
-    const serviceIdStr = extractServiceId(serviceId)
-    if (serviceIdStr) {
-      const service = services?.find(s => s.id === serviceIdStr)
-      return service?.name || 'Unknown Service'
-    }
-    return 'Unknown Service'
   }
 
   if (!user) {
@@ -133,21 +176,7 @@ const MySchedule: React.FC = () => {
       </div>
 
       {/* Home Info */}
-      {home && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <MapPinIcon className="h-5 w-5 text-gray-400" />
-              <div>
-                <h3 className="font-medium text-gray-900">{home.name}</h3>
-                <p className="text-sm text-gray-500">
-                  {home.location.address}, {home.location.city}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Home Info */}
 
       {/* Week Navigation */}
       <Card>
@@ -279,7 +308,7 @@ const MySchedule: React.FC = () => {
                                 </div>
                                 
                                 {/* Address Information */}
-                                {home && (
+                                {getHomeFromShift(shift) && (
                                   <div className="mb-4">
                                     <div className="flex items-center space-x-2 mb-2">
                                       <div className="w-2 h-2 bg-primary-400 rounded-full"></div>
@@ -290,9 +319,9 @@ const MySchedule: React.FC = () => {
                                     <div className="flex items-start space-x-2 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2.5 border border-white/20">
                                       <MapPinIcon className="h-4 w-4 text-primary-600 mt-0.5 flex-shrink-0" />
                                       <div className="text-sm text-primary-900">
-                                        <div className="font-medium">{home.name}</div>
+                                        <div className="font-medium">{getHomeFromShift(shift)?.name}</div>
                                         <div className="text-primary-700">
-                                          {home.location.address}, {home.location.city}
+                                          {getHomeFromShift(shift)?.location.city}
                                         </div>
                                       </div>
                                     </div>

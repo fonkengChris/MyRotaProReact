@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setIsLoading(false)
     }
-  }, [user])
+  }, []) // Remove user from dependency array to prevent infinite loop
 
   const checkAuth = async () => {
     try {

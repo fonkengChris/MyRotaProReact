@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -25,6 +25,8 @@ interface HoursSummaryProps {
 interface UserHours {
   user: User
   totalHours: number
+  paidHours: number
+  breakDeductions: number
   totalShifts: number
   shifts: Shift[]
 }
@@ -35,7 +37,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   isAdminView = false,
   userRole = 'support_worker'
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState(new Date())
+  const [selectedWeek, setSelectedWeek] = useState(() => new Date())
 
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 })
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 })
@@ -49,7 +51,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       start_date: format(weekStart, 'yyyy-MM-dd'),
       end_date: format(weekEnd, 'yyyy-MM-dd')
     }),
-    enabled: userRole === 'admin' || isAdminView || !!userId, // Admin can always view, or if admin view, or if individual user
+    enabled: userRole === 'admin' || isAdminView || (!!userId && !!homeId), // Admin can always view, or if admin view, or if individual user with homeId
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -59,12 +61,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     queryFn: () => usersApi.getAll({ 
       home_id: userRole === 'admin' ? undefined : homeId // Admin can see all users, others need homeId
     }),
-    enabled: userRole === 'admin' || (isAdminView && !!homeId), // Admin can always view, or if admin view with homeId
+    enabled: userRole === 'admin' || isAdminView, // Admin can always view, or if admin view
     select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch individual user for user view (only for individual users, not admin view)
-  const { data: user, isLoading: userLoading } = useQuery({
+  const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['user', 'hours-summary', userId],
     queryFn: () => usersApi.getById(userId!),
     enabled: !!userId && !isAdminView && userRole !== 'admin' // Only for individual users, not admin view
@@ -74,8 +76,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
 
 
+
+
   // Calculate hours for each user
-  const calculateUserHours = (): UserHours[] => {
+  const calculateUserHours = useMemo((): UserHours[] => {
     if (isAdminView) {
       return staff.map(staffMember => {
         const userShifts = shifts.filter(shift => 
@@ -88,22 +92,44 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           sum + (shift.duration_hours || 0), 0
         )
         
+        // Calculate paid hours with break deductions
+        let paidHours = 0
+        let totalBreakDeductions = 0
+        
+        userShifts.forEach(shift => {
+          const shiftHours = shift.duration_hours || 0
+          let breakDeduction = 0
+          
+          // Apply break deduction rules
+          if (shiftHours >= 12) {
+            breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
+          } else if (shiftHours >= 8 && shiftHours < 12) {
+            breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
+          }
+          // No deduction for shifts under 8 hours
+          
+          paidHours += Math.max(0, shiftHours - breakDeduction)
+          totalBreakDeductions += breakDeduction
+        })
+        
         return {
           user: staffMember,
           totalHours,
+          paidHours,
+          breakDeductions: totalBreakDeductions,
           totalShifts: userShifts.length,
           shifts: userShifts
         }
       }).sort((a, b) => b.totalHours - a.totalHours) // Sort by hours descending
     } else {
       // Individual user view
-      if (!user) return []
+      if (!userId) return []
       
       // For individual user view without homeId, use shifts directly (filtered by user_id)
       if (!homeId) {
         const userShifts = shifts.filter(shift => 
           shift.assigned_staff?.some(assignment => 
-            assignment.user_id === user.id
+            assignment.user_id === userId
           )
         )
         
@@ -111,9 +137,31 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           sum + (shift.duration_hours || 0), 0
         )
         
+        // Calculate paid hours with break deductions
+        let paidHours = 0
+        let totalBreakDeductions = 0
+        
+        userShifts.forEach(shift => {
+          const shiftHours = shift.duration_hours || 0
+          let breakDeduction = 0
+          
+          // Apply break deduction rules
+          if (shiftHours >= 12) {
+            breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
+          } else if (shiftHours >= 8 && shiftHours < 12) {
+            breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
+          }
+          // No deduction for shifts under 8 hours
+          
+          paidHours += Math.max(0, shiftHours - breakDeduction)
+          totalBreakDeductions += breakDeduction
+        })
+        
         return [{
-          user,
+          user: userData || { id: userId, name: 'Unknown User', role: userRole },
           totalHours,
+          paidHours,
+          breakDeductions: totalBreakDeductions,
           totalShifts: userShifts.length,
           shifts: userShifts
         }]
@@ -121,7 +169,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       
       const userShifts = shifts.filter(shift => 
         shift.assigned_staff?.some(assignment => 
-          assignment.user_id === user.id
+          assignment.user_id === userId
         )
       )
       
@@ -129,18 +177,42 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         sum + (shift.duration_hours || 0), 0
       )
       
+      // Calculate paid hours with break deductions
+      let paidHours = 0
+      let totalBreakDeductions = 0
+      
+      userShifts.forEach(shift => {
+        const shiftHours = shift.duration_hours || 0
+        let breakDeduction = 0
+        
+        // Apply break deduction rules
+        if (shiftHours >= 12) {
+          breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
+        } else if (shiftHours >= 8 && shiftHours < 12) {
+          breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
+        }
+        // No deduction for shifts under 8 hours
+        
+        paidHours += Math.max(0, shiftHours - breakDeduction)
+        totalBreakDeductions += breakDeduction
+      })
+      
       return [{
-        user,
+        user: userData || { id: userId, name: 'Unknown User', role: userRole },
         totalHours,
+        paidHours,
+        breakDeductions: totalBreakDeductions,
         totalShifts: userShifts.length,
         shifts: userShifts
       }]
     }
-  }
+  }, [isAdminView, staff, shifts, userId, homeId, userData, userRole])
 
-  const userHours = calculateUserHours()
-  const totalHours = userHours.reduce((sum, uh) => sum + uh.totalHours, 0)
-  const totalShifts = userHours.reduce((sum, uh) => sum + uh.totalShifts, 0)
+  const userHours = calculateUserHours
+  const totalHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalHours, 0), [userHours])
+  const totalPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.paidHours, 0), [userHours])
+  const totalBreakDeductions = useMemo(() => userHours.reduce((sum, uh) => sum + uh.breakDeductions, 0), [userHours])
+  const totalShifts = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalShifts, 0), [userHours])
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -153,6 +225,23 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
   const goToCurrentWeek = () => {
     setSelectedWeek(new Date())
+  }
+
+  // Show error if there's an error loading shifts
+  if (shiftsError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Hours</h3>
+          <p className="text-sm text-red-600 mb-4">
+            There was an error loading your hours data.
+          </p>
+          <p className="text-sm text-gray-500">
+            Error: {shiftsError.message || 'Unknown error'}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   // Show message if no home is selected (only for non-admin users)
@@ -186,6 +275,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     )
   }
 
+
   // Show message if no home or user ID is provided (but not for admin users)
   if (!homeId && !userId && userRole !== 'admin') {
     return (
@@ -197,6 +287,23 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
               ? 'Please select a care home to view hours summary'
               : 'You are not assigned to any care home'
             }
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show message if user doesn't have a home assigned (for individual view) - check this before loading
+  if (!isAdminView && !homeId && userRole !== 'admin') {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Care Home Assigned</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            You need to be assigned to a care home to view your hours.
+          </p>
+          <p className="text-sm text-gray-400">
+            Contact your administrator to assign you to a care home.
           </p>
         </div>
       </div>
@@ -296,7 +403,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       </Card>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -319,14 +426,14 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ClockIcon className="h-8 w-8 text-success-600" />
+                <ClockIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">
-                  {isAdminView ? 'Total Hours' : 'My Hours'}
+                  {isAdminView ? 'Assigned Hours' : 'My Assigned Hours'}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {totalHours}
+                  {totalHours.toFixed(1)}h
                 </p>
               </div>
             </div>
@@ -337,17 +444,32 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <CalendarIcon className="h-8 w-8 text-secondary-600" />
+                <ClockIcon className="h-8 w-8 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">
-                  {isAdminView ? 'Total Shifts' : 'Average Hours/Day'}
+                  {isAdminView ? 'Paid Hours' : 'My Paid Hours'}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {isAdminView 
-                    ? totalShifts 
-                    : userHours[0] ? (userHours[0].totalHours / 7).toFixed(1) : '0'
-                  }
+                <p className="text-2xl font-semibold text-green-600">
+                  {totalPaidHours.toFixed(1)}h
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CalendarIcon className="h-8 w-8 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">
+                  {isAdminView ? 'Break Deductions' : 'My Break Deductions'}
+                </p>
+                <p className="text-2xl font-semibold text-orange-600">
+                  -{totalBreakDeductions.toFixed(1)}h
                 </p>
               </div>
             </div>
@@ -412,12 +534,34 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-success-600">
-                        {userHour.totalHours}h
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {userHour.totalShifts} shifts
-                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Assigned Hours</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {userHour.totalHours.toFixed(1)}h
+                          </p>
+                        </div>
+                        {userHour.breakDeductions > 0 && (
+                          <div>
+                            <p className="text-sm text-orange-500">Break Deductions</p>
+                            <p className="text-lg font-semibold text-orange-600">
+                              -{userHour.breakDeductions.toFixed(1)}h
+                            </p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm text-green-500">Paid Hours</p>
+                          <p className="text-xl font-bold text-green-600">
+                            {userHour.paidHours.toFixed(1)}h
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Shifts</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {userHour.totalShifts}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

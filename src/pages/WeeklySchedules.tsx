@@ -26,7 +26,8 @@ const WeeklySchedules: React.FC = () => {
     if (user && !selectedHomeId) {
       const userHomes = user.homes || []
       if (userHomes.length > 0) {
-        setSelectedHomeId(userHomes[0].home_id)
+        const homeId = typeof userHomes[0].home_id === 'string' ? userHomes[0].home_id : String(userHomes[0].home_id)
+        setSelectedHomeId(homeId)
       }
     }
   }, [user, selectedHomeId])

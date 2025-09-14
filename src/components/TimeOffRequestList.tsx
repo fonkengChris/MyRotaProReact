@@ -52,11 +52,10 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
   // Get request type display name
   const getRequestTypeDisplay = (type: string) => {
     switch (type) {
-      case 'vacation': return 'Vacation'
+      case 'annual_leave': return 'Annual Leave'
       case 'sick_leave': return 'Sick Leave'
-      case 'personal_time': return 'Personal Time'
+      case 'personal_leave': return 'Personal Leave'
       case 'bereavement': return 'Bereavement'
-      case 'jury_duty': return 'Jury Duty'
       case 'other': return 'Other'
       default: return type.replace('_', ' ')
     }

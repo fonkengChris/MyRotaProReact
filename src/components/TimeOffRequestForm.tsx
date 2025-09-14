@@ -151,11 +151,10 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
               className="input w-full"
             >
               <option value="">Select request type</option>
-              <option value="vacation">Vacation</option>
+              <option value="annual_leave">Annual Leave</option>
               <option value="sick_leave">Sick Leave</option>
-              <option value="personal_time">Personal Time</option>
+              <option value="personal_leave">Personal Leave</option>
               <option value="bereavement">Bereavement</option>
-              <option value="jury_duty">Jury Duty</option>
               <option value="other">Other</option>
             </select>
             {errors.request_type && (

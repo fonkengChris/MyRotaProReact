@@ -37,15 +37,20 @@ const AvailabilityPage: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
+  // Get user's home ID
+  const userHomeId = extractUserDefaultHomeId(user)
+
   // Fetch time-off requests
   const { data: timeOffRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery({
-    queryKey: ['timeOffRequests', user?.id, extractUserDefaultHomeId(user), user?.role],
+    queryKey: ['timeOffRequests', user?.id, userHomeId, user?.role],
     queryFn: async () => {
       // Different query based on user role
-      if (['admin', 'home_manager', 'senior_staff'].includes(user?.role || '')) {
-        // Managers see all requests for their home
-        const homeId = extractUserDefaultHomeId(user)
-        return await timeOffApi.getAll({ home_id: homeId })
+      if (user?.role === 'admin') {
+        // Admins see all requests
+        return await timeOffApi.getAll()
+      } else if (['home_manager', 'senior_staff'].includes(user?.role || '')) {
+        // Managers see all requests for their home (if they have one)
+        return await timeOffApi.getAll(userHomeId ? { home_id: userHomeId } : {})
       } else {
         // Regular users see only their own requests
         return await timeOffApi.getAll({ user_id: user?.id })
@@ -59,11 +64,11 @@ const AvailabilityPage: React.FC = () => {
 
   // Fetch staff members (for managers)
   const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery({
-    queryKey: ['staff', extractUserDefaultHomeId(user)],
+    queryKey: ['staff', userHomeId],
     queryFn: () => usersApi.getAll({ 
-      home_id: extractUserDefaultHomeId(user) // Only filter by home if user has one
+      home_id: userHomeId // Only filter by home if user has one
     }),
-    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
+    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
     retry: 1,
     retryDelay: 1000,
     select: (data) => Array.isArray(data) ? data : []
@@ -121,7 +126,16 @@ const AvailabilityPage: React.FC = () => {
       toast.success('Time-off request approved')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to approve request')
+      const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to approve request'
+      
+      // Handle specific error cases
+      if (errorMessage.includes('Only pending requests can be approved')) {
+        toast.error('This request has already been processed. Please refresh the page.')
+        // Force refresh the data
+        queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
+      } else {
+        toast.error(errorMessage)
+      }
     }
   })
 
@@ -135,7 +149,16 @@ const AvailabilityPage: React.FC = () => {
       toast.success('Time-off request denied')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to deny request')
+      const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to deny request'
+      
+      // Handle specific error cases
+      if (errorMessage.includes('Request has already been processed')) {
+        toast.error('This request has already been processed. Please refresh the page.')
+        // Force refresh the data
+        queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
+      } else {
+        toast.error(errorMessage)
+      }
     }
   })
 
@@ -153,8 +176,7 @@ const AvailabilityPage: React.FC = () => {
   const handleSubmitTimeOff = async (data: any) => {
     await submitTimeOffMutation.mutateAsync({
       ...data,
-      user_id: user?.id,
-      home_id: user?.home_id
+      user_id: user?.id
     })
   }
 

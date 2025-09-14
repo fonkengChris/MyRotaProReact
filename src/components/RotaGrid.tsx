@@ -8,7 +8,9 @@ import {
   PencilIcon, 
   TrashIcon,
   UserIcon,
-  ClockIcon
+  ClockIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { Shift, User, extractServiceId, extractServiceName, WeeklySchedule } from '@/types'
 import { weeklySchedulesApi } from '@/lib/api'
@@ -28,6 +30,8 @@ interface RotaGridProps {
   conflicts?: any[]
   homeId: string // Add homeId prop
   onCreateShiftsFromSchedule?: () => Promise<void> // Add callback for creating shifts
+  onResetWeek: () => Promise<void> // Add callback for resetting week
+  onDeleteWeek: () => Promise<void> // Add callback for deleting week
 }
 
 const RotaGrid: React.FC<RotaGridProps> = ({
@@ -43,7 +47,9 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   canEdit,
   conflicts = [],
   homeId,
-  onCreateShiftsFromSchedule
+  onCreateShiftsFromSchedule,
+  onResetWeek,
+  onDeleteWeek
 }) => {
   
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
@@ -111,18 +117,30 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     switch (currentUser.role) {
       case 'admin':
       case 'home_manager':
-        // Admins and managers see all shifts
-        return shifts
+        // Admins and managers see all shifts for the selected home
+        return shifts.filter(shift => {
+          const shiftHomeId = typeof shift.home_id === 'string' ? shift.home_id : shift.home_id.id
+          return shiftHomeId === homeId
+        })
       
       case 'senior_staff':
         // Senior staff see shifts for all users in their home
         if (currentUser.homes && currentUser.homes.length > 0) {
-          const userHomeIds = currentUser.homes.map(home => home.home_id)
+          const userHomeIds = currentUser.homes.map(home => 
+            typeof home.home_id === 'string' ? home.home_id : String(home.home_id)
+          )
           const homeStaffIds = staff
-            .filter(member => member.homes && member.homes.some(home => userHomeIds.includes(home.home_id)))
+            .filter(member => member.homes && member.homes.some(home => 
+              userHomeIds.includes(typeof home.home_id === 'string' ? home.home_id : String(home.home_id))
+            ))
             .map(member => member.id)
           
           return shifts.filter(shift => {
+            // Check if the shift is in one of the user's homes
+            const shiftHomeId = typeof shift.home_id === 'string' ? shift.home_id : shift.home_id.id
+            const shiftInUserHome = userHomeIds.includes(shiftHomeId)
+            if (!shiftInUserHome) return false
+            
             // Check if the shift has any assignments to users in the same home
             return shift.assigned_staff && shift.assigned_staff.some(assignment => 
               homeStaffIds.includes(assignment.user_id)
@@ -134,6 +152,14 @@ const RotaGrid: React.FC<RotaGridProps> = ({
       case 'support_worker':
         // Regular users only see shifts allocated to themselves
         return shifts.filter(shift => {
+          // Check if the shift is in one of the user's homes
+          const userHomeIds = currentUser.homes?.map(home => 
+            typeof home.home_id === 'string' ? home.home_id : String(home.home_id)
+          ) || []
+          const shiftHomeId = typeof shift.home_id === 'string' ? shift.home_id : shift.home_id.id
+          const shiftInUserHome = userHomeIds.includes(shiftHomeId)
+          if (!shiftInUserHome) return false
+          
           return shift.assigned_staff && shift.assigned_staff.some(assignment => 
             assignment.user_id === currentUser.id
           )
@@ -232,230 +258,280 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[1200px]">
-        {/* Header row with day names */}
-        <div className="grid grid-cols-8 gap-1 mb-2">
-          <div className="p-2 font-medium text-gray-500 text-sm">Time</div>
-          {weekDays.map((day) => (
-            <div key={day.toISOString()} className="p-2 text-center">
-              <div className="font-medium text-gray-900">
-                {format(day, 'EEE')}
-              </div>
-              <div className="text-sm text-gray-500">
-                {format(day, 'MMM d')}
-              </div>
-            </div>
-          ))}
+    <div className="space-y-4">
+      {/* Action buttons for week management */}
+      {canEdit && shifts.length > 0 && (
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-medium text-gray-900">Week Actions</h3>
+            <Badge variant="primary" className="text-xs">
+              {shifts.length} shifts • {shifts.reduce((total, shift) => total + (shift.assigned_staff?.length || 0), 0)} assignments
+            </Badge>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to unassign all staff from this week\'s shifts? This action cannot be undone.')) {
+                  try {
+                    await onResetWeek()
+                  } catch (error) {
+                    console.error('Failed to reset week:', error)
+                  }
+                }
+              }}
+              className="flex items-center space-x-2"
+            >
+              <ArrowPathIcon className="h-4 w-4" />
+              <span>Reset Assignments</span>
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to delete ALL shifts for this week? This action cannot be undone and will permanently remove all shifts.')) {
+                  try {
+                    await onDeleteWeek()
+                  } catch (error) {
+                    console.error('Failed to delete week:', error)
+                  }
+                }
+              }}
+              className="flex items-center space-x-2"
+            >
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <span>Delete All Shifts</span>
+            </Button>
+          </div>
         </div>
+      )}
 
-        {/* Time slots and shifts */}
-        {timeSlots.map((time) => (
-          <div key={time} className="grid grid-cols-8 gap-1 mb-1">
-            {/* Time label */}
-            <div className="p-2 text-sm text-gray-500 font-mono bg-gray-50 border-r">
-              {time}
-            </div>
+      <div className="overflow-x-auto">
+        <div className="min-w-[1200px]">
+          {/* Header row with day names */}
+          <div className="grid grid-cols-8 gap-1 mb-2">
+            <div className="p-2 font-medium text-gray-500 text-sm">Time</div>
+            {weekDays.map((day) => (
+              <div key={day.toISOString()} className="p-2 text-center">
+                <div className="font-medium text-gray-900">
+                  {format(day, 'EEE')}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {format(day, 'MMM d')}
+                </div>
+              </div>
+            ))}
+          </div>
 
-            {/* Day columns */}
-            {weekDays.map((day) => {
-              const dayShifts = getShiftsForSlot(day, time)
-              const hasWeeklySchedule = hasWeeklyScheduleShifts(day, time)
-              const weeklyShift = getFirstWeeklyScheduleShift(day, time)
-              
-              return (
-                <div key={`${day.toISOString()}-${time}`} className="min-h-[80px] border-b border-r relative">
-                  {dayShifts.length === 0 ? (
-                    // No actual shifts - show weekly schedule if exists, otherwise add button
-                    hasWeeklySchedule ? (
-                      // Show weekly schedule shift template
-                      <div className="p-2 text-xs bg-gray-100 border border-gray-300 rounded">
-                        <div className="text-gray-600 mb-1">
-                          <ClockIcon className="inline h-3 w-3 mr-1" />
-                          {weeklyShift?.start_time.substring(0, 5)} - {weeklyShift?.end_time.substring(0, 5)}
+          {/* Time slots and shifts */}
+          {timeSlots.map((time) => (
+            <div key={time} className="grid grid-cols-8 gap-1 mb-1">
+              {/* Time label */}
+              <div className="p-2 text-sm text-gray-500 font-mono bg-gray-50 border-r">
+                {time}
+              </div>
+
+              {/* Day columns */}
+              {weekDays.map((day) => {
+                const dayShifts = getShiftsForSlot(day, time)
+                const hasWeeklySchedule = hasWeeklyScheduleShifts(day, time)
+                const weeklyShift = getFirstWeeklyScheduleShift(day, time)
+                
+                return (
+                  <div key={`${day.toISOString()}-${time}`} className="min-h-[80px] border-b border-r relative">
+                    {dayShifts.length === 0 ? (
+                      // No actual shifts - show weekly schedule if exists, otherwise add button
+                      hasWeeklySchedule ? (
+                        // Show weekly schedule shift template
+                        <div className="p-2 text-xs bg-gray-100 border border-gray-300 rounded">
+                          <div className="text-gray-600 mb-1">
+                            <ClockIcon className="inline h-3 w-3 mr-1" />
+                            {weeklyShift?.start_time.substring(0, 5)} - {weeklyShift?.end_time.substring(0, 5)}
+                          </div>
+                          <div className="text-gray-500 mb-1">
+                            {weeklyShift?.shift_type} • {weeklyShift?.required_staff_count} staff needed
+                          </div>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 w-full text-xs border-dashed border-gray-400 hover:border-primary-400 hover:bg-primary-50"
+                              onClick={() => onAddShift(day, time)}
+                            >
+                              <PlusIcon className="h-3 w-3 mr-1" />
+                              Create Shift
+                            </Button>
+                          )}
                         </div>
-                        <div className="text-gray-500 mb-1">
-                          {weeklyShift?.shift_type} • {weeklyShift?.required_staff_count} staff needed
-                        </div>
-                        {canEdit && (
+                      ) : (
+                        // Empty slot - show add button if can edit
+                        canEdit && (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-6 w-full text-xs border-dashed border-gray-400 hover:border-primary-400 hover:bg-primary-50"
+                            className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
                             onClick={() => onAddShift(day, time)}
                           >
-                            <PlusIcon className="h-3 w-3 mr-1" />
-                            Create Shift
+                            <PlusIcon className="h-4 w-4 text-gray-400" />
                           </Button>
-                        )}
-                      </div>
-                    ) : (
-                      // Empty slot - show add button if can edit
-                      canEdit && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
-                          onClick={() => onAddShift(day, time)}
-                        >
-                          <PlusIcon className="h-4 w-4 text-gray-400" />
-                        </Button>
+                        )
                       )
-                    )
-                  ) : (
-                    // Show shifts in this time slot
-                    <div className="space-y-1 p-1">
-                      {dayShifts.map((shift) => {
-                        const shiftAssignments = getAssignmentsForShift(shift.id)
-                        
-                        return (
-                          <div
-                            key={shift.id}
-                            className={`rounded p-2 text-xs ${
-                              hasShiftConflicts(shift.id)
-                                ? 'bg-red-50 border-2 border-red-300'
-                                : 'bg-primary-50 border border-primary-200'
-                            }`}
-                          >
-                            {/* Shift header */}
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center space-x-1">
-                                <ClockIcon className="h-3 w-3 text-primary-600" />
-                                <span className="font-medium text-primary-900">
-                                  {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
-                                </span>
-                                {hasShiftConflicts(shift.id) && (
-                                  <Badge variant="danger" className="text-xs ml-2">
-                                    Conflict
-                                  </Badge>
-                                )}
-                              </div>
-                              {canEdit && (
-                                <div className="flex space-x-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-5 w-5 p-0"
-                                    onClick={() => onEditShift(shift)}
-                                  >
-                                    <PencilIcon className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="danger"
-                                    size="sm"
-                                    className="h-5 w-5 p-0"
-                                    onClick={() => onDeleteShift(shift.id)}
-                                  >
-                                    <TrashIcon className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Service info */}
-                            <div className="text-primary-700 mb-2">
-                              Service: {extractServiceName(shift.service_id) || 'Unknown Service'}
-                            </div>
-
-                            {/* Staff assignments */}
-                            <div className="space-y-1">
-                              {shiftAssignments.map((assignment, index) => {
-                                const staffMember = getStaffMember(assignment.user_id)
-                                return (
-                                  <div
-                                    key={`${shift.id}-${assignment.user_id}-${index}`}
-                                    className="flex items-center justify-between bg-white rounded px-2 py-1 border"
-                                  >
-                                    <div className="flex items-center space-x-1">
-                                      <UserIcon className="h-3 w-3 text-gray-500" />
-                                      <span className="text-gray-700">
-                                        {staffMember?.name || 'Unknown Staff'}
-                                      </span>
-                                    </div>
-                                    {canEdit && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-4 w-4 p-0"
-                                        onClick={() => handleUnassignStaff(shift.id, assignment.user_id)}
-                                      >
-                                        ×
-                                      </Button>
-                                    )}
-                                  </div>
-                                )
-                              })}
-
-                              {/* Add staff button */}
-                              {canEdit && (
-                                <div className="relative">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-6 w-full text-xs border-dashed"
-                                    onClick={() => setShowStaffSelector(shift.id)}
-                                  >
-                                    <PlusIcon className="h-3 w-3 mr-1" />
-                                    Add Staff
-                                  </Button>
-
-                                  {/* Staff selector dropdown */}
-                                  {showStaffSelector === shift.id && (
-                                    <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
-                                      <div className="p-2 max-h-32 overflow-y-auto">
-                                        {staff
-                                          .filter(member => member.is_active)
-                                          .filter(member => !shiftAssignments.some(a => a.user_id === member.id))
-                                          .map(member => (
-                                            <button
-                                              key={member.id}
-                                              className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded"
-                                              onClick={() => handleAssignStaff(shift.id, member.id)}
-                                            >
-                                              <div className="flex items-center space-x-2">
-                                                <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
-                                                  <span className="text-xs font-medium text-primary-700">
-                                                    {member.name.charAt(0)}
-                                                  </span>
-                                                </div>
-                                                <span>{member.name}</span>
-                                              </div>
-                                            </button>
-                                          ))}
-                                        {staff.filter(member => 
-                                          member.is_active && 
-                                          !shiftAssignments.some(a => a.user_id === member.id)
-                                        ).length === 0 && (
-                                          <div className="px-2 py-1 text-sm text-gray-500">
-                                            No available staff
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
+                    ) : (
+                      // Show shifts in this time slot
+                      <div className="space-y-1 p-1">
+                        {dayShifts.map((shift) => {
+                          const shiftAssignments = getAssignmentsForShift(shift.id)
+                          
+                          return (
+                            <div
+                              key={shift.id}
+                              className={`rounded p-2 text-xs ${
+                                hasShiftConflicts(shift.id)
+                                  ? 'bg-red-50 border-2 border-red-300'
+                                  : 'bg-primary-50 border border-primary-200'
+                              }`}
+                            >
+                              {/* Shift header */}
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center space-x-1">
+                                  <ClockIcon className="h-3 w-3 text-primary-600" />
+                                  <span className="font-medium text-primary-900">
+                                    {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
+                                  </span>
+                                  {hasShiftConflicts(shift.id) && (
+                                    <Badge variant="danger" className="text-xs ml-2">
+                                      Conflict
+                                    </Badge>
                                   )}
                                 </div>
-                              )}
-                            </div>
+                                {canEdit && (
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      onClick={() => onEditShift(shift)}
+                                    >
+                                      <PencilIcon className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="danger"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      onClick={() => onDeleteShift(shift.id)}
+                                    >
+                                      <TrashIcon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
 
-                            {/* Shift status */}
-                            <div className="mt-2">
-                              <Badge 
-                                variant={shiftAssignments.length >= (shift.required_staff_count || 1) ? 'success' : 'warning'}
-                                className="text-xs"
-                              >
-                                {shiftAssignments.length}/{shift.required_staff_count || 1} Staff
-                              </Badge>
+                              {/* Service info */}
+                              <div className="text-primary-700 mb-2">
+                                Service: {extractServiceName(shift.service_id) || 'Unknown Service'}
+                              </div>
+
+                              {/* Staff assignments */}
+                              <div className="space-y-1">
+                                {shiftAssignments.map((assignment, index) => {
+                                  const staffMember = getStaffMember(assignment.user_id)
+                                  return (
+                                    <div
+                                      key={`${shift.id}-${assignment.user_id}-${index}`}
+                                      className="flex items-center justify-between bg-white rounded px-2 py-1 border"
+                                    >
+                                      <div className="flex items-center space-x-1">
+                                        <UserIcon className="h-3 w-3 text-gray-500" />
+                                        <span className="text-gray-700">
+                                          {staffMember?.name || 'Unknown Staff'}
+                                        </span>
+                                      </div>
+                                      {canEdit && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-4 w-4 p-0"
+                                          onClick={() => handleUnassignStaff(shift.id, assignment.user_id)}
+                                        >
+                                          ×
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+
+                                {/* Add staff button */}
+                                {canEdit && (
+                                  <div className="relative">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 w-full text-xs border-dashed"
+                                      onClick={() => setShowStaffSelector(shift.id)}
+                                    >
+                                      <PlusIcon className="h-3 w-3 mr-1" />
+                                      Add Staff
+                                    </Button>
+
+                                    {/* Staff selector dropdown */}
+                                    {showStaffSelector === shift.id && (
+                                      <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
+                                        <div className="p-2 max-h-32 overflow-y-auto">
+                                          {staff
+                                            .filter(member => member.is_active)
+                                            .filter(member => !shiftAssignments.some(a => a.user_id === member.id))
+                                            .map(member => (
+                                              <button
+                                                key={member.id}
+                                                className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                                                onClick={() => handleAssignStaff(shift.id, member.id)}
+                                              >
+                                                <div className="flex items-center space-x-2">
+                                                  <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
+                                                    <span className="text-xs font-medium text-primary-700">
+                                                      {member.name.charAt(0)}
+                                                    </span>
+                                                  </div>
+                                                  <span>{member.name}</span>
+                                                </div>
+                                              </button>
+                                            ))}
+                                          {staff.filter(member => 
+                                            member.is_active && 
+                                            !shiftAssignments.some(a => a.user_id === member.id)
+                                          ).length === 0 && (
+                                            <div className="px-2 py-1 text-sm text-gray-500">
+                                              No available staff
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Shift status */}
+                              <div className="mt-2">
+                                <Badge 
+                                  variant={shiftAssignments.length >= (shift.required_staff_count || 1) ? 'success' : 'warning'}
+                                  className="text-xs"
+                                >
+                                  {shiftAssignments.length}/{shift.required_staff_count || 1} Staff
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        ))}
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

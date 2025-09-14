@@ -14,6 +14,10 @@ import Availability from '@/pages/Availability'
 import Services from '@/pages/Services'
 import Homes from '@/pages/Homes'
 import WeeklySchedules from '@/pages/WeeklySchedules'
+import ShiftSelection from '@/pages/ShiftSelection'
+import ShiftSwaps from '@/pages/ShiftSwaps'
+import Timetables from '@/pages/Timetables'
+import UserTimetables from '@/pages/UserTimetables'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 function App() {
@@ -45,6 +49,10 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/rota/:weekStart?" element={<RotaEditor />} />
         <Route path="/weekly-schedules" element={<WeeklySchedules />} />
+        <Route path="/shift-selection" element={<ShiftSelection />} />
+        <Route path="/shift-swaps" element={<ShiftSwaps />} />
+        <Route path="/timetables" element={<Timetables />} />
+        <Route path="/my-timetables" element={<UserTimetables />} />
         <Route path="/my-schedule" element={<MySchedule />} />
         <Route path="/my-hours" element={<MyHours />} />
         <Route path="/availability" element={<Availability />} />

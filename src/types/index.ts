@@ -6,7 +6,7 @@ export interface User {
   phone: string
   role: UserRole
   homes: Array<{
-    home_id: string
+    home_id: string | { id: string; name?: string }
     is_default: boolean
   }>
   default_home_id?: string
@@ -39,7 +39,7 @@ export interface RegisterData {
   password: string
   role: UserRole
   homes?: Array<{
-    home_id: string
+    home_id: string | { id: string; name?: string }
     is_default: boolean
   }>
   type?: 'fulltime' | 'parttime' | 'bank'
@@ -148,6 +148,71 @@ export type AssignmentStatus = 'assigned' | 'pending' | 'swapped' | 'declined'
 
 export type ShiftStatus = 'unassigned' | 'understaffed' | 'fully_staffed' | 'overstaffed'
 
+// Shift Swap types
+export interface ShiftSwap {
+  _id: string
+  requester_shift_id: string | Shift
+  target_shift_id: string | Shift
+  requester_id: string | User
+  target_user_id: string | User
+  status: ShiftSwapStatus
+  requester_message?: string
+  response_message?: string
+  conflict_check: {
+    has_conflict: boolean
+    conflict_details: Array<{
+      type: string
+      conflict_type?: string
+      message: string
+      user?: string
+      conflictingShiftId?: string
+      timeOffRequestId?: string
+      existingSwapId?: string
+      restPeriodMinutes?: number
+    }>
+  }
+  requested_at: string
+  responded_at?: string
+  completed_at?: string
+  expires_at: string
+  home_id: string | Home
+  created_at: string
+  updated_at: string
+  isExpired: boolean
+  isActive: boolean
+}
+
+export type ShiftSwapStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed'
+
+export interface ShiftSwapRequest {
+  requester_shift_id: string
+  target_shift_id: string
+  requester_message?: string
+}
+
+export interface ShiftSwapResponse {
+  response_message?: string
+}
+
+export interface AvailableSwap {
+  user_shift: Shift
+  target_shift: Shift
+  potential_swappers: Array<{
+    user_id: string
+    name: string
+    email: string
+  }>
+}
+
+export interface ShiftSwapStats {
+  total: number
+  pending: number
+  approved: number
+  rejected: number
+  cancelled: number
+  completed: number
+}
+
 // Weekly Schedule types
 export interface WeeklyScheduleShift {
   service_id: string | { id: string; name: string; category: string }
@@ -244,7 +309,7 @@ export type RequestStatus = 'pending' | 'approved' | 'denied'
 export interface AIGenerationRequest {
   week_start_date: string
   week_end_date: string
-  home_id: string
+  home_ids: string | string[] // Support single home ID or array of home IDs
   service_id: string
   existing_shifts?: Shift[]
 }
@@ -256,8 +321,16 @@ export interface AIGenerationResult {
     assignments: RotaAssignment[]
     total_penalty: number
     constraints_violated: ConstraintViolation[]
+    employment_distribution?: {
+      fulltime: { total_hours: number; staff_count: number; average_hours: number }
+      parttime: { total_hours: number; staff_count: number; average_hours: number }
+      bank: { total_hours: number; staff_count: number; average_hours: number }
+    }
+    homes_processed?: number
+    total_homes_considered?: number
     error?: string
   }
+  summary?: string
 }
 
 export interface RotaAssignment {
@@ -347,13 +420,37 @@ export type LoadingSize = 'sm' | 'md' | 'lg'
 // Utility functions
 export const extractHomeId = (homeId: string | { id: string; name: string; location: { city: string } } | undefined): string | undefined => {
   if (!homeId) return undefined
-  return typeof homeId === 'string' ? homeId : homeId.id
+  if (typeof homeId === 'string') return homeId
+  // Handle ObjectId objects by converting to string
+  if (typeof homeId === 'object' && homeId !== null) {
+    return homeId.id || String(homeId)
+  }
+  return undefined
 }
 
 export const extractUserDefaultHomeId = (user: User | undefined): string | undefined => {
   if (!user || !user.homes || user.homes.length === 0) return undefined
+  
+  // First try to find a default home
   const defaultHome = user.homes.find(home => home.is_default)
-  return defaultHome ? defaultHome.home_id : user.homes[0].home_id
+  if (defaultHome) {
+    const homeId = defaultHome.home_id
+    // Handle both string and object cases
+    if (typeof homeId === 'string') return homeId
+    if (homeId && typeof homeId === 'object' && homeId.id) return String(homeId.id)
+    return String(homeId)
+  }
+  
+  // If no default home, use the first home
+  if (user.homes.length > 0) {
+    const homeId = user.homes[0].home_id
+    // Handle both string and object cases
+    if (typeof homeId === 'string') return homeId
+    if (homeId && typeof homeId === 'object' && homeId.id) return String(homeId.id)
+    return String(homeId)
+  }
+  
+  return undefined
 }
 
 export const extractServiceId = (serviceId: string | { id: string; name: string; category: string } | undefined): string | undefined => {
@@ -369,4 +466,110 @@ export const extractServiceName = (serviceId: string | { id: string; name: strin
 export const extractManagerId = (managerId: string | { id: string; name: string; email: string } | undefined): string | undefined => {
   if (!managerId) return undefined
   return typeof managerId === 'string' ? managerId : managerId.id
+}
+
+// Timetable types
+export interface Timetable {
+  id: string
+  name: string
+  description?: string
+  home_ids: string[]
+  service_id: string
+  start_date: string
+  end_date: string
+  total_weeks: number
+  status: 'draft' | 'generating' | 'generated' | 'published' | 'archived'
+  generated_by: string
+  weekly_rotas: WeeklyRota[]
+  total_shifts: number
+  total_hours: number
+  total_assignments: number
+  average_weekly_hours: number
+  generation_started_at?: string
+  generation_completed_at?: string
+  generation_duration_ms?: number
+  conflicts_detected: number
+  generation_errors: GenerationError[]
+  is_public: boolean
+  accessible_by_roles: UserRole[]
+  accessible_by_users: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface WeeklyRota {
+  week_start_date: string
+  week_end_date: string
+  week_number: number
+  shifts: TimetableShift[]
+  total_shifts: number
+  total_hours: number
+  total_assignments: number
+  employment_distribution: EmploymentDistribution
+}
+
+export interface TimetableShift {
+  shift_id: string
+  home_id: string
+  service_id: string
+  date: string
+  start_time: string
+  end_time: string
+  shift_type: ShiftType
+  required_staff_count: number
+  assigned_staff: TimetableStaffAssignment[]
+  notes?: string
+  duration_hours: number
+}
+
+export interface TimetableStaffAssignment {
+  user_id: string
+  name: string
+  role: UserRole
+  type: 'fulltime' | 'parttime' | 'bank'
+  status: string
+  assigned_at: string
+}
+
+export interface EmploymentDistribution {
+  fulltime: {
+    total_hours: number
+    staff_count: number
+    average_hours: number
+  }
+  parttime: {
+    total_hours: number
+    staff_count: number
+    average_hours: number
+  }
+  bank: {
+    total_hours: number
+    staff_count: number
+    average_hours: number
+  }
+}
+
+export interface GenerationError {
+  week: number
+  error: string
+  timestamp: string
+}
+
+export interface TimetableCreateRequest {
+  name: string
+  description?: string
+  home_ids: string[]
+  service_id: string
+  start_date: string
+  end_date: string
+  total_weeks: number
+}
+
+export interface TimetableGenerationStatus {
+  status: 'draft' | 'generating' | 'generated' | 'published' | 'archived'
+  generation_started_at?: string
+  generation_completed_at?: string
+  generation_duration_ms?: number
+  conflicts_detected: number
+  generation_errors: GenerationError[]
 }

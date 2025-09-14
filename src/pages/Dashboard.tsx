@@ -18,6 +18,7 @@ import {
 import { rotasApi, shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { extractUserDefaultHomeId } from '@/types'
+import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
 
 const Dashboard: React.FC = () => {
@@ -39,15 +40,18 @@ const Dashboard: React.FC = () => {
   const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Monday start
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
 
+  // Get user's home ID
+  const userHomeId = extractUserDefaultHomeId(user)
+
   // Fetch dashboard data
   const { data: currentRota = [], isLoading: rotaLoading } = useQuery({
     queryKey: ['rota', 'current', weekStart.toISOString()],
     queryFn: () => rotasApi.getAll({
-      home_id: extractUserDefaultHomeId(user),
+      home_id: userHomeId,
       week_start_date: weekStart.toISOString(),
       week_end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -57,16 +61,16 @@ const Dashboard: React.FC = () => {
       start_date: weekStart.toISOString(),
       end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
   const { data: staff = [], isLoading: staffLoading } = useQuery({
-    queryKey: ['staff', extractUserDefaultHomeId(user)],
+    queryKey: ['staff', userHomeId],
     queryFn: () => usersApi.getAll({ 
-      home_id: extractUserDefaultHomeId(user) // Only filter by home if user has one
+      home_id: userHomeId // Only filter by home if user has one
     }),
-    enabled: !!user && (!!extractUserDefaultHomeId(user) || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -94,13 +98,16 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Available Shifts Notification */}
+      <AvailableShiftsNotification />
+
       {/* Welcome Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h1 className="text-2xl font-bold text-gray-900">
           Welcome back, {user?.name}! 👋
         </h1>
         <p className="text-gray-600 mt-2">
-          Here's what's happening this week at {extractUserDefaultHomeId(user) ? 'your care home' : 'MyRotaPro'}
+          Here's what's happening this week at {userHomeId ? 'your care home' : 'MyRotaPro'}
         </p>
       </div>
 
@@ -422,7 +429,7 @@ const Dashboard: React.FC = () => {
       ) : (
         // Hours Summary Tab
         <HoursSummary 
-          homeId={extractUserDefaultHomeId(user)}
+          homeId={userHomeId}
           isAdminView={true}
           userRole={user.role}
         />

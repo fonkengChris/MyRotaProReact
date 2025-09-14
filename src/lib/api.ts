@@ -14,6 +14,14 @@ import {
   AIGenerationResult,
   ConstraintWeight,
   WeeklySchedule,
+  ShiftSwap,
+  ShiftSwapRequest,
+  ShiftSwapResponse,
+  AvailableSwap,
+  ShiftSwapStats,
+  Timetable,
+  TimetableCreateRequest,
+  TimetableGenerationStatus,
 } from '@/types'
 import toast from 'react-hot-toast';
 
@@ -181,7 +189,7 @@ export const shiftsApi = {
     return response.data
   },
 
-  create: async (data: Omit<Shift, 'id' | 'created_at' | 'updated_at'>): Promise<Shift> => {
+                                                                                                                                                                                                                                                                                                        create: async (data: Omit<Shift, 'id' | 'created_at' | 'updated_at'>): Promise<Shift> => {
     const response = await api.post<Shift>('/shifts', data)
     return response.data
   },
@@ -213,6 +221,17 @@ export const shiftsApi = {
     end_date: string
   }): Promise<any> => {
     const response = await api.get('/shifts/conflicts/check', { params })
+    return response.data
+  },
+
+  // Get available shifts for staff selection
+  getAvailable: async (params: {
+    user_id: string
+    start_date: string
+    end_date: string
+    home_ids?: string
+  }): Promise<Shift[]> => {
+    const response = await api.get<Shift[]>('/shifts/available', { params })
     return response.data
   },
 }
@@ -491,6 +510,140 @@ export const weeklySchedulesApi = {
 
   toggleDayStatus: async (scheduleId: string, dayName: string): Promise<WeeklySchedule> => {
     const response = await api.patch(`/weekly-schedules/${scheduleId}/days/${dayName}/toggle`);
+    return response.data;
+  }
+};
+
+// Shift Swap API
+export const shiftSwapsApi = {
+  // Get all shift swaps for the current user
+  getAll: async (params?: { status?: string; type?: 'sent' | 'received' }): Promise<ShiftSwap[]> => {
+    const response = await api.get('/shift-swaps', { params });
+    return response.data;
+  },
+
+  // Get pending swap requests (where user needs to respond)
+  getPending: async (): Promise<ShiftSwap[]> => {
+    const response = await api.get('/shift-swaps/pending');
+    return response.data;
+  },
+
+  // Get shift swap by ID
+  getById: async (id: string): Promise<ShiftSwap> => {
+    const response = await api.get(`/shift-swaps/${id}`);
+    return response.data;
+  },
+
+  // Create a new shift swap request
+  create: async (data: ShiftSwapRequest): Promise<ShiftSwap> => {
+    const response = await api.post('/shift-swaps', data);
+    return response.data;
+  },
+
+  // Approve a shift swap request
+  approve: async (id: string, data?: ShiftSwapResponse): Promise<ShiftSwap> => {
+    const response = await api.post(`/shift-swaps/${id}/approve`, data);
+    return response.data;
+  },
+
+  // Reject a shift swap request
+  reject: async (id: string, data?: ShiftSwapResponse): Promise<ShiftSwap> => {
+    const response = await api.post(`/shift-swaps/${id}/reject`, data);
+    return response.data;
+  },
+
+  // Cancel a shift swap request (by requester)
+  cancel: async (id: string): Promise<ShiftSwap> => {
+    const response = await api.post(`/shift-swaps/${id}/cancel`);
+    return response.data;
+  },
+
+  // Get available shifts for swapping
+  getAvailableShifts: async (
+    userId: string, 
+    params?: { start_date?: string; end_date?: string; home_id?: string }
+  ): Promise<AvailableSwap[]> => {
+    const response = await api.get(`/shift-swaps/available-shifts/${userId}`, { params });
+    return response.data;
+  },
+
+  // Get swap statistics for a user
+  getStats: async (userId: string): Promise<ShiftSwapStats> => {
+    const response = await api.get(`/shift-swaps/stats/${userId}`);
+    return response.data;
+  }
+};
+
+// Timetables API
+export const timetablesApi = {
+  // Get all accessible timetables
+  getAll: async (params?: {
+    status?: string;
+    home_id?: string;
+    start_date?: string;
+    end_date?: string;
+    user_access?: boolean;
+  }): Promise<Timetable[]> => {
+    const response = await api.get('/timetables', { params });
+    return response.data;
+  },
+
+  // Get timetable by ID
+  getById: async (id: string): Promise<Timetable> => {
+    const response = await api.get(`/timetables/${id}`);
+    return response.data;
+  },
+
+  // Create new timetable (draft)
+  create: async (data: TimetableCreateRequest): Promise<Timetable> => {
+    const response = await api.post('/timetables', data);
+    return response.data;
+  },
+
+  // Update timetable (only draft status)
+  update: async (id: string, data: Partial<Timetable>): Promise<Timetable> => {
+    const response = await api.put(`/timetables/${id}`, data);
+    return response.data;
+  },
+
+  // Delete timetable (only draft status)
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/timetables/${id}`);
+  },
+
+  // Generate timetable from existing rotas
+  generate: async (id: string): Promise<{ message: string; timetable_id: string; status: string }> => {
+    const response = await api.post(`/timetables/${id}/generate`);
+    return response.data;
+  },
+
+  // Check timetable generation status
+  getStatus: async (id: string): Promise<TimetableGenerationStatus> => {
+    const response = await api.get(`/timetables/${id}/status`);
+    return response.data;
+  },
+
+  // Publish timetable
+  publish: async (id: string): Promise<Timetable> => {
+    const response = await api.post(`/timetables/${id}/publish`);
+    return response.data;
+  },
+
+  // Archive timetable
+  archive: async (id: string): Promise<Timetable> => {
+    const response = await api.post(`/timetables/${id}/archive`);
+    return response.data;
+  },
+
+  // Get timetable summary
+  getSummary: async (id: string): Promise<any> => {
+    const response = await api.get(`/timetables/${id}/summary`);
+    return response.data;
+  },
+
+  // Get weekly breakdown
+  getWeeklyBreakdown: async (id: string): Promise<any[]> => {
+    const response = await api.get(`/timetables/${id}/weekly-breakdown`);
     return response.data;
   }
 };

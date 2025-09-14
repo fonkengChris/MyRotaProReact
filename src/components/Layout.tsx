@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
+import ShiftSwapNotification from '@/components/ShiftSwapNotification'
 import { 
   HomeIcon, 
   CalendarIcon, 
@@ -13,7 +14,9 @@ import {
   ClockIcon,
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  BellIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -32,11 +35,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ...(permissions.canManageRotas 
       ? [
           { name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') },
-          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' }
+          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' },
+          { name: 'Timetables', href: '/timetables', icon: CalendarIcon, current: location.pathname === '/timetables' }
         ]
-      : []
+      : [
+          { name: 'My Timetables', href: '/my-timetables', icon: CalendarIcon, current: location.pathname === '/my-timetables' }
+        ]
     ),
     { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },
+    { name: 'Shift Selection', href: '/shift-selection', icon: BellIcon, current: location.pathname === '/shift-selection' },
+    { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowPathIcon, current: location.pathname === '/shift-swaps' },
     { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
@@ -188,6 +196,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </main>
       </div>
+      
+      {/* Shift Swap Notifications */}
+      <ShiftSwapNotification />
     </div>
   )
 }
