@@ -295,8 +295,8 @@ const StaffManagement: React.FC = () => {
   if (!permissions.canManageUsers) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">Access Denied</h2>
+        <p className="text-neutral-600 dark:text-neutral-400">
           You don't have permission to manage staff members.
         </p>
       </div>
@@ -316,8 +316,8 @@ const StaffManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Staff Management</h1>
+          <p className="text-neutral-600 mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
             Manage staff members, roles, and permissions
           </p>
         </div>
@@ -325,11 +325,11 @@ const StaffManagement: React.FC = () => {
 
       {/* Filters and Search */}
       <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search staff members..."
@@ -341,7 +341,7 @@ const StaffManagement: React.FC = () => {
 
             {/* Role Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Role
               </label>
               <select
@@ -359,7 +359,7 @@ const StaffManagement: React.FC = () => {
 
             {/* Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Type
               </label>
               <select
@@ -376,7 +376,7 @@ const StaffManagement: React.FC = () => {
 
             {/* Home Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Home
               </label>
               <select
@@ -403,7 +403,7 @@ const StaffManagement: React.FC = () => {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Status
               </label>
               <select
@@ -429,22 +429,22 @@ const StaffManagement: React.FC = () => {
               <CardDescription>
                 {filteredStaff.length} of {staff.length || 0} staff members
                 {typeFilter !== 'all' && (
-                  <span className="ml-2 text-primary-600">
+                  <span className="ml-2 text-primary-600 dark:text-cyan-400">
                     • {typeFilter === 'fulltime' ? 'Full Time' : 
                        typeFilter === 'parttime' ? 'Part Time' : 
                        typeFilter === 'bank' ? 'Bank' : typeFilter}
                   </span>
                 )}
                 {homeFilter !== 'all' && homes && (
-                  <span className="ml-2 text-primary-600">
+                  <span className="ml-2 text-primary-600 dark:text-cyan-400">
                     • {getHomeDisplayName(homeFilter)}
                   </span>
                 )}
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
-              <FunnelIcon className="h-5 w-5 text-gray-400" />
-              <span className="text-sm text-gray-500">Filtered</span>
+              <FunnelIcon className="h-5 w-5 text-neutral-400" />
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">Filtered</span>
               {(searchTerm || roleFilter !== 'all' || typeFilter !== 'all' || homeFilter !== 'all' || statusFilter !== 'all') && (
                 <Button
                   variant="outline"
@@ -467,9 +467,9 @@ const StaffManagement: React.FC = () => {
         <CardContent>
           {filteredStaff.length === 0 ? (
             <div className="text-center py-8">
-              <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No staff members found</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <UsersIcon className="mx-auto h-12 w-12 text-neutral-400" />
+              <h3 className="mt-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">No staff members found</h3>
+              <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                 {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'Get started by adding your first staff member'
@@ -477,33 +477,35 @@ const StaffManagement: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                <thead className="bg-gray-50 dark:bg-neutral-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="table-header-cell">
                       Staff Member
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="table-header-cell">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="table-header-cell">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="table-header-cell">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="table-header-cell">
                       Homes
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-neutral-900 divide-y divide-gray-200 dark:divide-neutral-700">
                   {filteredStaff.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50">
+                    <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -514,10 +516,10 @@ const StaffManagement: React.FC = () => {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                               {member.name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-neutral-400">
                               ID: {member.id.slice(-8)}
                             </div>
                           </div>
@@ -534,16 +536,24 @@ const StaffManagement: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{member.email}</div>
-                        <div className="text-sm text-gray-500">{member.phone}</div>
+                        <div className="text-sm text-gray-900 dark:text-neutral-100">{member.email}</div>
+                        <div className="text-sm text-gray-500 dark:text-neutral-400">{member.phone}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
                           {getUserHomes(member).map((userHome) => (
-                            <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                            <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-3 rounded-md border-l-4 ${
+                              userHome.is_default 
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                                : 'bg-green-50 dark:bg-green-900/20 border-green-400'
+                            }`}>
                               <div className="flex items-center space-x-2">
-                                <HomeIcon className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-900">
+                                <HomeIcon className={`h-4 w-4 ${
+                                  userHome.is_default 
+                                    ? 'text-blue-500 dark:text-blue-400' 
+                                    : 'text-green-500 dark:text-green-400'
+                                }`} />
+                                <span className="text-sm text-gray-900 dark:text-neutral-100">
                                   {userHome.name}
                                 </span>
                                 {userHome.is_default && (
@@ -577,14 +587,14 @@ const StaffManagement: React.FC = () => {
                             </div>
                           ))}
                           {getUserHomes(member).length === 0 && (
-                            <span className="text-sm text-gray-500">No homes allocated</span>
+                            <span className="text-sm text-gray-500 dark:text-neutral-400">No homes allocated</span>
                           )}
                           {permissions.canAllocateHomes && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleHomeAllocation(member)}
-                              className="text-xs h-6 px-2"
+                              className="text-xs h-6 px-2 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
                             >
                               <PlusIcon className="h-3 w-3 mr-1" />
                               Add Home
@@ -630,6 +640,145 @@ const StaffManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {filteredStaff.map((member) => (
+                <Card key={member.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-12 w-12 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-white">
+                          {member.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                          {member.name}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-neutral-400">
+                          ID: {member.id.slice(-8)}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <Badge variant={getRoleBadgeVariant(member.role)} className="text-xs">
+                            {getRoleDisplayName(member.role)}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {getTypeDisplayName(member.type)}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEditUser(member)}
+                        title="Edit"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleToggleStatus(member.id, member.is_active)}
+                        title={member.is_active ? 'Deactivate' : 'Activate'}
+                      >
+                        {member.is_active ? '🚫' : '✅'}
+                      </Button>
+                      {member.id !== currentUser?.id && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleDeleteUser(member.id, member.name)}
+                          title="Delete"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Contact Info */}
+                  <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="text-xs text-gray-900 dark:text-neutral-100">{member.email}</div>
+                    <div className="text-xs text-gray-500 dark:text-neutral-400">{member.phone}</div>
+                  </div>
+
+                  {/* Homes */}
+                  <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">Homes:</div>
+                    <div className="space-y-2">
+                      {getUserHomes(member).map((userHome) => (
+                        <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-2 rounded-md border-l-4 ${
+                          userHome.is_default 
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                            : 'bg-green-50 dark:bg-green-900/20 border-green-400'
+                        }`}>
+                          <div className="flex items-center space-x-2">
+                            <HomeIcon className={`h-3 w-3 ${
+                              userHome.is_default 
+                                ? 'text-blue-500 dark:text-blue-400' 
+                                : 'text-green-500 dark:text-green-400'
+                            }`} />
+                            <span className="text-xs text-gray-900 dark:text-neutral-100">
+                              {userHome.name}
+                            </span>
+                            {userHome.is_default && (
+                              <StarIcon className="h-3 w-3 text-yellow-500" title="Default home" />
+                            )}
+                          </div>
+                          {permissions.canAllocateHomes && (
+                            <div className="flex space-x-1">
+                              {!userHome.is_default && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSetDefaultHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id))}
+                                  className="text-xs h-5 px-1"
+                                  title="Set as default"
+                                >
+                                  <StarIcon className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRemoveHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id))}
+                                className="text-xs h-5 px-1"
+                                title="Remove home"
+                              >
+                                <XMarkIcon className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {getUserHomes(member).length === 0 && (
+                        <div className="text-xs text-gray-500 dark:text-neutral-400">
+                          No homes allocated
+                        </div>
+                      )}
+                      {permissions.canAllocateHomes && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddHome(member)}
+                          className="w-full mt-2 text-xs h-6 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
+                        >
+                          <PlusIcon className="h-3 w-3 mr-1" />
+                          Add Home
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -637,12 +786,12 @@ const StaffManagement: React.FC = () => {
       {/* Enhanced Home Allocation Modal */}
       {showHomeAllocationModal && selectedUserForHomeAllocation && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-6 border w-[500px] shadow-lg rounded-md bg-white">
+          <div className="relative top-4 sm:top-20 mx-auto p-4 sm:p-6 border border-gray-200 dark:border-neutral-700 w-[95vw] max-w-[500px] shadow-lg rounded-md bg-white dark:bg-neutral-900">
             <div className="mb-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">
                 Manage Homes for {selectedUserForHomeAllocation.name}
               </h3>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-neutral-400">
                 <span>Role: <Badge variant={getRoleBadgeVariant(selectedUserForHomeAllocation.role)} className="ml-1">
                   {getRoleDisplayName(selectedUserForHomeAllocation.role)}
                 </Badge></span>
@@ -650,20 +799,28 @@ const StaffManagement: React.FC = () => {
                   {getTypeDisplayName(selectedUserForHomeAllocation.type)}
                 </Badge></span>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
                 Add new homes or manage existing allocations
               </p>
             </div>
 
             {/* Current Homes */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Current Homes</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Current Homes</h4>
               <div className="space-y-2">
                 {getUserHomes(selectedUserForHomeAllocation).map((userHome) => (
-                  <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-3 rounded-md border-l-4 ${
+                    userHome.is_default 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                      : 'bg-green-50 dark:bg-green-900/20 border-green-400'
+                  }`}>
                     <div className="flex items-center space-x-2">
-                      <HomeIcon className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{userHome.name}</span>
+                      <HomeIcon className={`h-4 w-4 ${
+                        userHome.is_default 
+                          ? 'text-blue-500 dark:text-blue-400' 
+                          : 'text-green-500 dark:text-green-400'
+                      }`} />
+                      <span className="text-sm text-gray-900 dark:text-neutral-100">{userHome.name}</span>
                       {userHome.is_default && (
                         <Badge variant="success" className="text-xs">Default</Badge>
                       )}
@@ -691,23 +848,23 @@ const StaffManagement: React.FC = () => {
                   </div>
                 ))}
                 {getUserHomes(selectedUserForHomeAllocation).length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-3">No homes allocated yet</p>
+                  <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-3">No homes allocated yet</p>
                 )}
               </div>
             </div>
 
             {/* Add New Home */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Add New Home</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Add New Home</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Select Home
                   </label>
                   <select
                     value={newHomeAllocation.homeId}
                     onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, homeId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
                   >
                     <option value="">Choose a home...</option>
                     {getAvailableHomes(selectedUserForHomeAllocation).map((home) => (
@@ -723,9 +880,9 @@ const StaffManagement: React.FC = () => {
                     id="isDefault"
                     checked={newHomeAllocation.isDefault}
                     onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, isDefault: e.target.checked }))}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="isDefault" className="text-sm text-gray-700">
+                  <label htmlFor="isDefault" className="text-sm text-gray-700 dark:text-neutral-300">
                     Set as default home
                   </label>
                 </div>
@@ -758,9 +915,9 @@ const StaffManagement: React.FC = () => {
       {/* User Edit Modal */}
       {showEditModal && selectedUserForEdit && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-6 border w-[600px] shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+          <div className="relative top-4 sm:top-10 mx-auto p-4 sm:p-6 border border-gray-200 dark:border-neutral-700 w-[95vw] max-w-[600px] shadow-lg rounded-md bg-white dark:bg-neutral-900 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100">
                 Edit Staff Member: {selectedUserForEdit.name}
               </h3>
               <Button
@@ -776,10 +933,10 @@ const StaffManagement: React.FC = () => {
             <div className="space-y-6">
               {/* Basic Information */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Basic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Basic Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Name
                     </label>
                     <input
@@ -791,7 +948,7 @@ const StaffManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Email
                     </label>
                     <input
@@ -803,7 +960,7 @@ const StaffManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Phone
                     </label>
                     <input
@@ -814,7 +971,7 @@ const StaffManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Status
                     </label>
                     <select
@@ -831,10 +988,10 @@ const StaffManagement: React.FC = () => {
 
               {/* Role and Type */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Role & Employment</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Role & Employment</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Role
                     </label>
                     <select
@@ -850,7 +1007,7 @@ const StaffManagement: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Employment Type
                     </label>
                     <select
@@ -869,10 +1026,10 @@ const StaffManagement: React.FC = () => {
 
               {/* Hours */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Hours Requirements</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Hours Requirements</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Minimum Hours per Week
                     </label>
                     <input
@@ -885,7 +1042,7 @@ const StaffManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="form-label">
                       Maximum Hours per Week
                     </label>
                     <input
@@ -902,7 +1059,7 @@ const StaffManagement: React.FC = () => {
 
               {/* Skills */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Skills</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Skills</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {['medication', 'personal_care', 'domestic_support', 'social_support', 'specialist_care'].map((skill) => (
                     <label key={skill} className="flex items-center space-x-2">
@@ -917,9 +1074,9 @@ const StaffManagement: React.FC = () => {
                             setEditFormData(prev => ({ ...prev, skills: currentSkills.filter(s => s !== skill) }))
                           }
                         }}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-700 capitalize">
+                      <span className="text-sm text-gray-700 dark:text-neutral-300 capitalize">
                         {skill.replace('_', ' ')}
                       </span>
                     </label>
@@ -929,7 +1086,7 @@ const StaffManagement: React.FC = () => {
 
               {/* Preferred Shift Types */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Preferred Shift Types</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Preferred Shift Types</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {['morning', 'afternoon', 'evening', 'night', 'overtime', 'long_day', 'split'].map((shiftType) => (
                     <label key={shiftType} className="flex items-center space-x-2">
@@ -944,9 +1101,9 @@ const StaffManagement: React.FC = () => {
                             setEditFormData(prev => ({ ...prev, preferred_shift_types: currentShiftTypes.filter(s => s !== shiftType) }))
                           }
                         }}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-700 capitalize">
+                      <span className="text-sm text-gray-700 dark:text-neutral-300 capitalize">
                         {shiftType.replace('_', ' ')}
                       </span>
                     </label>

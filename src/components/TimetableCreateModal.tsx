@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { format, addWeeks } from 'date-fns'
+import { format,} from 'date-fns'
 import Button from '@/components/ui/Button'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { Home, Service, TimetableCreateRequest } from '@/types'
@@ -136,7 +136,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Create Timetable</h2>
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Create Timetable</h2>
           <Button
             variant="outline"
             size="sm"
@@ -150,7 +150,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="form-label">
               Timetable Name *
             </label>
             <input
@@ -163,12 +163,12 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               }`}
               placeholder="Enter timetable name"
             />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            {errors.name && <p className="form-error">{errors.name}</p>}
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="description" className="form-label">
               Description
             </label>
             <textarea
@@ -181,12 +181,12 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               placeholder="Enter timetable description (optional)"
               rows={3}
             />
-            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+            {errors.description && <p className="form-error">{errors.description}</p>}
           </div>
 
           {/* Homes Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Select Homes *
             </label>
             <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
@@ -196,18 +196,18 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
                     type="checkbox"
                     checked={formData.home_ids.includes(home.id)}
                     onChange={() => handleHomeToggle(home.id)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="rounded border-gray-300 text-primary-600 dark:text-cyan-400 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">{home.name}</span>
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">{home.name}</span>
                 </label>
               ))}
             </div>
-            {errors.home_ids && <p className="mt-1 text-sm text-red-600">{errors.home_ids}</p>}
+            {errors.home_ids && <p className="form-error">{errors.home_ids}</p>}
           </div>
 
           {/* Service Selection */}
           <div>
-            <label htmlFor="service_id" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="service_id" className="form-label">
               Service *
             </label>
             <select
@@ -225,12 +225,12 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
                 </option>
               ))}
             </select>
-            {errors.service_id && <p className="mt-1 text-sm text-red-600">{errors.service_id}</p>}
+            {errors.service_id && <p className="form-error">{errors.service_id}</p>}
           </div>
 
           {/* Start Date */}
           <div>
-            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="start_date" className="form-label">
               Start Date *
             </label>
             <input
@@ -242,12 +242,12 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
                 errors.start_date ? 'border-red-300' : 'border-gray-300'
               }`}
             />
-            {errors.start_date && <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>}
+            {errors.start_date && <p className="form-error">{errors.start_date}</p>}
           </div>
 
           {/* Total Weeks */}
           <div>
-            <label htmlFor="total_weeks" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="total_weeks" className="form-label">
               Total Weeks *
             </label>
             <input
@@ -261,12 +261,12 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
                 errors.total_weeks ? 'border-red-300' : 'border-gray-300'
               }`}
             />
-            {errors.total_weeks && <p className="mt-1 text-sm text-red-600">{errors.total_weeks}</p>}
+            {errors.total_weeks && <p className="form-error">{errors.total_weeks}</p>}
           </div>
 
           {/* End Date (Read-only) */}
           <div>
-            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="end_date" className="form-label">
               End Date (Auto-calculated)
             </label>
             <input
@@ -274,7 +274,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               id="end_date"
               value={formData.end_date}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md shadow-sm bg-neutral-50 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
             />
           </div>
 

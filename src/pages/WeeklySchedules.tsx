@@ -71,7 +71,7 @@ const WeeklySchedules: React.FC = () => {
   if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-4">Access Denied</h2>
         <p className="text-gray-600">
           You don't have permission to access weekly schedule management.
         </p>
@@ -93,7 +93,7 @@ const WeeklySchedules: React.FC = () => {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Weekly Schedules</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Weekly Schedules</h1>
             <p className="text-gray-600 mt-1">
               Configure standard shift patterns for each care home
             </p>

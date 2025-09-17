@@ -89,7 +89,7 @@ const UserTimetables: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Timetables</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">My Timetables</h1>
           <p className="text-gray-600 mt-1">
             View your published work schedules and timetables
           </p>

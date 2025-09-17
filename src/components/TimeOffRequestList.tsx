@@ -123,8 +123,8 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
           {pendingRequests.length === 0 ? (
             <div className="text-center py-8">
               <CheckIcon className="mx-auto h-12 w-12 text-green-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No pending requests</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="mt-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">No pending requests</h3>
+              <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                 All time-off requests have been processed
               </p>
             </div>
@@ -140,13 +140,13 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-3">
                           <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-5 w-5 text-primary-600" />
+                            <UserIcon className="h-5 w-5 text-primary-600 dark:text-cyan-400" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-gray-900">
+                            <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
                               {staffMember?.name || 'Unknown Staff'}
                             </h4>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
                               {staffMember?.role?.replace('_', ' ') || 'Staff Member'}
                             </p>
                           </div>
@@ -173,13 +173,13 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         </div>
 
                         <div className="mb-3">
-                          <p className="text-sm text-gray-900 font-medium">Reason:</p>
+                          <p className="text-sm text-gray-900 dark:text-neutral-100 font-medium">Reason:</p>
                           <p className="text-sm text-gray-600">{request.reason}</p>
                         </div>
 
                         {request.notes && (
                           <div className="mb-3">
-                            <p className="text-sm text-gray-900 font-medium">Notes:</p>
+                            <p className="text-sm text-gray-900 dark:text-neutral-100 font-medium">Notes:</p>
                             <p className="text-sm text-gray-600">{request.notes}</p>
                           </div>
                         )}
@@ -231,7 +231,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                       <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-sm font-medium text-red-800 mb-1">
+                            <label className="form-label text-danger-800 dark:text-danger-200">
                               Reason for Denial
                             </label>
                             <textarea
@@ -298,14 +298,14 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         <UserIcon className="h-4 w-4 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-green-900">
+                        <p className="text-sm font-medium text-green-900 dark:text-green-100">
                           {staffMember?.name || 'Unknown Staff'}
                         </p>
-                        <p className="text-xs text-green-700">
+                        <p className="text-xs text-green-700 dark:text-green-300">
                           {format(parseISO(request.start_date), 'MMM d')} - {format(parseISO(request.end_date), 'MMM d')} ({duration} days)
                         </p>
                         {approver && (
-                          <p className="text-xs text-green-600">
+                          <p className="text-xs text-green-600 dark:text-green-400">
                             Approved by: {approver.name}
                             {request.approved_at && (
                               <span className="ml-2">

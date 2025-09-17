@@ -187,7 +187,7 @@ const ShiftSwaps: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Shift Swaps</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Shift Swaps</h1>
           <p className="text-gray-600 mt-1">
             Request and manage shift exchanges with other staff members
           </p>

@@ -110,7 +110,7 @@ const Homes: React.FC = () => {
   if (!permissions.canManageHomes) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-4">Access Denied</h2>
         <p className="text-gray-600">
           You don't have permission to manage homes.
         </p>
@@ -130,7 +130,7 @@ const Homes: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Homes</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Homes</h1>
           <p className="text-gray-600">Manage care homes and their settings</p>
         </div>
         <Button onClick={handleCreateHome}>

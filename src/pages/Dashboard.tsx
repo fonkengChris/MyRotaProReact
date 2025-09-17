@@ -102,39 +102,41 @@ const Dashboard: React.FC = () => {
       <AvailableShiftsNotification />
 
       {/* Welcome Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.name}! 👋
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Here's what's happening this week at {userHomeId ? 'your care home' : 'MyRotaPro'}
-        </p>
+      <div className="card">
+        <div className="card-content">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display mb-2">
+            Welcome back, {user?.name}! 👋
+          </h1>
+          <p className="text-neutral-600 text-sm sm:text-base lg:text-lg">
+            Here's what's happening this week at {userHomeId ? 'your care home' : 'MyRotaPro'}
+          </p>
+        </div>
       </div>
 
       {/* Tabs - Only show for users who can view hours summary */}
       {canViewHoursSummary && (
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-neutral-200">
+          <nav className="-mb-px flex space-x-2 sm:space-x-4 lg:space-x-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
               }`}
             >
-              <CalendarIcon className="h-4 w-4 inline mr-2" />
+              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
               Overview
             </button>
             <button
               onClick={() => setActiveTab('hours')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'hours'
                   ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
               }`}
             >
-              <ChartBarIcon className="h-4 w-4 inline mr-2" />
+              <ChartBarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
               Hours Summary
             </button>
           </nav>
@@ -145,58 +147,66 @@ const Dashboard: React.FC = () => {
       {activeTab === 'overview' ? (
         <>
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <Card className="group hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <CalendarIcon className="h-8 w-8 text-primary-600" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+                      <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600" />
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Shifts</p>
-                    <p className="text-2xl font-semibold text-gray-900">{totalShifts}</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Total Shifts</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">{totalShifts}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-6">
+            <Card className="group hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <ClockIcon className="h-8 w-8 text-success-600" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-success-100 flex items-center justify-center group-hover:bg-success-200 transition-colors">
+                      <ClockIcon className="h-5 w-5 sm:h-6 sm:w-6 text-success-600" />
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Hours</p>
-                    <p className="text-2xl font-semibold text-gray-900">{totalHours}</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Total Hours</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">{totalHours}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-6">
+            <Card className="group hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <UsersIcon className="h-8 w-8 text-secondary-600" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-secondary-100 flex items-center justify-center group-hover:bg-secondary-200 transition-colors">
+                      <UsersIcon className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-600" />
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Active Staff</p>
-                    <p className="text-2xl font-semibold text-gray-900">{activeStaff}</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Active Staff</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">{activeStaff}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-6">
+            <Card className="group hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <ExclamationTriangleIcon className="h-8 w-8 text-warning-600" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-warning-100 flex items-center justify-center group-hover:bg-warning-200 transition-colors">
+                      <ExclamationTriangleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-warning-600" />
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Pending Requests</p>
-                    <p className="text-2xl font-semibold text-gray-900">{pendingRequests}</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Pending Requests</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">{pendingRequests}</p>
                   </div>
                 </div>
               </CardContent>
@@ -255,27 +265,27 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No rota for this week</h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                  <div className="text-center py-12">
+                    <div className="mx-auto h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+                      <CalendarIcon className="h-8 w-8 text-neutral-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-neutral-900 mb-2">No rota for this week</h3>
+                    <p className="text-sm text-neutral-600 mb-6">
                       {permissions.canManageRotas 
                         ? 'Create a new rota to get started'
                         : 'Contact your manager to create a rota'
                       }
                     </p>
                     {permissions.canManageRotas && (
-                      <div className="mt-6">
-                        <Link to="/rota">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                          >
-                            <PlusIcon className="h-4 w-4 mr-2" />
-                            Create Rota
-                          </Button>
-                        </Link>
-                      </div>
+                      <Link to="/rota">
+                        <Button
+                          variant="primary"
+                          size="md"
+                        >
+                          <PlusIcon className="h-4 w-4 mr-2" />
+                          Create Rota
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 )}
@@ -298,10 +308,12 @@ const Dashboard: React.FC = () => {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="h-20 flex-col justify-center"
+                      className="h-24 flex-col justify-center group hover:bg-primary-50 hover:border-primary-200 transition-all duration-200"
                     >
-                      <CalendarIcon className="h-6 w-6 mb-2" />
-                      Create New Rota
+                      <div className="h-8 w-8 rounded-lg bg-primary-100 flex items-center justify-center mb-2 group-hover:bg-primary-200 transition-colors">
+                        <CalendarIcon className="h-5 w-5 text-primary-600" />
+                      </div>
+                      <span className="font-medium">Create New Rota</span>
                     </Button>
                   </Link>
                 )}
@@ -310,10 +322,12 @@ const Dashboard: React.FC = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-20 flex-col justify-center"
+                    className="h-24 flex-col justify-center group hover:bg-secondary-50 hover:border-secondary-200 transition-all duration-200"
                   >
-                    <CalendarIcon className="h-6 w-6 mb-2" />
-                    View My Schedule
+                    <div className="h-8 w-8 rounded-lg bg-secondary-100 flex items-center justify-center mb-2 group-hover:bg-secondary-200 transition-colors">
+                      <CalendarIcon className="h-5 w-5 text-secondary-600" />
+                    </div>
+                    <span className="font-medium">View My Schedule</span>
                   </Button>
                 </Link>
 
@@ -321,10 +335,12 @@ const Dashboard: React.FC = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-20 flex-col justify-center"
+                    className="h-24 flex-col justify-center group hover:bg-accent-50 hover:border-accent-200 transition-all duration-200"
                   >
-                    <ChartBarIcon className="h-6 w-6 mb-2" />
-                    My Hours
+                    <div className="h-8 w-8 rounded-lg bg-accent-100 flex items-center justify-center mb-2 group-hover:bg-accent-200 transition-colors">
+                      <ChartBarIcon className="h-5 w-5 text-accent-600" />
+                    </div>
+                    <span className="font-medium">My Hours</span>
                   </Button>
                 </Link>
 
@@ -333,10 +349,12 @@ const Dashboard: React.FC = () => {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="h-20 flex-col justify-center"
+                      className="h-24 flex-col justify-center group hover:bg-success-50 hover:border-success-200 transition-all duration-200"
                     >
-                      <UsersIcon className="h-6 w-6 mb-2" />
-                      Manage Staff
+                      <div className="h-8 w-8 rounded-lg bg-success-100 flex items-center justify-center mb-2 group-hover:bg-success-200 transition-colors">
+                        <UsersIcon className="h-5 w-5 text-success-600" />
+                      </div>
+                      <span className="font-medium">Manage Staff</span>
                     </Button>
                   </Link>
                 )}
@@ -345,10 +363,12 @@ const Dashboard: React.FC = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-20 flex-col justify-center"
+                    className="h-24 flex-col justify-center group hover:bg-warning-50 hover:border-warning-200 transition-all duration-200"
                   >
-                    <ClockIcon className="h-6 w-6 mb-2" />
-                    Availability
+                    <div className="h-8 w-8 rounded-lg bg-warning-100 flex items-center justify-center mb-2 group-hover:bg-warning-200 transition-colors">
+                      <ClockIcon className="h-5 w-5 text-warning-600" />
+                    </div>
+                    <span className="font-medium">Availability</span>
                   </Button>
                 </Link>
 
@@ -357,10 +377,12 @@ const Dashboard: React.FC = () => {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="h-20 flex-col justify-center"
+                      className="h-24 flex-col justify-center group hover:bg-primary-50 hover:border-primary-200 transition-all duration-200"
                     >
-                      <PlusIcon className="h-6 w-6 mb-2" />
-                      AI Generate Rota
+                      <div className="h-8 w-8 rounded-lg bg-primary-100 flex items-center justify-center mb-2 group-hover:bg-primary-200 transition-colors">
+                        <PlusIcon className="h-5 w-5 text-primary-600" />
+                      </div>
+                      <span className="font-medium">AI Generate Rota</span>
                     </Button>
                   </Link>
                 )}
@@ -370,11 +392,13 @@ const Dashboard: React.FC = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-20 flex-col justify-center"
+                    className="h-24 flex-col justify-center group hover:bg-accent-50 hover:border-accent-200 transition-all duration-200"
                     onClick={() => setActiveTab('hours')}
                   >
-                    <ChartBarIcon className="h-6 w-6 mb-2" />
-                    Hours Summary
+                    <div className="h-8 w-8 rounded-lg bg-accent-100 flex items-center justify-center mb-2 group-hover:bg-accent-200 transition-colors">
+                      <ChartBarIcon className="h-5 w-5 text-accent-600" />
+                    </div>
+                    <span className="font-medium">Hours Summary</span>
                   </Button>
                 )}
               </div>
@@ -391,33 +415,33 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200 hover:bg-neutral-100 transition-colors">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <CalendarIcon className="h-4 w-4 text-primary-600" />
+                    <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <CalendarIcon className="h-5 w-5 text-primary-600" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                       Weekly rota published
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-600">
                       {format(now, 'MMM d, yyyy')} at {format(now, 'h:mm a')}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200 hover:bg-neutral-100 transition-colors">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-success-100 rounded-full flex items-center justify-center">
-                      <UsersIcon className="h-4 w-4 text-success-600" />
+                    <div className="h-10 w-10 bg-success-100 rounded-full flex items-center justify-center">
+                      <UsersIcon className="h-5 w-5 text-success-600" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                       New staff member added
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-600">
                       {format(now, 'MMM d, yyyy')} at {format(now, 'h:mm a')}
                     </p>
                   </div>

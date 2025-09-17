@@ -205,7 +205,7 @@ const Timetables: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Timetables</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Timetables</h1>
             <p className="text-gray-600 mt-1">
               Generate and manage immutable multi-week rotas
             </p>
@@ -217,7 +217,7 @@ const Timetables: React.FC = () => {
             <div className="mx-auto h-16 w-16 text-red-400 mb-4">
               <ExclamationTriangleIcon className="h-16 w-16" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Timetables</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Error Loading Timetables</h3>
             <p className="text-gray-500 mb-6">
               {timetablesError instanceof Error ? timetablesError.message : 'An unexpected error occurred'}
             </p>
@@ -240,7 +240,7 @@ const Timetables: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Timetables</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Timetables</h1>
           <p className="text-gray-600 mt-1">
             Generate and manage immutable multi-week rotas
           </p>
@@ -323,7 +323,7 @@ const Timetables: React.FC = () => {
             <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
               <CalendarIcon className="h-16 w-16" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Timetables</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">No Timetables</h3>
             <p className="text-gray-500 mb-6">
               Create your first timetable to generate immutable multi-week rotas.
             </p>
@@ -377,15 +377,15 @@ const Timetables: React.FC = () => {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900">{timetable.total_shifts}</p>
+                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_shifts}</p>
                       <p className="text-gray-600">Shifts</p>
                     </div>
                     <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900">{timetable.total_hours}</p>
+                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_hours}</p>
                       <p className="text-gray-600">Hours</p>
                     </div>
                     <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900">{timetable.total_assignments}</p>
+                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_assignments}</p>
                       <p className="text-gray-600">Assignments</p>
                     </div>
                   </div>

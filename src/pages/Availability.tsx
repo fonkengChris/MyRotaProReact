@@ -210,7 +210,7 @@ const AvailabilityPage: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Availability</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Failed to Load Availability</h3>
           <p className="text-gray-600 mb-4">
             {availabilitiesError?.message || 'There was an error loading your availability data.'}
           </p>
@@ -239,7 +239,7 @@ const AvailabilityPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Availability & Time Off</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Availability & Time Off</h1>
           <p className="text-gray-600 mt-1">
             Manage your availability and time-off requests
           </p>
@@ -363,10 +363,10 @@ const AvailabilityPage: React.FC = () => {
       {activeTab === 'requests' && (
         <div>
           {staffLoading && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-cyan-900/20 border border-blue-200 dark:border-cyan-800 rounded-lg">
               <div className="flex items-center">
                 <LoadingSpinner size="sm" />
-                <span className="ml-2 text-sm text-blue-700">Loading staff information...</span>
+                <span className="ml-2 text-sm text-blue-700 dark:text-cyan-400">Loading staff information...</span>
               </div>
             </div>
           )}
@@ -413,34 +413,34 @@ const AvailabilityPage: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm font-medium text-gray-700">Staff Member</p>
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-gray-900 dark:text-neutral-100">
                         {staff?.find(s => s.id === selectedRequest.user_id)?.name || 'Unknown'}
                       </p>
                     </div>
                     
                     <div>
                       <p className="text-sm font-medium text-gray-700">Request Type</p>
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-gray-900 dark:text-neutral-100">
                         {selectedRequest.request_type.replace('_', ' ')}
                       </p>
                     </div>
                     
                     <div>
                       <p className="text-sm font-medium text-gray-700">Dates</p>
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-gray-900 dark:text-neutral-100">
                         {new Date(selectedRequest.start_date).toLocaleDateString()} - {new Date(selectedRequest.end_date).toLocaleDateString()}
                       </p>
                     </div>
                     
                     <div>
                       <p className="text-sm font-medium text-gray-700">Reason</p>
-                      <p className="text-sm text-gray-900">{selectedRequest.reason}</p>
+                      <p className="text-sm text-gray-900 dark:text-neutral-100">{selectedRequest.reason}</p>
                     </div>
                     
                     {selectedRequest.notes && (
                       <div>
                         <p className="text-sm font-medium text-gray-700">Notes</p>
-                        <p className="text-sm text-gray-900">{selectedRequest.notes}</p>
+                        <p className="text-sm text-gray-900 dark:text-neutral-100">{selectedRequest.notes}</p>
                       </div>
                     )}
                     

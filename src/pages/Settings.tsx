@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/contexts/ThemeContext'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -11,7 +12,9 @@ import {
   KeyIcon, 
   CogIcon,
   BellIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  SunIcon,
+  MoonIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -35,6 +38,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 
 const Settings: React.FC = () => {
   const { user, updateUser } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'security'>('profile')
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
@@ -99,23 +103,23 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Settings</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mt-2 text-lg">
           Manage your account settings and preferences
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-neutral-200 dark:border-neutral-700">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-500 text-primary-600 dark:text-cyan-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
               }`}
             >
               <tab.icon className="h-5 w-5 inline mr-2" />
@@ -138,7 +142,7 @@ const Settings: React.FC = () => {
             <form onSubmit={handleProfileSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="form-label">
                     Full Name
                   </label>
                   <input
@@ -149,12 +153,12 @@ const Settings: React.FC = () => {
                     placeholder="Enter your full name"
                   />
                   {profileErrors.name && (
-                    <p className="mt-1 text-sm text-danger-600">{profileErrors.name.message}</p>
+                    <p className="form-error">{profileErrors.name.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="form-label">
                     Email Address
                   </label>
                   <input
@@ -165,12 +169,12 @@ const Settings: React.FC = () => {
                     placeholder="Enter your email address"
                   />
                   {profileErrors.email && (
-                    <p className="mt-1 text-sm text-danger-600">{profileErrors.email.message}</p>
+                    <p className="form-error">{profileErrors.email.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="phone" className="form-label">
                     Phone Number
                   </label>
                   <input
@@ -181,20 +185,20 @@ const Settings: React.FC = () => {
                     placeholder="Enter your phone number"
                   />
                   {profileErrors.phone && (
-                    <p className="mt-1 text-sm text-danger-600">{profileErrors.phone.message}</p>
+                    <p className="form-error">{profileErrors.phone.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="form-label">
                     Role
                   </label>
-                  <div className="mt-1 p-3 bg-gray-50 rounded-md border">
-                    <span className="text-sm text-gray-900 capitalize">
+                  <div className="mt-1 p-3 bg-neutral-50 dark:bg-neutral-700 rounded-md border border-neutral-200 dark:border-neutral-600">
+                    <span className="text-sm text-neutral-900 dark:text-neutral-100 capitalize">
                       {user?.role?.replace('_', ' ')}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="form-help">
                     Role changes must be made by an administrator
                   </p>
                 </div>
@@ -228,7 +232,7 @@ const Settings: React.FC = () => {
             <form onSubmit={handlePasswordSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="currentPassword" className="form-label">
                     Current Password
                   </label>
                   <input
@@ -239,14 +243,14 @@ const Settings: React.FC = () => {
                     placeholder="Enter your current password"
                   />
                   {passwordErrors.currentPassword && (
-                    <p className="mt-1 text-sm text-danger-600">{passwordErrors.currentPassword.message}</p>
+                    <p className="form-error">{passwordErrors.currentPassword.message}</p>
                   )}
                 </div>
 
                 <div></div>
 
                 <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="newPassword" className="form-label">
                     New Password
                   </label>
                   <input
@@ -257,12 +261,12 @@ const Settings: React.FC = () => {
                     placeholder="Enter your new password"
                   />
                   {passwordErrors.newPassword && (
-                    <p className="mt-1 text-sm text-danger-600">{passwordErrors.newPassword.message}</p>
+                    <p className="form-error">{passwordErrors.newPassword.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="confirmPassword" className="form-label">
                     Confirm New Password
                   </label>
                   <input
@@ -273,19 +277,19 @@ const Settings: React.FC = () => {
                     placeholder="Confirm your new password"
                   />
                   {passwordErrors.confirmPassword && (
-                    <p className="mt-1 text-sm text-danger-600">{passwordErrors.confirmPassword.message}</p>
+                    <p className="form-error">{passwordErrors.confirmPassword.message}</p>
                   )}
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-md p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <ShieldCheckIcon className="h-5 w-5 text-blue-400" />
+                    <ShieldCheckIcon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Password Requirements</h3>
-                    <div className="mt-2 text-sm text-blue-700">
+                    <h3 className="text-sm font-medium text-primary-800 dark:text-primary-200">Password Requirements</h3>
+                    <div className="mt-2 text-sm text-primary-700 dark:text-primary-300">
                       <ul className="list-disc pl-5 space-y-1">
                         <li>At least 8 characters long</li>
                         <li>Include uppercase and lowercase letters</li>
@@ -324,12 +328,44 @@ const Settings: React.FC = () => {
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Settings</h3>
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Appearance</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Email Notifications</p>
-                      <p className="text-sm text-gray-500">Receive notifications about rota changes</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Dark Mode</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Switch between light and dark themes</p>
+                    </div>
+                    <button
+                      onClick={toggleTheme}
+                      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#0ea5e9' : '#e5e7eb'
+                      }}
+                    >
+                      <span
+                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        style={{
+                          transform: theme === 'dark' ? 'translateX(1.25rem)' : 'translateX(0.25rem)'
+                        }}
+                      >
+                        {theme === 'dark' ? (
+                          <MoonIcon className="h-3 w-3 text-primary-600 mt-0.5 ml-0.5" />
+                        ) : (
+                          <SunIcon className="h-3 w-3 text-neutral-500 mt-0.5 ml-0.5" />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Notification Settings</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Email Notifications</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Receive notifications about rota changes</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
@@ -339,8 +375,8 @@ const Settings: React.FC = () => {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">SMS Notifications</p>
-                      <p className="text-sm text-gray-500">Receive urgent notifications via SMS</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">SMS Notifications</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Receive urgent notifications via SMS</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" />
@@ -351,10 +387,10 @@ const Settings: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Display Settings</h3>
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Display Settings</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="form-label">
                       Default View
                     </label>
                     <select className="input">
@@ -365,7 +401,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="form-label">
                       Time Format
                     </label>
                     <select className="input">
@@ -391,14 +427,14 @@ const Settings: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <div className="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-md p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <ShieldCheckIcon className="h-5 w-5 text-yellow-400" />
+                    <ShieldCheckIcon className="h-5 w-5 text-warning-600 dark:text-warning-400" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">Security Information</h3>
-                    <div className="mt-2 text-sm text-yellow-700">
+                    <h3 className="text-sm font-medium text-warning-800 dark:text-warning-200">Security Information</h3>
+                    <div className="mt-2 text-sm text-warning-700 dark:text-warning-300">
                       <p>Your account is protected with industry-standard security measures.</p>
                     </div>
                   </div>
@@ -406,20 +442,20 @@ const Settings: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Account Activity</h3>
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Account Activity</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Last Login</p>
-                      <p className="text-sm text-gray-500">Today at 9:30 AM</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Last Login</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Today at 9:30 AM</p>
                     </div>
                     <Badge variant="success">Current Session</Badge>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Previous Login</p>
-                      <p className="text-sm text-gray-500">Yesterday at 2:15 PM</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Previous Login</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Yesterday at 2:15 PM</p>
                     </div>
                     <Badge variant="secondary">Completed</Badge>
                   </div>

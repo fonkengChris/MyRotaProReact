@@ -344,7 +344,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
             {isAdminView ? 'Hours Summary' : 'My Hours'}
           </h1>
           <p className="text-gray-600 mt-1">
@@ -382,7 +382,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </h2>
               <p className="text-sm text-gray-500">
@@ -414,7 +414,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <p className="text-sm font-medium text-gray-500">
                   {isAdminView ? 'Total Staff' : 'My Shifts'}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                   {isAdminView ? userHours.length : userHours[0]?.totalShifts || 0}
                 </p>
               </div>
@@ -432,7 +432,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <p className="text-sm font-medium text-gray-500">
                   {isAdminView ? 'Assigned Hours' : 'My Assigned Hours'}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                   {totalHours.toFixed(1)}h
                 </p>
               </div>
@@ -496,7 +496,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           {userHours.length === 0 ? (
             <div className="text-center py-8">
               <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
+              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-neutral-100">
                 No hours recorded
               </h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -525,7 +525,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100">
                           {userHour.user.name}
                         </h3>
                         <p className="text-sm text-gray-500">
@@ -537,7 +537,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                       <div className="flex items-center space-x-4">
                         <div>
                           <p className="text-sm text-gray-500">Assigned Hours</p>
-                          <p className="text-lg font-semibold text-gray-900">
+                          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                             {userHour.totalHours.toFixed(1)}h
                           </p>
                         </div>
@@ -557,7 +557,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Shifts</p>
-                          <p className="text-lg font-semibold text-gray-900">
+                          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                             {userHour.totalShifts}
                           </p>
                         </div>

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import Layout from '@/components/Layout'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
@@ -33,36 +34,40 @@ function App() {
 
   if (!user) {
     return (
-      <Routes>
-        <Route path="/setup" element={<Setup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </ThemeProvider>
     )
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/rota/:weekStart?" element={<RotaEditor />} />
-        <Route path="/weekly-schedules" element={<WeeklySchedules />} />
-        <Route path="/shift-selection" element={<ShiftSelection />} />
-        <Route path="/shift-swaps" element={<ShiftSwaps />} />
-        <Route path="/timetables" element={<Timetables />} />
-        <Route path="/my-timetables" element={<UserTimetables />} />
-        <Route path="/my-schedule" element={<MySchedule />} />
-        <Route path="/my-hours" element={<MyHours />} />
-        <Route path="/availability" element={<Availability />} />
-        <Route path="/staff" element={<StaffManagement />} />
-        <Route path="/homes" element={<Homes />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Layout>
+    <ThemeProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/rota/:weekStart?" element={<RotaEditor />} />
+          <Route path="/weekly-schedules" element={<WeeklySchedules />} />
+          <Route path="/shift-selection" element={<ShiftSelection />} />
+          <Route path="/shift-swaps" element={<ShiftSwaps />} />
+          <Route path="/timetables" element={<Timetables />} />
+          <Route path="/my-timetables" element={<UserTimetables />} />
+          <Route path="/my-schedule" element={<MySchedule />} />
+          <Route path="/my-hours" element={<MyHours />} />
+          <Route path="/availability" element={<Availability />} />
+          <Route path="/staff" element={<StaffManagement />} />
+          <Route path="/homes" element={<Homes />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Layout>
+    </ThemeProvider>
   )
 }
 

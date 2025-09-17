@@ -63,16 +63,16 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">M</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 py-4 sm:py-12 px-3 sm:px-4 lg:px-8">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-lg sm:text-2xl font-bold text-white font-display">M</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">
             Sign in to MyRotaPro
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-1 sm:mt-2 text-center text-sm sm:text-base text-neutral-600">
             Professional rota management for care settings
           </p>
         </div>
@@ -84,7 +84,7 @@ const Login: React.FC = () => {
           <CardContent>
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="form-label">
                   Email address
                 </label>
                 <div className="mt-1">
@@ -99,13 +99,13 @@ const Login: React.FC = () => {
                     placeholder="Enter your email"
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-danger-600">{errors.email.message}</p>
+                    <p className="form-error">{errors.email.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="form-label">
                   Password
                 </label>
                 <div className="mt-1 relative">
@@ -125,13 +125,13 @@ const Login: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className="h-5 w-5 text-neutral-400" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className="h-5 w-5 text-neutral-400" />
                     )}
                   </button>
                   {errors.password && (
-                    <p className="mt-1 text-sm text-danger-600">{errors.password.message}</p>
+                    <p className="form-error">{errors.password.message}</p>
                   )}
                 </div>
               </div>

@@ -133,12 +133,12 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   // Get shift type color
   const getShiftTypeColor = (shiftType: ShiftType) => {
     switch (shiftType) {
-      case 'morning': return 'bg-blue-100 text-blue-800'
-      case 'afternoon': return 'bg-green-100 text-green-800'
-      case 'evening': return 'bg-purple-100 text-purple-800'
-      case 'night': return 'bg-gray-100 text-gray-800'
-      case 'overtime': return 'bg-orange-100 text-orange-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-cyan-300'
+      case 'afternoon': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      case 'evening': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+      case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
+      case 'overtime': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+      default: return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
     }
   }
 
@@ -147,8 +147,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Weekly Availability</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Weekly Availability</h3>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Set your preferred availability for the week
           </p>
         </div>

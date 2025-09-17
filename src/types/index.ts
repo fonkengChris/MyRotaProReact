@@ -412,9 +412,9 @@ export interface FormField {
 }
 
 // UI types
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'accent'
 export type ButtonSize = 'sm' | 'md' | 'lg'
-export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
+export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'accent' | 'neutral'
 export type LoadingSize = 'sm' | 'md' | 'lg'
 
 // Utility functions

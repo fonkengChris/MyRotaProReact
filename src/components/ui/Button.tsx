@@ -24,7 +24,8 @@ const Button: React.FC<ButtonProps> = ({
     primary: 'btn-primary',
     secondary: 'btn-secondary',
     outline: 'btn-outline',
-    danger: 'btn-danger'
+    danger: 'btn-danger',
+    accent: 'btn-accent'
   }
   
   const sizeClasses = {

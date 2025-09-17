@@ -153,7 +153,7 @@ const MyHours: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Paid Hours</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">My Paid Hours</h1>
           <p className="text-gray-600 mt-1">
             Your paid hours for the selected week (after break deductions)
           </p>

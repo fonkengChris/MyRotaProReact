@@ -18,7 +18,9 @@ const Badge: React.FC<BadgeProps> = ({
     secondary: 'badge-secondary',
     success: 'badge-success',
     warning: 'badge-warning',
-    danger: 'badge-danger'
+    danger: 'badge-danger',
+    accent: 'badge-accent',
+    neutral: 'badge-neutral'
   }
 
   return (
