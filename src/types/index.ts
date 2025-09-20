@@ -24,7 +24,7 @@ export type UserRole = 'admin' | 'home_manager' | 'senior_staff' | 'support_work
 
 export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'social_support' | 'specialist_care'
 
-export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'night' | 'overtime' | 'long_day' | 'split'
+export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'night' | 'overtime' | 'long_day' | 'none' | 'split'
 
 // Authentication types
 export interface LoginCredentials {

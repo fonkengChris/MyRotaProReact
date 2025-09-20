@@ -39,7 +39,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 const Settings: React.FC = () => {
   const { user, updateUser } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'security'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile')
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
@@ -96,7 +96,6 @@ const Settings: React.FC = () => {
     { id: 'profile', name: 'Profile', icon: UserIcon },
     { id: 'password', name: 'Password', icon: KeyIcon },
     { id: 'preferences', name: 'Preferences', icon: CogIcon },
-    { id: 'security', name: 'Security', icon: ShieldCheckIcon },
   ]
 
   return (
@@ -416,61 +415,6 @@ const Settings: React.FC = () => {
         </Card>
       )}
 
-      {/* Security Tab */}
-      {activeTab === 'security' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Security Settings</CardTitle>
-            <CardDescription>
-              Manage your account security and privacy
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-md p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <ShieldCheckIcon className="h-5 w-5 text-warning-600 dark:text-warning-400" />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-warning-800 dark:text-warning-200">Security Information</h3>
-                    <div className="mt-2 text-sm text-warning-700 dark:text-warning-300">
-                      <p>Your account is protected with industry-standard security measures.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Account Activity</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Last Login</p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Today at 9:30 AM</p>
-                    </div>
-                    <Badge variant="success">Current Session</Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Previous Login</p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Yesterday at 2:15 PM</p>
-                    </div>
-                    <Badge variant="secondary">Completed</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button variant="outline">
-                  View Full Activity Log
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

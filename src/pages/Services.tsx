@@ -120,18 +120,18 @@ const Services: React.FC = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label htmlFor="home-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="home-filter" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Filter by Home
               </label>
               <select
                 id="home-filter"
                 value={selectedHome}
                 onChange={(e) => setSelectedHome(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 transition-colors dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">All Homes</option>
                 {homes.map((home) => (
@@ -145,57 +145,57 @@ const Services: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+            <thead className="bg-neutral-50 dark:bg-neutral-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Service
                 </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Home
                 </th> */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Staff Required
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Duration
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Priority
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
               {filteredServices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
                     <div className="flex flex-col items-center">
-                      <div className="text-gray-400 mb-2">
+                      <div className="text-neutral-400 dark:text-neutral-500 mb-2">
                         <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
                       </div>
-                      <p className="text-lg font-medium text-gray-900 mb-1">No services found</p>
-                      <p className="text-gray-500">Get started by creating your first service</p>
+                      <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-1">No services found</p>
+                      <p className="text-neutral-500 dark:text-neutral-400">Get started by creating your first service</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredServices.map((service) => (
-                  <tr key={service.id} className="hover:bg-gray-50">
+                  <tr key={service.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{service.name}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{service.name}</div>
+                        <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate max-w-xs">
                           {service.description}
                         </div>
                       </div>
@@ -203,13 +203,13 @@ const Services: React.FC = () => {
                     {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {getHomeNames(service.home_ids)}
                     </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">
                       {getCategoryLabel(service.category)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">
                       {service.min_staff_count} - {service.max_staff_count}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">
                       {service.duration_hours}h
                       {service.is_24_hour && (
                         <span className="ml-1 text-xs text-blue-600">(24h)</span>

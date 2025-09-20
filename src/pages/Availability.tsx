@@ -15,6 +15,7 @@ import {
 import { availabilityApi, timeOffApi, usersApi } from '@/lib/api'
 import { Availability, TimeOffRequest, extractUserDefaultHomeId } from '@/types'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
+import WeeklyAvailabilitySelector from '@/components/WeeklyAvailabilitySelector'
 import TimeOffRequestForm from '@/components/TimeOffRequestForm'
 import TimeOffRequestList from '@/components/TimeOffRequestList'
 import toast from 'react-hot-toast'
@@ -24,7 +25,7 @@ const AvailabilityPage: React.FC = () => {
   const permissions = usePermissions()
   const queryClient = useQueryClient()
   
-  const [activeTab, setActiveTab] = useState<'calendar' | 'requests' | 'submit'>('calendar')
+  const [activeTab, setActiveTab] = useState<'calendar' | 'weekly' | 'requests' | 'submit'>('calendar')
   const [selectedRequest, setSelectedRequest] = useState<TimeOffRequest | null>(null)
 
   // Fetch availability data
@@ -253,7 +254,17 @@ const AvailabilityPage: React.FC = () => {
             className={activeTab === 'calendar' ? 'bg-primary-50 border-primary-200' : ''}
           >
             <CalendarIcon className="h-4 w-4 mr-2" />
-            Availability
+            Detailed View
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveTab('weekly')}
+            className={activeTab === 'weekly' ? 'bg-primary-50 border-primary-200' : ''}
+          >
+            <ClockIcon className="h-4 w-4 mr-2" />
+            Weekly Select
           </Button>
           
           <Button
@@ -352,6 +363,16 @@ const AvailabilityPage: React.FC = () => {
       {/* Tab Content */}
       {activeTab === 'calendar' && (
         <AvailabilityCalendar
+          userId={user?.id || ''}
+          availabilities={availabilities || []}
+          onSaveAvailability={handleSaveAvailability}
+          onDeleteAvailability={handleDeleteAvailability}
+          canEdit={true}
+        />
+      )}
+
+      {activeTab === 'weekly' && (
+        <WeeklyAvailabilitySelector
           userId={user?.id || ''}
           availabilities={availabilities || []}
           onSaveAvailability={handleSaveAvailability}

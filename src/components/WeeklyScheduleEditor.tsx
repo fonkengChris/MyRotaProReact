@@ -79,7 +79,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
   }
 
   const createDefaultSchedule = async () => {
-    const defaultSchedule: WeeklySchedule = {
+    const defaultSchedule: Partial<WeeklySchedule> = {
       home_id: homeId,
       schedule: {
         monday: { is_active: true, shifts: [] },
@@ -93,7 +93,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
     }
 
     try {
-      const data = await weeklySchedulesApi.create(defaultSchedule)
+      const data = await weeklySchedulesApi.create(defaultSchedule as any)
       setSchedule(data)
       onScheduleChange?.()
       toast.success('Default weekly schedule created')
@@ -342,7 +342,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                         </Badge>
                         {canEdit && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             className="ml-2 p-1"
                             onClick={() => toggleDayActive(key)}
@@ -374,7 +374,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                                   <span className="text-sm font-medium text-gray-900">
                                     {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
                                   </span>
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="secondary" className="text-xs">
                                     {shift.shift_type}
                                   </Badge>
                                   <div className="flex items-center space-x-1">
@@ -385,7 +385,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                                   </div>
                                 </div>
                                 <div className="mt-1 text-xs text-gray-600">
-                                  {getServiceName(shift.service_id)}
+                                  {typeof shift.service_id === 'string' ? getServiceName(shift.service_id) : shift.service_id.name}
                                   {shift.notes && (
                                     <span className="ml-2 text-gray-500">• {shift.notes}</span>
                                   )}
