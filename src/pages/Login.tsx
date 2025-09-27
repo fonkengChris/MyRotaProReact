@@ -63,7 +63,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 py-4 sm:py-12 px-3 sm:px-4 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 py-4 sm:py-12 px-3 sm:px-4 lg:px-8">
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
           <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">
             Sign in to MyRotaPro
           </h2>
-          <p className="mt-1 sm:mt-2 text-center text-sm sm:text-base text-neutral-600">
+          <p className="mt-1 sm:mt-2 text-center text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
             Professional rota management for care settings
           </p>
         </div>
@@ -125,9 +125,9 @@ const Login: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-neutral-400" />
+                      <EyeSlashIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-neutral-400" />
+                      <EyeIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
                     )}
                   </button>
                   {errors.password && (
@@ -153,13 +153,13 @@ const Login: React.FC = () => {
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+                  <div className="w-full border-t border-neutral-300 dark:border-neutral-600" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Demo Credentials</span>
+                  <span className="px-2 bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">Demo Credentials</span>
                 </div>
               </div>
-              <div className="mt-4 text-center text-xs text-gray-500 space-y-1">
+              <div className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-1">
                 <p><strong>Admin:</strong> admin@myrotapro.com / password123</p>
                 <p><strong>Manager:</strong> manager@myrotapro.com / password123</p>
                 <p><strong>Staff:</strong> staff@myrotapro.com / password123</p>
@@ -169,11 +169,11 @@ const Login: React.FC = () => {
         </Card>
 
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
             Don't have an account?{' '}
             <Link
               to="/register"
-              className="font-medium text-primary-600 hover:text-primary-500"
+              className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
             >
               Create Account
             </Link>

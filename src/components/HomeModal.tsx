@@ -237,15 +237,15 @@ const HomeModal: React.FC<HomeModalProps> = ({
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
         
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-          <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+          <div className="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-neutral-100">
                 {home ? 'Edit Home' : 'Create New Home'}
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                className="rounded-md bg-white dark:bg-neutral-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -253,7 +253,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                   Home Name *
                 </label>
                                   <Input
@@ -267,7 +267,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Address *
                   </label>
                   <Input
@@ -280,7 +280,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     City *
                   </label>
                   <Input
@@ -293,7 +293,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Postcode *
                   </label>
                   <Input
@@ -308,13 +308,13 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Manager *
                   </label>
                   <select
                     value={formData.manager_id}
                     onChange={(e) => handleInputChange('manager_id', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   >
                     <option value="">Select a manager</option>
@@ -327,7 +327,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Capacity *
                   </label>
                   <Input
@@ -343,7 +343,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Phone *
                   </label>
                   <Input
@@ -356,7 +356,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Email *
                   </label>
                   <Input
@@ -371,7 +371,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Operating Hours Start *
                   </label>
                   <Input
@@ -383,7 +383,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Operating Hours End *
                   </label>
                   <Input
@@ -403,11 +403,11 @@ const HomeModal: React.FC<HomeModalProps> = ({
                     onChange={(e) => handleInputChange('is_active', e.target.checked)}
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Active</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">Active</span>
                 </label>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
                 <Button
                   type="button"
                   variant="outline"

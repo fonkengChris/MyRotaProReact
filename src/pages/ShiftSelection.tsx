@@ -150,7 +150,7 @@ const ShiftSelection: React.FC = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-4">No Homes Assigned</h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-neutral-400">
           You need to be assigned to a care home to view available shifts.
         </p>
       </div>
@@ -163,7 +163,7 @@ const ShiftSelection: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Shift Selection</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-neutral-400 mt-1">
             Select additional shifts that fit your schedule
           </p>
         </div>
@@ -240,45 +240,45 @@ const ShiftSelection: React.FC = () => {
             <div className="text-center py-8">
               <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Shifts This Week</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-neutral-400">
                 You don't have any shifts assigned for this week.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <p className="text-2xl font-bold text-green-600">{userShifts.length}</p>
-                  <p className="text-sm text-gray-600">Total Shifts</p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">Total Shifts</p>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-2xl font-bold text-blue-600">{totalHours.toFixed(1)}h</p>
-                  <p className="text-sm text-gray-600">Total Hours</p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">Total Hours</p>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                   <p className="text-2xl font-bold text-purple-600">
                     {(totalHours / userShifts.length).toFixed(1)}h
                   </p>
-                  <p className="text-sm text-gray-600">Avg per Shift</p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">Avg per Shift</p>
                 </div>
               </div>
               
               <div className="space-y-2">
                 {userShifts.map((shift) => (
-                  <div key={shift.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={shift.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <ClockIcon className="h-4 w-4 text-gray-500" />
                       <span className="font-medium">
                         {format(new Date(shift.date + 'T00:00:00'), 'EEE, MMM d')}
                       </span>
-                      <span className="text-gray-600">
+                      <span className="text-gray-600 dark:text-neutral-400">
                         {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                       </span>
                       <Badge variant="secondary" className="text-xs">
                         {shift.shift_type}
                       </Badge>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-neutral-400">
                       {typeof shift.home_id === 'string' 
                         ? homes.find(h => h.id === shift.home_id)?.name || shift.home_id
                         : shift.home_id.name}
@@ -311,7 +311,7 @@ const ShiftSelection: React.FC = () => {
             <div className="text-center py-8">
               <BellIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Available Shifts</h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-neutral-400 mb-4">
                 There are currently no shifts available for selection this week.
               </p>
               <Button
@@ -325,7 +325,7 @@ const ShiftSelection: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-neutral-400">
                   {availableShifts.length} shift{availableShifts.length !== 1 ? 's' : ''} available for selection
                 </div>
                 <Button
@@ -339,7 +339,7 @@ const ShiftSelection: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableShifts.slice(0, 6).map((shift) => (
-                  <div key={shift.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                  <div key={shift.id} className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-neutral-600 transition-colors">
                     <div className="flex items-center space-x-2 mb-2">
                       <ClockIcon className="h-4 w-4 text-gray-500" />
                       <span className="font-medium text-sm">
@@ -361,7 +361,7 @@ const ShiftSelection: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-neutral-400">
                       {typeof shift.home_id === 'string' ? shift.home_id : shift.home_id.name}
                     </div>
                   </div>

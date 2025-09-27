@@ -210,15 +210,15 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
         
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
-          <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+          <div className="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-neutral-100">
                 Weekly Schedule - {homeName}
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                className="rounded-md bg-white dark:bg-neutral-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -235,10 +235,10 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                   if (!day) return null
 
                   return (
-                    <div key={dayName} className="border rounded-lg p-4">
+                    <div key={dayName} className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
-                          <h4 className="text-md font-medium text-gray-900 capitalize">
+                          <h4 className="text-md font-medium text-gray-900 dark:text-neutral-100 capitalize">
                             {dayName}
                           </h4>
                           <label className="flex items-center">
@@ -248,7 +248,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                               onChange={() => handleToggleDay(dayName)}
                               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                             />
-                            <span className="ml-2 text-sm text-gray-700">Active</span>
+                            <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">Active</span>
                           </label>
                         </div>
                         <Button
@@ -264,20 +264,20 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                       {day.is_active && (
                         <div className="space-y-3">
                           {day.shifts.length === 0 ? (
-                            <p className="text-sm text-gray-500 italic">No shifts scheduled</p>
+                            <p className="text-sm text-gray-500 dark:text-neutral-400 italic">No shifts scheduled</p>
                           ) : (
                             day.shifts.map((shift, shiftIndex) => (
-                              <div key={shiftIndex} className="bg-gray-50 rounded-md p-3">
+                              <div key={shiftIndex} className="bg-gray-50 dark:bg-neutral-700 rounded-md p-3">
                                 <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
                                   {/* Service */}
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                       Service
                                     </label>
                                     <select
                                       value={extractServiceId(shift.service_id) || ''}
                                       onChange={(e) => handleShiftChange(dayName, shiftIndex, 'service_id', e.target.value)}
-                                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                      className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
                                     >
                                       <option value="">Select Service</option>
                                       {services.map((service) => (
@@ -290,7 +290,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
 
                                   {/* Start Time */}
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                       Start Time
                                     </label>
                                     <Input
@@ -303,7 +303,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
 
                                   {/* End Time */}
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                       End Time
                                     </label>
                                     <Input
@@ -316,13 +316,13 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
 
                                   {/* Shift Type */}
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                       Type
                                     </label>
                                     <select
                                       value={shift.shift_type}
                                       onChange={(e) => handleShiftChange(dayName, shiftIndex, 'shift_type', e.target.value)}
-                                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                      className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
                                     >
                                       <option value="morning">Morning</option>
                                       <option value="afternoon">Afternoon</option>
@@ -336,7 +336,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
 
                                   {/* Staff Count */}
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                       Staff Count
                                     </label>
                                     <Input
@@ -385,7 +385,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                 })}
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
                   <Button
                     type="button"
                     variant="outline"

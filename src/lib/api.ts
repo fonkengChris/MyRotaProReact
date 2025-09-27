@@ -24,10 +24,11 @@ import {
   TimetableGenerationStatus,
 } from '@/types'
 import toast from 'react-hot-toast';
+import { getAppConfig, isDebugMode } from './env';
 
 // Create base axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: getAppConfig().apiBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -43,9 +44,17 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
+    // Debug logging in development
+    if (isDebugMode()) {
+      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+    }
+
     return config
   },
   (error) => {
+    if (isDebugMode()) {
+      console.error('❌ API Request Error:', error)
+    }
     return Promise.reject(error)
   }
 )
@@ -53,9 +62,18 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Debug logging in development
+    if (isDebugMode()) {
+      console.log(`✅ API Response: ${response.status} ${response.config.url}`)
+    }
     return response
   },
   (error) => {
+    // Debug logging in development
+    if (isDebugMode()) {
+      console.error(`❌ API Error: ${error.response?.status} ${error.config?.url}`, error.response?.data)
+    }
+
     // Handle authentication errors only for protected routes
     if (error.response?.status === 401) {
       // Only redirect if we're not on a public page AND we have a token

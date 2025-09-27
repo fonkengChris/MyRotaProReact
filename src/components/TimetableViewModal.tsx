@@ -300,11 +300,11 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">{timetable.name}</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
               {format(parseISO(timetable.start_date), 'MMM d, yyyy')} - {format(parseISO(timetable.end_date), 'MMM d, yyyy')}
             </p>
           </div>
@@ -327,41 +327,41 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Timetable Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg">
               <div className="flex items-center">
                 <CalendarIcon className="h-5 w-5 text-gray-400 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Weeks</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Total Weeks</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{timetable.total_weeks}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg">
               <div className="flex items-center">
                 <ClockIcon className="h-5 w-5 text-gray-400 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Shifts</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Total Shifts</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{timetable.total_shifts}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg">
               <div className="flex items-center">
                 <UsersIcon className="h-5 w-5 text-gray-400 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Hours</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Total Hours</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{timetable.total_hours}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg">
               <div className="flex items-center">
                 <UsersIcon className="h-5 w-5 text-gray-400 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Assignments</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-neutral-400">Assignments</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{timetable.total_assignments}</p>
                 </div>
               </div>
@@ -372,14 +372,14 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
           {(timetable.conflicts_detected > 0 || timetable.generation_errors.length > 0) && (
             <div className="space-y-3">
               {timetable.conflicts_detected > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                   <div className="flex items-center">
                     <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />
                     <div>
-                      <p className="text-sm font-medium text-red-800">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
                         {timetable.conflicts_detected} conflicts detected
                       </p>
-                      <p className="text-sm text-red-600">
+                      <p className="text-sm text-red-600 dark:text-red-300">
                         This timetable cannot be published until conflicts are resolved.
                       </p>
                     </div>
@@ -388,16 +388,16 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
               )}
               
               {timetable.generation_errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                   <div className="flex items-center">
                     <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />
                     <div>
-                      <p className="text-sm font-medium text-red-800">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
                         {timetable.generation_errors.length} generation errors
                       </p>
                       <div className="mt-2 space-y-1">
                         {timetable.generation_errors.map((error, index) => (
-                          <p key={index} className="text-sm text-red-600">
+                          <p key={index} className="text-sm text-red-600 dark:text-red-300">
                             Week {error.week}: {error.error}
                           </p>
                         ))}
@@ -416,7 +416,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                 <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100">Weekly Breakdown</h3>
                 <div className="flex items-center space-x-3">
                   {/* View Mode Selector */}
-                  <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                  <div className="flex items-center space-x-1 bg-gray-100 dark:bg-neutral-700 rounded-lg p-1">
                     <Button
                       variant={viewMode === 'list' ? "primary" : "ghost"}
                       size="sm"
@@ -446,7 +446,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                     >
                       Previous
                     </Button>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-neutral-400">
                       Week {selectedWeek + 1} of {timetable.weekly_rotas.length}
                     </span>
                     <Button
@@ -477,17 +477,17 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
               {/* Selected Week Details */}
               {currentWeek && (
-                <div className="border border-gray-200 rounded-lg p-6">
+                <div className="border border-gray-200 dark:border-neutral-700 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h4 className="text-lg font-medium text-gray-900 dark:text-neutral-100">
                         Week {currentWeek.week_number}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-neutral-400">
                         {format(parseISO(currentWeek.week_start_date), 'MMM d')} - {format(parseISO(currentWeek.week_end_date), 'MMM d, yyyy')}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-neutral-400">
                       <span>{filteredStats.total_shifts} shifts</span>
                       <span>{filteredStats.total_hours} hours</span>
                       <span>{filteredStats.total_assignments} assignments</span>
@@ -503,15 +503,15 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                         <p className="text-lg font-bold text-blue-900 dark:text-cyan-100">{currentWeek.employment_distribution.fulltime.staff_count}</p>
                         <p className="text-xs text-blue-700 dark:text-cyan-300">{currentWeek.employment_distribution.fulltime.total_hours}h total</p>
                       </div>
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-green-900">Part-time</p>
-                        <p className="text-lg font-bold text-green-900">{currentWeek.employment_distribution.parttime.staff_count}</p>
-                        <p className="text-xs text-green-700">{currentWeek.employment_distribution.parttime.total_hours}h total</p>
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-green-900 dark:text-green-100">Part-time</p>
+                        <p className="text-lg font-bold text-green-900 dark:text-green-100">{currentWeek.employment_distribution.parttime.staff_count}</p>
+                        <p className="text-xs text-green-700 dark:text-green-300">{currentWeek.employment_distribution.parttime.total_hours}h total</p>
                       </div>
-                      <div className="bg-purple-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-purple-900">Bank</p>
-                        <p className="text-lg font-bold text-purple-900">{currentWeek.employment_distribution.bank.staff_count}</p>
-                        <p className="text-xs text-purple-700">{currentWeek.employment_distribution.bank.total_hours}h total</p>
+                      <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Bank</p>
+                        <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{currentWeek.employment_distribution.bank.staff_count}</p>
+                        <p className="text-xs text-purple-700 dark:text-purple-300">{currentWeek.employment_distribution.bank.total_hours}h total</p>
                       </div>
                     </div>
                   </div>
@@ -532,19 +532,19 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                         )}
                       </div>
                       {filteredShifts.length === 0 ? (
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-500 dark:text-neutral-400 text-sm">
                           {userFilter ? 'No shifts assigned to you this week' : 'No shifts for this week'}
                         </p>
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {filteredShifts.map((shift) => (
-                            <div key={shift.shift_id} className="border border-gray-200 rounded-lg p-3">
+                            <div key={shift.shift_id} className="border border-gray-200 dark:border-neutral-700 rounded-lg p-3">
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">
                                     {format(parseISO(shift.date), 'MMM d')} - {shift.start_time} to {shift.end_time}
                                   </p>
-                                  <p className="text-xs text-gray-600">
+                                  <p className="text-xs text-gray-600 dark:text-neutral-400">
                                     {shift.shift_type} • {shift.required_staff_count} staff needed • {shift.duration_hours}h
                                   </p>
                                 </div>
@@ -578,9 +578,9 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
           {/* Generation Info */}
           {timetable.generation_started_at && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
               <h5 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-2">Generation Information</h5>
-              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-neutral-400">
                 <div>
                   <p>Started: {format(parseISO(timetable.generation_started_at), 'MMM d, yyyy HH:mm')}</p>
                   {timetable.generation_completed_at && (
@@ -598,7 +598,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-neutral-700">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
