@@ -99,6 +99,9 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
+          <div className="mx-auto h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+            <img src="/logo.png" alt="MyRotaPro Logo" className="h-full w-full object-contain" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">Create Account</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
             Join MyRotaPro to manage your work schedule
