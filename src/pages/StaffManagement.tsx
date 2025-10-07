@@ -45,11 +45,17 @@ const StaffManagement: React.FC = () => {
 
   // Fetch staff data
   const { data: staff = [], isLoading } = useQuery({
-    queryKey: ['staff', currentUser?.default_home_id],
-    queryFn: () => usersApi.getAll({ 
-      home_id: extractHomeId(currentUser?.default_home_id) // Only filter by home if user has one
-    }),
-    enabled: !!currentUser && (!!currentUser.default_home_id || ['admin', 'home_manager', 'senior_staff'].includes(currentUser.role)),
+    queryKey: ['staff', currentUser?.role, currentUser?.default_home_id],
+    queryFn: () => {
+      // Admin and home_manager can see all users
+      if (['admin', 'home_manager'].includes(currentUser?.role || '')) {
+        return usersApi.getAll()
+      }
+      // Senior staff and support workers see users from their default home
+      const homeId = extractHomeId(currentUser?.default_home_id)
+      return homeId ? usersApi.getAll({ home_id: homeId }) : usersApi.getAll()
+    },
+    enabled: !!currentUser,
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -388,9 +394,9 @@ const StaffManagement: React.FC = () => {
                 {homes.map((home) => {
                   const homeStaffCount = staff.filter(member => 
                     member.homes?.some(h => {
-        const userHomeId = typeof h.home_id === 'string' ? h.home_id : String(h.home_id)
-        return userHomeId === home.id
-      })
+                      const userHomeId = typeof h.home_id === 'string' ? h.home_id : String(h.home_id)
+                      return userHomeId === home.id
+                    })
                   ).length || 0
                   return (
                     <option key={home.id} value={home.id}>
@@ -747,7 +753,7 @@ const StaffManagement: React.FC = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleRemoveHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id))}
+                                onClick={() => handleRemoveHome(member.id, typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id), member.name, userHome.name)}
                                 className="text-xs h-5 px-1"
                                 title="Remove home"
                               >
@@ -766,7 +772,7 @@ const StaffManagement: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleAddHome(member)}
+                          onClick={() => handleHomeAllocation(member)}
                           className="w-full mt-2 text-xs h-6 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
                         >
                           <PlusIcon className="h-3 w-3 mr-1" />
