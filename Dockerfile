@@ -14,6 +14,13 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Set production environment variables
+ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=/api
+ENV VITE_APP_NAME=MyRotaPro
+ENV VITE_APP_VERSION=1.0.0
+ENV VITE_ENVIRONMENT=production
+
 # Build the application
 RUN npm run build:prod
 
@@ -26,11 +33,11 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Create non-root user
-RUN addgroup -g 1001 -S nginx
-RUN adduser -S nginx -u 1001
+# Create non-root user (skip if nginx user already exists)
+RUN addgroup -g 1001 -S nginxapp 2>/dev/null || true
+RUN adduser -S nginxapp -u 1001 -G nginxapp 2>/dev/null || true
 
-# Change ownership
+# Change ownership (nginx user already exists in nginx:alpine)
 RUN chown -R nginx:nginx /usr/share/nginx/html
 RUN chown -R nginx:nginx /var/cache/nginx
 RUN chown -R nginx:nginx /var/log/nginx
@@ -38,7 +45,7 @@ RUN chown -R nginx:nginx /etc/nginx/conf.d
 RUN touch /var/run/nginx.pid
 RUN chown -R nginx:nginx /var/run/nginx.pid
 
-# Switch to non-root user
+# Switch to non-root user (use existing nginx user)
 USER nginx
 
 # Expose port
