@@ -11,6 +11,7 @@ A modern React TypeScript frontend for the MyRotaPro rota management system, bui
 - **AI Integration**: AI-powered rota generation and optimization
 - **Mobile Responsive**: Works seamlessly on all devices
 - **Role-based Access**: Different interfaces for different user roles
+- **CI/CD Pipeline**: Automated Docker builds with GitHub Actions 🚀
 
 ## 🏗️ Architecture
 
