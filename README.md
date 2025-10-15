@@ -318,3 +318,4 @@ For support and questions:
 - **Backend**: [MyRotaProNode](../MyRotaProNode) - Node.js backend API
 - **Database**: MongoDB with Mongoose ODM
 - **AI Solver**: Custom constraint optimization algorithm
+# Trigger rebuild Wed Oct 15 06:37:13 PM BST 2025
