@@ -116,15 +116,15 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
         />
 
         {/* Modal */}
-        <div className="relative w-full max-w-md transform rounded-lg bg-white p-6 shadow-xl transition-all">
+        <div className="relative w-full max-w-md transform rounded-lg bg-white p-6 shadow-xl transition-all border border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
               {shift ? 'Edit Shift' : 'Add New Shift'}
             </h2>
             <button
               onClick={onClose}
-              className="rounded-md p-1 text-gray-400 hover:text-gray-600"
+              className="rounded-md p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-300 dark:hover:text-neutral-100"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
@@ -134,14 +134,14 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Service Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                 Service
               </label>
               <select
                 value={formData.service_id}
                 onChange={(e) => handleInputChange('service_id', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.service_id ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  errors.service_id ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
                 }`}
                 disabled={services.length === 0}
               >
@@ -153,17 +153,17 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                 ))}
               </select>
               {errors.service_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.service_id}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.service_id}</p>
               )}
               {services.length === 0 && (
-                <p className="mt-1 text-sm text-gray-500">No services available</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">No services available</p>
               )}
             </div>
 
             {/* Time Configuration */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                   <ClockIcon className="inline h-4 w-4 mr-1" />
                   Start Time
                 </label>
@@ -171,17 +171,17 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => handleInputChange('start_time', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                    errors.start_time ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                    errors.start_time ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
                   }`}
                 />
                 {errors.start_time && (
-                  <p className="mt-1 text-sm text-red-600">{errors.start_time}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_time}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                   <ClockIcon className="inline h-4 w-4 mr-1" />
                   End Time
                 </label>
@@ -189,12 +189,12 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                   type="time"
                   value={formData.end_time}
                   onChange={(e) => handleInputChange('end_time', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                    errors.end_time ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                    errors.end_time ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
                   }`}
                 />
                 {errors.end_time && (
-                  <p className="mt-1 text-sm text-red-600">{errors.end_time}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.end_time}</p>
                 )}
               </div>
             </div>
@@ -202,14 +202,14 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
             {/* Shift Type and Staff Count */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                   <TagIcon className="inline h-4 w-4 mr-1" />
                   Shift Type
                 </label>
                 <select
                   value={formData.shift_type}
                   onChange={(e) => handleInputChange('shift_type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-600"
                 >
                   <option value="morning">Morning</option>
                   <option value="day">Day</option>
@@ -223,7 +223,7 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                   <UserGroupIcon className="inline h-4 w-4 mr-1" />
                   Staff Required
                 </label>
@@ -233,19 +233,19 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                   max="50"
                   value={formData.required_staff_count}
                   onChange={(e) => handleInputChange('required_staff_count', parseInt(e.target.value))}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                    errors.required_staff_count ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                    errors.required_staff_count ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
                   }`}
                 />
                 {errors.required_staff_count && (
-                  <p className="mt-1 text-sm text-red-600">{errors.required_staff_count}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.required_staff_count}</p>
                 )}
               </div>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                 Notes (Optional)
               </label>
               <textarea
@@ -254,9 +254,9 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                 rows={3}
                 maxLength={500}
                 placeholder="Add any additional notes about this shift..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-600 placeholder:text-neutral-500 dark:placeholder-neutral-400"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">
                 {formData.notes.length}/500 characters
               </p>
             </div>
