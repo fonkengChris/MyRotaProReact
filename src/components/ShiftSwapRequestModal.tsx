@@ -139,7 +139,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -163,28 +163,28 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                 {/* Shift Comparison */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Your Current Shift */}
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="font-medium text-blue-900 mb-3 flex items-center">
+                  <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
+                    <h3 className="font-medium text-blue-900 dark:text-cyan-100 mb-3 flex items-center">
                       <UserIcon className="h-4 w-4 mr-2" />
                       Your Current Shift
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-blue-600" />
+                        <ClockIcon className="h-4 w-4 text-blue-600 dark:text-cyan-300" />
                         <span className="font-medium">{formatShiftDate(availableSwap.user_shift.date)}</span>
                       </div>
-                      <div className="text-blue-800 font-semibold">
+                      <div className="text-blue-800 dark:text-cyan-200 font-semibold">
                         {formatShiftTime(availableSwap.user_shift.start_time, availableSwap.user_shift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="primary" className="text-xs">
                           {availableSwap.user_shift.shift_type}
                         </Badge>
-                        <span className="text-blue-600">
+                        <span className="text-blue-600 dark:text-cyan-300">
                           {getShiftDuration(availableSwap.user_shift.start_time, availableSwap.user_shift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-blue-600">
+                      <div className="text-blue-600 dark:text-cyan-300">
                         {typeof availableSwap.user_shift.home_id === 'string' 
                           ? availableSwap.user_shift.home_id
                           : availableSwap.user_shift.home_id.name}
@@ -193,28 +193,28 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                   </div>
 
                   {/* Target Shift */}
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <h3 className="font-medium text-green-900 mb-3 flex items-center">
+                  <div className="p-4 bg-green-50 dark:bg-emerald-900/20 rounded-lg border border-green-200 dark:border-emerald-800">
+                    <h3 className="font-medium text-green-900 dark:text-emerald-100 mb-3 flex items-center">
                       <ArrowPathIcon className="h-4 w-4 mr-2" />
                       Target Shift
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-green-600" />
+                        <ClockIcon className="h-4 w-4 text-green-600 dark:text-emerald-300" />
                         <span className="font-medium">{formatShiftDate(availableSwap.target_shift.date)}</span>
                       </div>
-                      <div className="text-green-800 font-semibold">
+                      <div className="text-green-800 dark:text-emerald-200 font-semibold">
                         {formatShiftTime(availableSwap.target_shift.start_time, availableSwap.target_shift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="success" className="text-xs">
                           {availableSwap.target_shift.shift_type}
                         </Badge>
-                        <span className="text-green-600">
+                        <span className="text-green-600 dark:text-emerald-300">
                           {getShiftDuration(availableSwap.target_shift.start_time, availableSwap.target_shift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-green-600">
+                      <div className="text-green-600 dark:text-emerald-300">
                         {typeof availableSwap.target_shift.home_id === 'string' 
                           ? availableSwap.target_shift.home_id
                           : availableSwap.target_shift.home_id.name}
@@ -225,15 +225,15 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
 
                 {/* Available Swappers */}
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Select User to Swap With</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-neutral-100 mb-3">Select User to Swap With</h3>
                   <div className="space-y-2">
                     {availableSwap.potential_swappers.map((swapper) => (
                       <div
                         key={swapper.user_id}
                         className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                           selectedSwapper === swapper.user_id
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:text-neutral-100'
+                            : 'border-gray-200 hover:border-gray-300 dark:border-neutral-700 dark:hover:border-neutral-600'
                         }`}
                         onClick={() => setSelectedSwapper(swapper.user_id)}
                       >
@@ -248,8 +248,8 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="font-medium text-gray-900">{swapper.name}</div>
-                            <div className="text-sm text-gray-500">{swapper.email}</div>
+                            <div className="font-medium text-gray-900 dark:text-neutral-100">{swapper.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-neutral-400">{swapper.email}</div>
                           </div>
                         </div>
                       </div>
@@ -259,7 +259,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
 
                 {/* Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Message (Optional)
                   </label>
                   <textarea
@@ -272,16 +272,16 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                   {errors.requester_message && (
                     <p className="mt-1 text-sm text-danger-600">{errors.requester_message.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">
                     {requesterMessage?.length || 0}/500 characters
                   </p>
                 </div>
 
                 {/* Warning */}
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
-                    <div className="text-sm text-yellow-800">
+                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
                       <p className="font-medium">Important:</p>
                       <p>The system will check for scheduling conflicts before sending the request. The other user will need to approve the swap for it to be completed.</p>
                     </div>

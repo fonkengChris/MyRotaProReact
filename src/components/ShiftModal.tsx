@@ -301,7 +301,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-lg">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -317,7 +317,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   <XMarkIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-neutral-400">
                 {format(date, 'EEEE, MMMM d, yyyy')}
               </p>
             </CardHeader>
@@ -326,7 +326,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
               <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 {/* Service Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                     Service
                   </label>
                   <select
@@ -345,13 +345,13 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     <p className="mt-1 text-sm text-danger-600">{errors.service_id.message}</p>
                   )}
                   {!shift && homeId && (
-                    <p className="mt-1 text-sm text-gray-500">Service automatically selected for this home</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Service automatically selected for this home</p>
                   )}
                 </div>
 
                 {/* Home Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                     Home
                   </label>
                   <select
@@ -391,10 +391,10 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     <p className="mt-1 text-sm text-danger-600">{errors.home_id.message}</p>
                   )}
                   {!watch('service_id') && (
-                    <p className="mt-1 text-sm text-gray-500">Please select a service first</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Please select a service first</p>
                   )}
                   {!shift && homeId && (
-                    <p className="mt-1 text-sm text-gray-500">Home automatically selected</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Home automatically selected</p>
                   )}
                   {watch('service_id') && (() => {
                     const selectedService = services.find(s => s.id === watch('service_id'))
@@ -411,7 +411,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     }, [])
                     
                     return (
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">
                         Available homes: {uniqueHomes.length}
                       </p>
                     )
@@ -421,7 +421,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 {/* Time Selection */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                       Start Time
                     </label>
                     <input
@@ -435,7 +435,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                       End Time
                     </label>
                     <input
@@ -451,7 +451,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 
                 {/* Overnight Shift Info */}
                 {startTime && endTime && (
-                  <div className="text-xs text-gray-500 text-center">
+                  <div className="text-xs text-gray-500 dark:text-neutral-400 text-center">
                     {(() => {
                       const start = new Date(`2000-01-01T${startTime}`)
                       const end = new Date(`2000-01-01T${endTime}`)
@@ -468,7 +468,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   const overlap = checkShiftOverlap(startTime, endTime, format(date, 'yyyy-MM-dd'))
                   if (overlap) {
                     return (
-                      <div className="text-xs text-red-600 text-center bg-red-50 p-2 rounded border border-red-200">
+                      <div className="text-xs text-red-600 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
                         ⚠️ Overlaps with existing shift: {overlap.start_time.substring(0, 5)} - {overlap.end_time.substring(0, 5)}
                       </div>
                     )
@@ -477,13 +477,13 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 })()}
 
                 {/* Duration Display */}
-                <div className="bg-gray-50 p-3 rounded-md">
+                <div className="bg-gray-50 dark:bg-neutral-700 p-3 rounded-md">
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-neutral-400">
                       <ClockIcon className="h-4 w-4" />
                       <span>Duration: {duration.toFixed(1)} hours</span>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-neutral-400">
                       {formatTimeDisplay(startTime, endTime)}
                     </div>
                   </div>
@@ -492,7 +492,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 {/* Staff Count and Shift Type */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                       Required Staff
                     </label>
                     <input
@@ -508,7 +508,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                       Shift Type
                     </label>
                     <select
@@ -532,7 +532,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
                     Notes (Optional)
                   </label>
                   <textarea

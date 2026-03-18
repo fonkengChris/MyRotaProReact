@@ -134,8 +134,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl border border-neutral-200 dark:border-neutral-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b dark:border-neutral-700">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Create Timetable</h2>
           <Button
             variant="outline"
@@ -158,8 +158,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                errors.name ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
               }`}
               placeholder="Enter timetable name"
             />
@@ -175,9 +175,9 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.description ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                errors.description ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
+              } placeholder:text-neutral-500 dark:placeholder-neutral-400`}
               placeholder="Enter timetable description (optional)"
               rows={3}
             />
@@ -189,14 +189,14 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
             <label className="form-label">
               Select Homes *
             </label>
-            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 rounded-md p-2">
               {homes.map((home) => (
                 <label key={home.id} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={formData.home_ids.includes(home.id)}
                     onChange={() => handleHomeToggle(home.id)}
-                    className="rounded border-gray-300 text-primary-600 dark:text-cyan-400 focus:ring-primary-500"
+                    className="rounded border-gray-300 dark:border-neutral-600 text-primary-600 dark:text-cyan-400 focus:ring-primary-500"
                   />
                   <span className="text-sm text-neutral-700 dark:text-neutral-300">{home.name}</span>
                 </label>
@@ -214,8 +214,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               id="service_id"
               value={formData.service_id}
               onChange={(e) => setFormData(prev => ({ ...prev, service_id: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.service_id ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                errors.service_id ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
               }`}
             >
               <option value="">Select a service</option>
@@ -238,8 +238,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               id="start_date"
               value={formData.start_date}
               onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.start_date ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                errors.start_date ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
               }`}
             />
             {errors.start_date && <p className="form-error">{errors.start_date}</p>}
@@ -257,8 +257,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               max="52"
               value={formData.total_weeks}
               onChange={(e) => setFormData(prev => ({ ...prev, total_weeks: parseInt(e.target.value) || 1 }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.total_weeks ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
+                errors.total_weeks ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
               }`}
             />
             {errors.total_weeks && <p className="form-error">{errors.total_weeks}</p>}
@@ -279,7 +279,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-6 border-t">
+          <div className="flex items-center justify-end space-x-3 pt-6 border-t dark:border-neutral-700">
             <Button
               type="button"
               variant="outline"

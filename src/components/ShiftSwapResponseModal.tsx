@@ -173,11 +173,11 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} />
-          <div className="relative bg-white rounded-lg p-6 shadow-xl">
+          <div className="relative bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-xl border border-neutral-200 dark:border-neutral-700">
             <div className="text-center">
               <ExclamationTriangleIcon className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Invalid Swap Request</h3>
-              <p className="text-gray-600 mb-4">This swap request contains invalid shift data.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Invalid Swap Request</h3>
+              <p className="text-gray-600 dark:text-neutral-400 mb-4">This swap request contains invalid shift data.</p>
               <Button onClick={onClose}>Close</Button>
             </div>
           </div>
@@ -191,7 +191,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -208,7 +208,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   <XMarkIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-neutral-400">
                 Request from {getRequesterName()} • {format(new Date(swapRequest.requested_at), 'MMM d, yyyy')}
               </div>
             </CardHeader>
@@ -217,16 +217,16 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
               <div className="space-y-6">
                 {/* Requester Message */}
                 {swapRequest.requester_message && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="font-medium text-blue-900 mb-2">Message from {getRequesterName()}</h3>
-                    <p className="text-blue-800 text-sm">{swapRequest.requester_message}</p>
+                  <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
+                    <h3 className="font-medium text-blue-900 dark:text-cyan-100 mb-2">Message from {getRequesterName()}</h3>
+                    <p className="text-blue-800 dark:text-cyan-200 text-sm">{swapRequest.requester_message}</p>
                   </div>
                 )}
 
                 {/* Shift Comparison */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Your Current Shift (Target Shift) */}
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="p-4 bg-green-50 dark:bg-emerald-900/20 rounded-lg border border-green-200 dark:border-emerald-800">
                     <h3 className="font-medium text-green-900 mb-3 flex items-center">
                       <UserIcon className="h-4 w-4 mr-2" />
                       Your Current Shift
@@ -236,18 +236,18 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                         <ClockIcon className="h-4 w-4 text-green-600" />
                         <span className="font-medium">{formatShiftDate(targetShift.date)}</span>
                       </div>
-                      <div className="text-green-800 font-semibold">
+                      <div className="text-green-800 dark:text-emerald-200 font-semibold">
                         {formatShiftTime(targetShift.start_time, targetShift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="success" className="text-xs">
                           {targetShift.shift_type}
                         </Badge>
-                        <span className="text-green-600">
+                        <span className="text-green-600 dark:text-emerald-300">
                           {getShiftDuration(targetShift.start_time, targetShift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-green-600">
+                      <div className="text-green-600 dark:text-emerald-300">
                         {typeof targetShift.home_id === 'string' 
                           ? targetShift.home_id
                           : targetShift.home_id.name}
@@ -256,7 +256,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   </div>
 
                   {/* Requester's Shift */}
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
                     <h3 className="font-medium text-blue-900 mb-3 flex items-center">
                       <ArrowPathIcon className="h-4 w-4 mr-2" />
                       {getRequesterName()}'s Shift
@@ -266,18 +266,18 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                         <ClockIcon className="h-4 w-4 text-blue-600" />
                         <span className="font-medium">{formatShiftDate(requesterShift.date)}</span>
                       </div>
-                      <div className="text-blue-800 font-semibold">
+                      <div className="text-blue-800 dark:text-cyan-200 font-semibold">
                         {formatShiftTime(requesterShift.start_time, requesterShift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="primary" className="text-xs">
                           {requesterShift.shift_type}
                         </Badge>
-                        <span className="text-blue-600">
+                        <span className="text-blue-600 dark:text-cyan-300">
                           {getShiftDuration(requesterShift.start_time, requesterShift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-blue-600">
+                      <div className="text-blue-600 dark:text-cyan-300">
                         {typeof requesterShift.home_id === 'string' 
                           ? requesterShift.home_id
                           : requesterShift.home_id.name}
@@ -288,12 +288,12 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
 
                 {/* Conflict Check Results */}
                 {swapRequest.conflict_check.has_conflict && (
-                  <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                     <div className="flex items-start space-x-2">
                       <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mt-0.5" />
                       <div>
-                        <h3 className="font-medium text-red-900 mb-2">Conflicts Detected</h3>
-                        <div className="space-y-1 text-sm text-red-800">
+                        <h3 className="font-medium text-red-900 dark:text-red-200 mb-2">Conflicts Detected</h3>
+                        <div className="space-y-1 text-sm text-red-800 dark:text-red-300">
                           {swapRequest.conflict_check.conflict_details.map((conflict, index) => (
                             <div key={index}>• {conflict.message}</div>
                           ))}
@@ -305,7 +305,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
 
                 {/* Response Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Response Message (Optional)
                   </label>
                   <textarea
@@ -318,16 +318,16 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   {errors.response_message && (
                     <p className="mt-1 text-sm text-danger-600">{errors.response_message.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">
                     {responseMessage?.length || 0}/500 characters
                   </p>
                 </div>
 
                 {/* Expiration Warning */}
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
-                    <div className="text-sm text-yellow-800">
+                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
                       <p className="font-medium">Request Expires:</p>
                       <p>{format(new Date(swapRequest.expires_at), 'MMM d, yyyy \'at\' h:mm a')}</p>
                     </div>
@@ -367,7 +367,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                 </div>
 
                 {swapRequest.conflict_check.has_conflict && (
-                  <div className="text-center text-sm text-red-600">
+                  <div className="text-center text-sm text-red-600 dark:text-red-400">
                     Cannot approve this swap due to scheduling conflicts
                   </div>
                 )}

@@ -113,7 +113,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
     if (homesLoading) {
       return (
         <div className="flex items-center justify-center h-32">
-          <div className="text-gray-500">Loading home information...</div>
+          <div className="text-gray-500 dark:text-neutral-400">Loading home information...</div>
         </div>
       )
     }
@@ -189,12 +189,12 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
         {Object.entries(shiftsByHome).map(([homeId, shifts]) => (
           <div key={homeId} className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b">
+            <div className="bg-gray-50 dark:bg-neutral-700 px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900 dark:text-neutral-100">
                   {getHomeName(homeId)}
                 </h4>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-neutral-400">
                   <span>{shifts.length} shifts</span>
                   <span>{shifts.reduce((total, shift) => total + shift.assigned_staff.length, 0)} assignments</span>
                   <span>{shifts.reduce((total, shift) => total + shift.duration_hours * shift.assigned_staff.length, 0)}h total</span>
@@ -205,14 +205,14 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
             <div className="overflow-x-auto">
               <div className="min-w-[1000px]">
                 {/* Header row with day names */}
-                <div className="grid grid-cols-8 gap-1 mb-2 bg-gray-100">
-                  <div className="p-2 font-medium text-gray-500 text-sm">Time</div>
+                <div className="grid grid-cols-8 gap-1 mb-2 bg-gray-100 dark:bg-neutral-700">
+                  <div className="p-2 font-medium text-gray-500 dark:text-neutral-400 text-sm">Time</div>
                   {weekDays.map((day) => (
                     <div key={day.toISOString()} className="p-2 text-center">
                       <div className="font-medium text-gray-900 dark:text-neutral-100">
                         {format(day, 'EEE')}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 dark:text-neutral-400">
                         {format(day, 'MMM d')}
                       </div>
                     </div>
@@ -223,7 +223,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                 {timeSlots.map((time) => (
                   <div key={time} className="grid grid-cols-8 gap-1 mb-1">
                     {/* Time label */}
-                    <div className="p-2 text-sm text-gray-500 font-mono bg-gray-50 border-r">
+                      <div className="p-2 text-sm text-gray-500 dark:text-neutral-400 font-mono bg-gray-50 dark:bg-neutral-700 border-r border-gray-200 dark:border-neutral-600">
                       {time}
                     </div>
 
@@ -269,10 +269,10 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                                     {shift.assigned_staff.map((staff: any, index: number) => (
                                       <div
                                         key={`${shift.shift_id}-${staff.user_id}-${index}`}
-                                        className="flex items-center bg-white rounded px-2 py-1 border"
+                                        className="flex items-center bg-white dark:bg-neutral-800 rounded px-2 py-1 border border-gray-200 dark:border-neutral-700"
                                       >
-                                        <UsersIcon className="h-3 w-3 text-gray-500 mr-1" />
-                                        <span className="text-gray-700 text-xs">
+                                        <UsersIcon className="h-3 w-3 text-gray-500 dark:text-neutral-400 mr-1" />
+                                        <span className="text-gray-700 dark:text-neutral-100 text-xs">
                                           {staff.name}
                                         </span>
                                         <Badge variant="secondary" className="text-xs ml-1">

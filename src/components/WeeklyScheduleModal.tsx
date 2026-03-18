@@ -364,7 +364,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
 
                                 {/* Notes */}
                                 <div className="mt-3">
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                     Notes
                                   </label>
                                   <Input
