@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Button from '@/components/ui/Button'
 import { ClockIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 
@@ -24,7 +24,7 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
   onApplyTemplate,
   disabled = false
 }) => {
-  const templates: ShiftTemplate[] = [
+  const initialTemplates: ShiftTemplate[] = [
     {
       id: 'two-shift',
       name: 'Two Shift Pattern',
@@ -146,6 +146,25 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
     }
   ]
 
+  const [templates, setTemplates] = useState<ShiftTemplate[]>(initialTemplates)
+
+  const handleShiftChange = (
+    templateId: string,
+    index: number,
+    field: keyof ShiftTemplate['shifts'][number],
+    value: string | number
+  ) => {
+    setTemplates(prev =>
+      prev.map(template => {
+        if (template.id !== templateId) return template
+        const updatedShifts = template.shifts.map((shift, i) =>
+          i === index ? { ...shift, [field]: value } : shift
+        )
+        return { ...template, shifts: updatedShifts }
+      })
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -170,18 +189,60 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
                 {template.shifts.map((shift, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between text-xs bg-gray-50 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded px-2 py-1"
+                    className="flex items-center justify-between text-xs bg-gray-50 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded px-2 py-1 space-x-2"
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 flex-1">
                       <ClockIcon className="h-3 w-3 text-gray-400 dark:text-neutral-300" />
-                      <span className="font-medium">
-                        {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
-                      </span>
+                      <input
+                        type="time"
+                        value={shift.start_time}
+                        onChange={(e) =>
+                          handleShiftChange(template.id, index, 'start_time', e.target.value)
+                        }
+                        className="w-20 rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-1 py-0.5"
+                      />
+                      <span className="mx-1">-</span>
+                      <input
+                        type="time"
+                        value={shift.end_time}
+                        onChange={(e) =>
+                          handleShiftChange(template.id, index, 'end_time', e.target.value)
+                        }
+                        className="w-20 rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-1 py-0.5"
+                      />
                     </div>
                     <div className="flex items-center space-x-1">
                       <UserGroupIcon className="h-3 w-3 text-gray-400 dark:text-neutral-300" />
-                      <span>{shift.required_staff_count}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={shift.required_staff_count}
+                        onChange={(e) =>
+                          handleShiftChange(
+                            template.id,
+                            index,
+                            'required_staff_count',
+                            Number(e.target.value) || 1
+                          )
+                        }
+                        className="w-12 rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-1 py-0.5 text-right"
+                      />
                     </div>
+                  </div>
+                ))}
+
+                {/* Optional notes editor */}
+                {template.shifts.map((shift, index) => (
+                  <div key={`${template.id}-notes-${index}`} className="mt-1">
+                    <input
+                      type="text"
+                      value={shift.notes || ''}
+                      onChange={(e) =>
+                        handleShiftChange(template.id, index, 'notes', e.target.value)
+                      }
+                      placeholder="Notes (optional)"
+                      className="w-full rounded border border-gray-200 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2 py-1 text-xs text-gray-700 dark:text-neutral-200"
+                    />
                   </div>
                 ))}
               </div>
