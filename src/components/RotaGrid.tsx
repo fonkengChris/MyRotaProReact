@@ -12,7 +12,7 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User, extractServiceId, extractServiceName, WeeklySchedule } from '@/types'
+import { Shift, User, extractServiceName, WeeklySchedule } from '@/types'
 import { weeklySchedulesApi } from '@/lib/api'
 
 interface RotaGridProps {
@@ -182,8 +182,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     const dateStr = format(date, 'yyyy-MM-dd')
     return filteredShifts.filter(shift => {
       const shiftDate = shift.date
+      // Map any start minute into the corresponding hour grid slot.
+      // Example: shift starts at "09:30" => display it in the "09:00" column.
       const shiftStart = shift.start_time.substring(0, 5)
-      return shiftDate === dateStr && shiftStart === time
+      const shiftHourSlot = `${shiftStart.substring(0, 2)}:00`
+      return shiftDate === dateStr && shiftHourSlot === time
     })
   }
 
@@ -198,8 +201,10 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     if (!daySchedule || !daySchedule.is_active) return []
     
     return daySchedule.shifts.filter(shift => {
+      // Same hour-slot bucketing as actual shifts.
       const shiftStart = shift.start_time.substring(0, 5)
-      return shiftStart === time
+      const shiftHourSlot = `${shiftStart.substring(0, 2)}:00`
+      return shiftHourSlot === time
     })
   }
 
