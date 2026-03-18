@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import WeeklyScheduleEditor from '@/components/WeeklyScheduleEditor'
 import { homesApi, servicesApi } from '@/lib/api'
+import { extractHomeId } from '@/types'
 import { 
   PlusIcon,
   ArrowLeftIcon,
@@ -26,8 +27,8 @@ const WeeklySchedules: React.FC = () => {
     if (user && !selectedHomeId) {
       const userHomes = user.homes || []
       if (userHomes.length > 0) {
-        const homeId = typeof userHomes[0].home_id === 'string' ? userHomes[0].home_id : String(userHomes[0].home_id)
-        setSelectedHomeId(homeId)
+        const homeId = extractHomeId(userHomes[0].home_id)
+        if (homeId) setSelectedHomeId(homeId)
       }
     }
   }, [user, selectedHomeId])
