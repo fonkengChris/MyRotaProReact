@@ -149,8 +149,8 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Quick Templates</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Quick Templates</h3>
+        <p className="text-sm text-gray-600 dark:text-neutral-300">
           Apply pre-built shift patterns to quickly set up your weekly schedule
         </p>
       </div>
@@ -159,24 +159,27 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
         {templates.map((template) => (
           <div
             key={template.id}
-            className="bg-white rounded-lg border border-gray-200 p-4 hover:border-primary-300 transition-colors"
+            className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-4 hover:border-primary-300 dark:hover:border-primary-500 transition-colors"
           >
             <div className="mb-3">
-              <h4 className="font-medium text-gray-900 mb-1">{template.name}</h4>
-              <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-1">{template.name}</h4>
+              <p className="text-sm text-gray-600 dark:text-neutral-300 mb-3">{template.description}</p>
               
               {/* Shift Preview */}
               <div className="space-y-2">
                 {template.shifts.map((shift, index) => (
-                  <div key={index} className="flex items-center justify-between text-xs bg-gray-50 rounded px-2 py-1">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between text-xs bg-gray-50 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded px-2 py-1"
+                  >
                     <div className="flex items-center space-x-2">
-                      <ClockIcon className="h-3 w-3 text-gray-400" />
+                      <ClockIcon className="h-3 w-3 text-gray-400 dark:text-neutral-300" />
                       <span className="font-medium">
                         {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <UserGroupIcon className="h-3 w-3 text-gray-400" />
+                      <UserGroupIcon className="h-3 w-3 text-gray-400 dark:text-neutral-300" />
                       <span>{shift.required_staff_count}</span>
                     </div>
                   </div>
@@ -197,7 +200,7 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
         ))}
       </div>
 
-      <div className="text-center text-sm text-gray-500">
+      <div className="text-center text-sm text-gray-500 dark:text-neutral-400">
         <p>
           Templates will be applied to all active days. You can customize individual days after applying.
         </p>
