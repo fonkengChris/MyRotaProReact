@@ -33,6 +33,8 @@ const RotaEditor: React.FC = () => {
   
   // Helper function to ensure home ID is always a string
   const ensureStringHomeId = (homeId: any): string => {
+    if (homeId === null || homeId === undefined) return ''
+    if (homeId === 'null' || homeId === 'undefined') return ''
     if (typeof homeId === 'string') return homeId
     if (homeId && typeof homeId === 'object' && homeId.id) return String(homeId.id)
     return String(homeId || '')
@@ -52,6 +54,7 @@ const RotaEditor: React.FC = () => {
   const [selectedHomeId, setSelectedHomeId] = useState<string>('')
   const [selectedHomesForAI, setSelectedHomesForAI] = useState<string[]>([])
   const [showMultiHomeSelector, setShowMultiHomeSelector] = useState(false)
+  const isValidHomeId = !!selectedHomeId && selectedHomeId !== 'null'
 
   // Auto-select user's home if they have one assigned
   useEffect(() => {
@@ -90,7 +93,7 @@ const RotaEditor: React.FC = () => {
         week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
       })
     },
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -102,7 +105,7 @@ const RotaEditor: React.FC = () => {
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -112,7 +115,7 @@ const RotaEditor: React.FC = () => {
     queryFn: () => usersApi.getAll({ 
       home_id: ensureStringHomeId(selectedHomeId)
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -120,7 +123,7 @@ const RotaEditor: React.FC = () => {
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services', selectedHomeId],
     queryFn: () => servicesApi.getAll(ensureStringHomeId(selectedHomeId)), // Fetch services for selected home
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -132,13 +135,13 @@ const RotaEditor: React.FC = () => {
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
     refetchInterval: 30000 // Refresh every 30 seconds
   })
 
   const weekRota = rota?.[0]
   // Only show loading spinner when we have a selected home and are loading its data
-  const isPageLoading = selectedHomeId && (rotaLoading || shiftsLoading || staffLoading || servicesLoading || conflictsLoading)
+  const isPageLoading = isValidHomeId && (rotaLoading || shiftsLoading || staffLoading || servicesLoading || conflictsLoading)
 
 
 
@@ -308,7 +311,7 @@ const RotaEditor: React.FC = () => {
         })
         
         // Also refetch for the currently selected home if it's different
-        if (selectedHomeId && !selectedHomesForAI.includes(selectedHomeId)) {
+        if (isValidHomeId && !selectedHomesForAI.includes(selectedHomeId)) {
           queryClient.refetchQueries({ 
             queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId] 
           })
@@ -699,7 +702,7 @@ const RotaEditor: React.FC = () => {
                   ))}
                 </select>
               </div>
-              {selectedHomeId && (
+              {isValidHomeId && (
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   {homes.find(h => h.id === selectedHomeId)?.name}
                 </div>
@@ -779,7 +782,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Week Navigation - Only show when home is selected */}
-      {selectedHomeId && (
+      {isValidHomeId && (
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -815,7 +818,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Scheduling Conflicts Alert - Only show when home is selected */}
-      {selectedHomeId && conflicts && conflicts.totalConflicts > 0 && (
+      {isValidHomeId && conflicts && conflicts.totalConflicts > 0 && (
         <ConflictAlert
           conflicts={conflicts.conflicts}
           onResolveConflict={(conflict) => {
@@ -830,7 +833,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Rota Status and Actions - Only show when home is selected */}
-      {selectedHomeId && weekRota && (
+      {isValidHomeId && weekRota && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -887,7 +890,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Rota Editor Interface - Only show when home is selected */}
-      {selectedHomeId && (
+      {isValidHomeId && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -999,7 +1002,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Quick Stats - Only show when home is selected */}
-      {selectedHomeId && (
+      {isValidHomeId && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-4">
@@ -1040,7 +1043,7 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Shift Modal - Only show when home is selected */}
-      {selectedHomeId && (
+      {isValidHomeId && (
         <ShiftModal
           isOpen={isShiftModalOpen}
           onClose={() => setIsShiftModalOpen(false)}
