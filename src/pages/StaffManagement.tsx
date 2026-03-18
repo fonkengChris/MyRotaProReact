@@ -25,6 +25,7 @@ const StaffManagement: React.FC = () => {
   const { user: currentUser } = useAuth()
   const permissions = usePermissions()
   const queryClient = useQueryClient()
+  const isAdmin = currentUser?.role === 'admin'
   
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
@@ -628,7 +629,7 @@ const StaffManagement: React.FC = () => {
                           >
                             {member.is_active ? '🚫' : '✅'}
                           </Button>
-                          {member.id !== currentUser?.id && (
+                          {isAdmin && member.id !== currentUser?.id && (
                             <Button
                               variant="danger"
                               size="sm"
@@ -694,7 +695,7 @@ const StaffManagement: React.FC = () => {
                       >
                         {member.is_active ? '🚫' : '✅'}
                       </Button>
-                      {member.id !== currentUser?.id && (
+                      {isAdmin && member.id !== currentUser?.id && (
                         <Button
                           variant="danger"
                           size="sm"
