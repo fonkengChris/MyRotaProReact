@@ -38,7 +38,7 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
     try {
       setIsLoading(true)
       const [servicesData, existingSchedule] = await Promise.all([
-        servicesApi.getAll({ home_id: homeId }),
+        servicesApi.getAll(homeId),
         weeklySchedulesApi.getByHome(homeId).catch(() => null)
       ])
       
