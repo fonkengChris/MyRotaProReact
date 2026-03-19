@@ -17,7 +17,7 @@ import {
   XCircleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { timetablesApi, homesApi, servicesApi } from '@/lib/api'
+import { timetablesApi, homesApi, servicesApi, rotasApi } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import { Timetable, TimetableCreateRequest } from '@/types'
@@ -168,6 +168,69 @@ const Timetables: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['timetables'] })
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to delete timetable')
+    }
+  }
+
+  const getTimetableHomeIds = (timetable: Timetable): string[] => {
+    const rawHomeIds = Array.isArray(timetable.home_ids) ? timetable.home_ids : []
+    return rawHomeIds
+      .map((home: any) => {
+        if (typeof home === 'string') return home
+        if (home && typeof home === 'object') {
+          return home.id || home._id || String(home)
+        }
+        return ''
+      })
+      .filter(Boolean)
+  }
+
+  // Delete generated rotas linked to this timetable and unassign related shifts.
+  const handleDeleteGeneratedRotas = async (timetable: Timetable) => {
+    if (!window.confirm(`Delete generated rotas for "${timetable.name}" and unassign related shifts?`)) {
+      return
+    }
+
+    const homeIds = getTimetableHomeIds(timetable)
+    if (homeIds.length === 0) {
+      toast.error('No homes found on this timetable')
+      return
+    }
+
+    try {
+      toast.loading('Deleting generated rotas...')
+      const rotaIds = new Set<string>()
+
+      for (const week of timetable.weekly_rotas || []) {
+        for (const homeId of homeIds) {
+          const weekRotas = await rotasApi.getAll({
+            home_id: homeId,
+            week_start_date: week.week_start_date,
+            week_end_date: week.week_end_date
+          })
+          ;(weekRotas || []).forEach((r: any) => rotaIds.add(r.id))
+        }
+      }
+
+      if (rotaIds.size === 0) {
+        toast.dismiss()
+        toast('No matching rotas were found for this timetable')
+        return
+      }
+
+      let totalUnassignedShifts = 0
+      for (const rotaId of rotaIds) {
+        const result = await rotasApi.delete(rotaId)
+        totalUnassignedShifts += result.shifts_unassigned || 0
+      }
+
+      toast.dismiss()
+      toast.success(`Deleted ${rotaIds.size} rota(s). Unassigned shifts: ${totalUnassignedShifts}.`)
+      queryClient.invalidateQueries({ queryKey: ['timetables'] })
+      queryClient.invalidateQueries({ queryKey: ['rota'] })
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+    } catch (error: any) {
+      toast.dismiss()
+      toast.error(error.response?.data?.error || 'Failed to delete generated rotas')
     }
   }
 
@@ -464,6 +527,16 @@ const Timetables: React.FC = () => {
                             onClick={() => handleDeleteTimetable(timetable)}
                           >
                             Delete
+                          </Button>
+                        )}
+
+                        {(timetable.status === 'generated' || timetable.status === 'published' || timetable.status === 'archived') && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDeleteGeneratedRotas(timetable)}
+                          >
+                            Delete Rotas
                           </Button>
                         )}
                       </>

@@ -282,8 +282,8 @@ export const rotasApi = {
     return response.data
   },
 
-  delete: async (id: string): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/rotas/${id}`)
+  delete: async (id: string): Promise<{ message: string; shifts_unassigned?: number }> => {
+    const response = await api.delete<{ message: string; shifts_unassigned?: number }>(`/rotas/${id}`)
     return response.data
   },
 
