@@ -52,13 +52,8 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
     if (formData.start_date && formData.total_weeks > 0) {
       const startDate = new Date(formData.start_date)
       
-      // Calculate end date using the formula: 6 days for first week, then 7n - 1 for subsequent weeks
-      let totalDays = 0
-      if (formData.total_weeks === 1) {
-        totalDays = 6 // First week: 6 days
-      } else {
-        totalDays = 6 + (7 * formData.total_weeks - 1) // First week (6 days) + subsequent weeks (7n - 1)
-      }
+      // Inclusive range: week 1 ends on day 6, so N weeks end on day (N * 7 - 1)
+      const totalDays = formData.total_weeks * 7 - 1
       
       const endDate = new Date(startDate)
       endDate.setDate(startDate.getDate() + totalDays)
