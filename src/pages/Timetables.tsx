@@ -17,7 +17,7 @@ import {
   XCircleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { timetablesApi, homesApi, servicesApi, rotasApi, shiftsApi } from '@/lib/api'
+import { timetablesApi, homesApi, servicesApi, rotasApi } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import { Timetable, TimetableCreateRequest } from '@/types'
@@ -33,6 +33,10 @@ const Timetables: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedTimetable, setSelectedTimetable] = useState<Timetable | null>(null)
+  /** Optimistically hidden while deleting rotas + timetable; restored on error only */
+  const [hiddenTimetableIds, setHiddenTimetableIds] = useState<Set<string>>(() => new Set())
+
+  const visibleTimetables = timetables.filter((t) => !hiddenTimetableIds.has(t.id))
   
   // Fetch timetables
   const { data: timetables = [], isLoading: timetablesLoading, refetch: refetchTimetables, error: timetablesError } = useQuery({
@@ -183,9 +187,40 @@ const Timetables: React.FC = () => {
       .filter(Boolean)
   }
 
-  // Delete generated rotas linked to this timetable, unassign related shifts, then delete the timetable.
+  const collectRotaIdsForTimetable = async (
+    timetable: Timetable,
+    homeIds: string[]
+  ): Promise<Set<string>> => {
+    const rotaIds = new Set<string>()
+    for (const week of timetable.weekly_rotas || []) {
+      const weekStartDate = String(week.week_start_date).split('T')[0]
+      for (const homeId of homeIds) {
+        const weekRotas = await rotasApi.getAll({
+          home_id: homeId,
+          week_start_date: weekStartDate,
+          week_end_date: weekStartDate
+        })
+        ;(weekRotas || []).forEach((r: any) => rotaIds.add(r.id))
+      }
+    }
+    return rotaIds
+  }
+
+  const unhideTimetable = (id: string) => {
+    setHiddenTimetableIds((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }
+
+  // Delete rotas (if any), then timetable. No per-shift API calls when no rotas exist.
   const handleDeleteGeneratedRotas = async (timetable: Timetable) => {
-    if (!window.confirm(`Delete generated rotas for "${timetable.name}", unassign related shifts, and remove this timetable? This cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Remove "${timetable.name}" and any linked weekly rotas? The timetable will be deleted. This cannot be undone.`
+      )
+    ) {
       return
     }
 
@@ -195,72 +230,61 @@ const Timetables: React.FC = () => {
       return
     }
 
+    const tid = timetable.id
+
     try {
-      toast.loading('Deleting generated rotas...')
-      const rotaIds = new Set<string>()
+      toast.loading('Checking for linked rotas...')
+      const rotaIds = await collectRotaIdsForTimetable(timetable, homeIds)
+      toast.dismiss()
 
-      for (const week of timetable.weekly_rotas || []) {
-        const weekStartDate = String(week.week_start_date).split('T')[0]
-        for (const homeId of homeIds) {
-          const weekRotas = await rotasApi.getAll({
-            home_id: homeId,
-            // rota endpoint filters by week_start_date field
-            week_start_date: weekStartDate,
-            week_end_date: weekStartDate
-          })
-          ;(weekRotas || []).forEach((r: any) => rotaIds.add(r.id))
-        }
-      }
-
+      // No rotas: delete timetable only (rota delete would not unassign anything)
       if (rotaIds.size === 0) {
-        // Fallback: if no rota records exist, unassign directly from timetable snapshot shifts
-        let totalUnassignedAssignments = 0
-        for (const week of timetable.weekly_rotas || []) {
-          for (const shift of week.shifts || []) {
-            for (const staff of shift.assigned_staff || []) {
-              try {
-                await shiftsApi.removeStaff(String(shift.shift_id), String(staff.user_id))
-                totalUnassignedAssignments++
-              } catch {
-                // Ignore individual failures; continue best-effort cleanup
-              }
-            }
-          }
-        }
-
-        toast.dismiss()
         toast.loading('Deleting timetable...')
-        await timetablesApi.delete(timetable.id)
+        await timetablesApi.delete(tid)
         toast.dismiss()
-        toast.success(`Cleared ${totalUnassignedAssignments} assignment(s). Timetable deleted.`)
-        setIsViewModalOpen(false)
-        setSelectedTimetable(null)
+        toast.success('No linked rotas found. Timetable deleted.')
+        if (selectedTimetable?.id === tid) {
+          setIsViewModalOpen(false)
+          setSelectedTimetable(null)
+        }
         queryClient.invalidateQueries({ queryKey: ['timetables'] })
-        queryClient.invalidateQueries({ queryKey: ['shifts'] })
         queryClient.invalidateQueries({ queryKey: ['user-timetables'] })
         return
       }
 
-      let totalUnassignedShifts = 0
-      for (const rotaId of rotaIds) {
-        const result = await rotasApi.delete(rotaId)
-        totalUnassignedShifts += result.shifts_unassigned || 0
+      // Has rotas: hide immediately, then delete server-side (unassign via rota delete)
+      setHiddenTimetableIds((prev) => new Set(prev).add(tid))
+      if (selectedTimetable?.id === tid) {
+        setIsViewModalOpen(false)
+        setSelectedTimetable(null)
       }
 
-      toast.dismiss()
-      toast.loading('Deleting timetable...')
-      await timetablesApi.delete(timetable.id)
-      toast.dismiss()
-      toast.success(`Deleted ${rotaIds.size} rota(s), unassigned ${totalUnassignedShifts} shift(s). Timetable removed.`)
-      setIsViewModalOpen(false)
-      setSelectedTimetable(null)
-      queryClient.invalidateQueries({ queryKey: ['timetables'] })
-      queryClient.invalidateQueries({ queryKey: ['rota'] })
-      queryClient.invalidateQueries({ queryKey: ['shifts'] })
-      queryClient.invalidateQueries({ queryKey: ['user-timetables'] })
+      toast.loading('Removing linked rotas and timetable...')
+
+      try {
+        let totalUnassigned = 0
+        for (const rotaId of rotaIds) {
+          const result = await rotasApi.delete(rotaId)
+          totalUnassigned += result.shifts_unassigned || 0
+        }
+        await timetablesApi.delete(tid)
+        toast.dismiss()
+        toast.success(
+          `Deleted ${rotaIds.size} rota(s) (${totalUnassigned} assignments cleared). Timetable removed.`
+        )
+        unhideTimetable(tid)
+        queryClient.invalidateQueries({ queryKey: ['timetables'] })
+        queryClient.invalidateQueries({ queryKey: ['rota'] })
+        queryClient.invalidateQueries({ queryKey: ['shifts'] })
+        queryClient.invalidateQueries({ queryKey: ['user-timetables'] })
+      } catch (err: any) {
+        toast.dismiss()
+        unhideTimetable(tid)
+        toast.error(err.response?.data?.error || 'Failed to remove rotas or timetable')
+      }
     } catch (error: any) {
       toast.dismiss()
-      toast.error(error.response?.data?.error || 'Failed to delete rotas or timetable')
+      toast.error(error.response?.data?.error || 'Failed to check rotas or delete timetable')
     }
   }
 
@@ -371,7 +395,7 @@ const Timetables: React.FC = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary-600">
-                {timetables.filter(t => t.status === 'published').length}
+                {visibleTimetables.filter(t => t.status === 'published').length}
               </p>
               <p className="text-sm text-gray-600">Published</p>
             </div>
@@ -382,7 +406,7 @@ const Timetables: React.FC = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-warning-600">
-                {timetables.filter(t => t.status === 'generating').length}
+                {visibleTimetables.filter(t => t.status === 'generating').length}
               </p>
               <p className="text-sm text-gray-600">Generating</p>
             </div>
@@ -393,7 +417,7 @@ const Timetables: React.FC = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-secondary-600">
-                {timetables.filter(t => t.status === 'draft').length}
+                {visibleTimetables.filter(t => t.status === 'draft').length}
               </p>
               <p className="text-sm text-gray-600">Draft</p>
             </div>
@@ -404,7 +428,7 @@ const Timetables: React.FC = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-success-600">
-                {timetables.reduce((total, t) => total + t.total_weeks, 0)}
+                {visibleTimetables.reduce((total, t) => total + t.total_weeks, 0)}
               </p>
               <p className="text-sm text-gray-600">Total Weeks</p>
             </div>
@@ -435,9 +459,16 @@ const Timetables: React.FC = () => {
             )}
           </CardContent>
         </Card>
+      ) : visibleTimetables.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-gray-600 dark:text-neutral-300">Finishing removal…</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {timetables.map((timetable) => (
+          {visibleTimetables.map((timetable) => (
             <Card key={timetable.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
