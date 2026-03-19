@@ -40,6 +40,11 @@ const Timetables: React.FC = () => {
     queryFn: () => timetablesApi.getAll(),
     select: (data) => Array.isArray(data) ? data : [],
     enabled: !!user, // Only run query if user is authenticated
+    refetchInterval: (query) => {
+      const list = Array.isArray(query.state.data) ? query.state.data : []
+      const hasGenerating = list.some((t: Timetable) => t.status === 'generating')
+      return hasGenerating ? 5000 : false
+    }
   })
   
   // Fetch homes for create modal
@@ -111,6 +116,7 @@ const Timetables: React.FC = () => {
           setTimeout(poll, 5000) // Poll every 5 seconds
         } else if (polls >= maxPolls) {
           toast.error('Timetable generation is taking longer than expected. Please check manually.')
+          queryClient.invalidateQueries({ queryKey: ['timetables'] })
         }
       } catch (error: any) {
         console.error('Error polling generation status:', error)
@@ -125,6 +131,7 @@ const Timetables: React.FC = () => {
         } else {
           toast.error('Error checking generation status')
         }
+        queryClient.invalidateQueries({ queryKey: ['timetables'] })
       }
     }
     
