@@ -17,7 +17,7 @@ import {
   XCircleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { timetablesApi, homesApi, servicesApi, rotasApi } from '@/lib/api'
+import { timetablesApi, homesApi, servicesApi, rotasApi, shiftsApi } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import { Timetable, TimetableCreateRequest } from '@/types'
@@ -39,8 +39,7 @@ const Timetables: React.FC = () => {
     queryKey: ['timetables'],
     queryFn: () => timetablesApi.getAll(),
     select: (data) => Array.isArray(data) ? data : [],
-    enabled: !!user, // Only run query if user is authenticated
-    refetchInterval: 5000
+    enabled: !!user // Only run query if user is authenticated
   })
   
   // Fetch homes for create modal
@@ -201,19 +200,38 @@ const Timetables: React.FC = () => {
       const rotaIds = new Set<string>()
 
       for (const week of timetable.weekly_rotas || []) {
+        const weekStartDate = String(week.week_start_date).split('T')[0]
         for (const homeId of homeIds) {
           const weekRotas = await rotasApi.getAll({
             home_id: homeId,
-            week_start_date: week.week_start_date,
-            week_end_date: week.week_end_date
+            // rota endpoint filters by week_start_date field
+            week_start_date: weekStartDate,
+            week_end_date: weekStartDate
           })
           ;(weekRotas || []).forEach((r: any) => rotaIds.add(r.id))
         }
       }
 
       if (rotaIds.size === 0) {
+        // Fallback: if no rota records exist, unassign directly from timetable snapshot shifts
+        let totalUnassignedAssignments = 0
+        for (const week of timetable.weekly_rotas || []) {
+          for (const shift of week.shifts || []) {
+            for (const staff of shift.assigned_staff || []) {
+              try {
+                await shiftsApi.removeStaff(String(shift.shift_id), String(staff.user_id))
+                totalUnassignedAssignments++
+              } catch {
+                // Ignore individual failures; continue best-effort cleanup
+              }
+            }
+          }
+        }
+
         toast.dismiss()
-        toast('No matching rotas were found for this timetable')
+        toast.success(`No rota records found. Cleared ${totalUnassignedAssignments} assignment(s) directly from shifts.`)
+        queryClient.invalidateQueries({ queryKey: ['timetables'] })
+        queryClient.invalidateQueries({ queryKey: ['shifts'] })
         return
       }
 

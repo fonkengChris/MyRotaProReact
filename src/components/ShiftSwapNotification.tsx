@@ -27,7 +27,7 @@ const ShiftSwapNotification: React.FC<ShiftSwapNotificationProps> = ({ onClose }
   const { data: pendingSwaps = [] } = useQuery({
     queryKey: ['shift-swaps', 'pending', user?.id],
     queryFn: () => shiftSwapsApi.getPending(),
-    enabled: !!user,
+    enabled: !!user && isVisible,
     select: (data) => Array.isArray(data) ? data : [],
     refetchInterval: 30000 // Check every 30 seconds
   })
