@@ -102,7 +102,7 @@ export default function Register() {
           <div className="mx-auto h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 rounded-2xl flex items-center justify-center shadow-lg mb-4">
             <img src="/logo.png" alt="MyRotaPro Logo" className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">Create Account</h1>
+          <h1 className="text-3xl font-bold text-[#a5f3fc]">Create Account</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
             Join MyRotaPro to manage your work schedule
           </p>

@@ -153,7 +153,7 @@ const MyHours: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">My Paid Hours</h1>
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">My Paid Hours</h1>
           <p className="text-gray-600 mt-1">
             Your paid hours for the selected week (after break deductions)
           </p>
@@ -184,7 +184,7 @@ const MyHours: React.FC = () => {
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-[#a5f3fc]">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-neutral-300">

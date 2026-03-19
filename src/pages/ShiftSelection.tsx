@@ -149,7 +149,7 @@ const ShiftSelection: React.FC = () => {
   if (!user.homes || user.homes.length === 0) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-4">No Homes Assigned</h2>
+        <h2 className="text-2xl font-bold text-[#a5f3fc] mb-4">No Homes Assigned</h2>
         <p className="text-gray-600 dark:text-neutral-400">
           You need to be assigned to a care home to view available shifts.
         </p>
@@ -162,7 +162,7 @@ const ShiftSelection: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Shift Selection</h1>
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">Shift Selection</h1>
           <p className="text-gray-600 dark:text-neutral-400 mt-1">
             Select additional shifts that fit your schedule
           </p>
@@ -201,7 +201,7 @@ const ShiftSelection: React.FC = () => {
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-[#a5f3fc]">
                 Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-neutral-300">

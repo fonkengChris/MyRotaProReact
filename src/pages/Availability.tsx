@@ -240,7 +240,7 @@ const AvailabilityPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Availability & Time Off</h1>
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">Availability & Time Off</h1>
           <p className="text-gray-600 mt-1">
             Manage your availability and time-off requests
           </p>

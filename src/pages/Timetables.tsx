@@ -205,7 +205,7 @@ const Timetables: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Timetables</h1>
+            <h1 className="text-2xl font-bold text-[#a5f3fc]">Timetables</h1>
             <p className="text-gray-600 mt-1">
               Generate and manage immutable multi-week rotas
             </p>
@@ -240,7 +240,7 @@ const Timetables: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Timetables</h1>
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">Timetables</h1>
           <p className="text-gray-600 mt-1">
             Generate and manage immutable multi-week rotas
           </p>

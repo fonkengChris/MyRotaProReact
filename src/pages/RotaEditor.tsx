@@ -605,7 +605,7 @@ const RotaEditor: React.FC = () => {
   if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-4">Access Denied</h2>
+        <h2 className="text-2xl font-bold text-[#a5f3fc] mb-4">Access Denied</h2>
         <p className="text-gray-600">
           You don't have permission to access the rota editor.
         </p>
@@ -626,7 +626,7 @@ const RotaEditor: React.FC = () => {
       {/* Header with Week Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Rota Editor</h1>
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">Rota Editor</h1>
           <p className="text-gray-600 mt-1">
             Manage weekly staff schedules and assignments
           </p>
@@ -796,7 +796,7 @@ const RotaEditor: React.FC = () => {
               </Button>
 
               <div className="text-center">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-[#a5f3fc]">
                   Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-neutral-300">

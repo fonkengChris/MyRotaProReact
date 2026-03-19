@@ -302,7 +302,7 @@ const StaffManagement: React.FC = () => {
   if (!permissions.canManageUsers) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">Access Denied</h2>
+        <h2 className="text-2xl font-bold text-[#a5f3fc] mb-4">Access Denied</h2>
         <p className="text-neutral-600 dark:text-neutral-400">
           You don't have permission to manage staff members.
         </p>
@@ -323,7 +323,7 @@ const StaffManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Staff Management</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#a5f3fc] font-display">Staff Management</h1>
           <p className="text-neutral-600 mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
             Manage staff members, roles, and permissions
           </p>

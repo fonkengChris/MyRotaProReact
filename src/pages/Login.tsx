@@ -69,7 +69,7 @@ const Login: React.FC = () => {
           <div className="mx-auto h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 rounded-2xl flex items-center justify-center shadow-lg">
             <img src="/logo.png" alt="MyRotaPro Logo" className="h-full w-full object-contain" />
           </div>
-          <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">
+          <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-bold text-[#a5f3fc] font-display">
             Sign in to MyRotaPro
           </h2>
           <p className="mt-1 sm:mt-2 text-center text-sm sm:text-base text-neutral-600 dark:text-neutral-400">

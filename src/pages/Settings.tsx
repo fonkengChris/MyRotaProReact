@@ -102,7 +102,7 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Settings</h1>
+        <h1 className="text-3xl font-bold text-[#a5f3fc] font-display">Settings</h1>
         <p className="text-neutral-600 dark:text-neutral-400 mt-2 text-lg">
           Manage your account settings and preferences
         </p>
