@@ -415,7 +415,7 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200 hover:bg-neutral-100 transition-colors">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-xl border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <CalendarIcon className="h-5 w-5 text-primary-600" />
@@ -431,7 +431,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200 hover:bg-neutral-100 transition-colors">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-xl border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 bg-success-100 rounded-full flex items-center justify-center">
                       <UsersIcon className="h-5 w-5 text-success-600" />
