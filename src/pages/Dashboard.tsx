@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
       {/* Welcome Section */}
       <div className="card">
         <div className="card-content">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display mb-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-cyan-400 font-display mb-2">
             Welcome back, {user?.name}! 👋
           </h1>
           <p className="text-neutral-600 text-sm sm:text-base lg:text-lg">
@@ -219,7 +219,7 @@ const Dashboard: React.FC = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Current Week Rota</CardTitle>
+                    <CardTitle className="text-cyan-400">Current Week Rota</CardTitle>
                     <CardDescription className="dark:text-white">
                       Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
                     </CardDescription>
@@ -269,7 +269,7 @@ const Dashboard: React.FC = () => {
                     <div className="mx-auto h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
                       <CalendarIcon className="h-8 w-8 text-neutral-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-neutral-900 mb-2">No rota for this week</h3>
+                    <h3 className="text-lg font-semibold text-cyan-400 mb-2">No rota for this week</h3>
                     <p className="text-sm text-neutral-600 mb-6">
                       {permissions.canManageRotas 
                         ? 'Create a new rota to get started'
@@ -296,7 +296,7 @@ const Dashboard: React.FC = () => {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="text-cyan-400">Quick Actions</CardTitle>
               <CardDescription>
                 Common tasks and shortcuts
               </CardDescription>
@@ -408,7 +408,7 @@ const Dashboard: React.FC = () => {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="text-cyan-400">Recent Activity</CardTitle>
               <CardDescription>
                 Latest updates and changes
               </CardDescription>
