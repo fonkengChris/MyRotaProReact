@@ -183,9 +183,9 @@ const Timetables: React.FC = () => {
       .filter(Boolean)
   }
 
-  // Delete generated rotas linked to this timetable and unassign related shifts.
+  // Delete generated rotas linked to this timetable, unassign related shifts, then delete the timetable.
   const handleDeleteGeneratedRotas = async (timetable: Timetable) => {
-    if (!window.confirm(`Delete generated rotas for "${timetable.name}" and unassign related shifts?`)) {
+    if (!window.confirm(`Delete generated rotas for "${timetable.name}", unassign related shifts, and remove this timetable? This cannot be undone.`)) {
       return
     }
 
@@ -229,9 +229,15 @@ const Timetables: React.FC = () => {
         }
 
         toast.dismiss()
-        toast.success(`No rota records found. Cleared ${totalUnassignedAssignments} assignment(s) directly from shifts.`)
+        toast.loading('Deleting timetable...')
+        await timetablesApi.delete(timetable.id)
+        toast.dismiss()
+        toast.success(`Cleared ${totalUnassignedAssignments} assignment(s). Timetable deleted.`)
+        setIsViewModalOpen(false)
+        setSelectedTimetable(null)
         queryClient.invalidateQueries({ queryKey: ['timetables'] })
         queryClient.invalidateQueries({ queryKey: ['shifts'] })
+        queryClient.invalidateQueries({ queryKey: ['user-timetables'] })
         return
       }
 
@@ -242,13 +248,19 @@ const Timetables: React.FC = () => {
       }
 
       toast.dismiss()
-      toast.success(`Deleted ${rotaIds.size} rota(s). Unassigned shifts: ${totalUnassignedShifts}.`)
+      toast.loading('Deleting timetable...')
+      await timetablesApi.delete(timetable.id)
+      toast.dismiss()
+      toast.success(`Deleted ${rotaIds.size} rota(s), unassigned ${totalUnassignedShifts} shift(s). Timetable removed.`)
+      setIsViewModalOpen(false)
+      setSelectedTimetable(null)
       queryClient.invalidateQueries({ queryKey: ['timetables'] })
       queryClient.invalidateQueries({ queryKey: ['rota'] })
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['user-timetables'] })
     } catch (error: any) {
       toast.dismiss()
-      toast.error(error.response?.data?.error || 'Failed to delete generated rotas')
+      toast.error(error.response?.data?.error || 'Failed to delete rotas or timetable')
     }
   }
 
