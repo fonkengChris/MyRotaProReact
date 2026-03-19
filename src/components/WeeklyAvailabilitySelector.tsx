@@ -248,7 +248,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
       {/* Week Display */}
       <Card>
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="text-neutral-900 dark:text-white">
             Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
           </CardTitle>
         </CardHeader>

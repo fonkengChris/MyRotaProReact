@@ -184,10 +184,10 @@ const MyHours: React.FC = () => {
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-neutral-300">
                 {format(weekStart, 'EEEE, MMMM d')} to {format(weekEnd, 'EEEE, MMMM d, yyyy')}
               </p>
             </div>

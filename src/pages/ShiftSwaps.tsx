@@ -661,11 +661,11 @@ const ShiftSwaps: React.FC = () => {
               >
                 ← Previous Week
               </Button>
-              <div className="text-center text-sm">
-                <div className="font-medium">
-                  Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
+                <div className="text-center text-sm">
+                  <div className="font-medium dark:text-white">
+                    Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
+                  </div>
                 </div>
-              </div>
               <Button
                 variant="outline"
                 size="sm"

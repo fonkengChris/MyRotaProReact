@@ -220,7 +220,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Current Week Rota</CardTitle>
-                    <CardDescription>
+                    <CardDescription className="dark:text-white">
                       Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
                     </CardDescription>
                   </div>
