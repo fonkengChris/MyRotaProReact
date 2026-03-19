@@ -565,6 +565,7 @@ const Timetables: React.FC = () => {
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           timetable={selectedTimetable}
+          onDeleteRotas={handleDeleteGeneratedRotas}
         />
       )}
     </div>

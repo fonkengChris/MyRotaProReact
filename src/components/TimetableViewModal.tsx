@@ -12,13 +12,15 @@ interface TimetableViewModalProps {
   onClose: () => void
   timetable: Timetable
   userFilter?: boolean // If true, only show shifts assigned to current user
+  onDeleteRotas?: (timetable: Timetable) => Promise<void> | void
 }
 
 const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
   isOpen,
   onClose,
   timetable,
-  userFilter = false
+  userFilter = false,
+  onDeleteRotas
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(0)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -599,6 +601,14 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-neutral-700">
+          {onDeleteRotas && (timetable.status === 'generated' || timetable.status === 'published' || timetable.status === 'archived') && (
+            <Button
+              variant="danger"
+              onClick={() => onDeleteRotas(timetable)}
+            >
+              Delete Rotas
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
