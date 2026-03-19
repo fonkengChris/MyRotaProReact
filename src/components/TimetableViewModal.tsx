@@ -154,7 +154,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
         {/* Grid View Summary */}
         <div className="bg-blue-50 dark:bg-cyan-900/20 border border-blue-200 dark:border-cyan-800 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <h5 className="text-sm font-medium text-blue-900 dark:text-cyan-100">Grid View Summary</h5>
+            <h5 className="text-sm font-medium text-blue-900 dark:text-white">Grid View Summary</h5>
             {userFilter && (
               <Badge variant="primary" className="text-xs">
                 Showing only your assignments
@@ -163,26 +163,26 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
           </div>
           <div className="grid grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-blue-700 dark:text-cyan-300 font-medium">Homes:</span>
-              <span className="ml-1 text-blue-600 dark:text-cyan-400">{Object.keys(shiftsByHome).length}</span>
-              <div className="text-xs text-blue-500 dark:text-cyan-400 mt-1">
+              <span className="text-blue-700 dark:text-white font-medium">Homes:</span>
+              <span className="ml-1 text-blue-600 dark:text-white">{Object.keys(shiftsByHome).length}</span>
+              <div className="text-xs text-blue-500 dark:text-white mt-1">
                 {Object.keys(shiftsByHome).map(homeId => getHomeNameWithLocation(homeId)).join(', ')}
               </div>
             </div>
             <div>
-              <span className="text-blue-700 dark:text-cyan-300 font-medium">Total Shifts:</span>
-              <span className="ml-1 text-blue-600 dark:text-cyan-400">{filteredShifts.length}</span>
+              <span className="text-blue-700 dark:text-white font-medium">Total Shifts:</span>
+              <span className="ml-1 text-blue-600 dark:text-white">{filteredShifts.length}</span>
               {userFilter && filteredShifts.length !== week.shifts.length && (
-                <span className="text-xs text-blue-500 dark:text-cyan-400 ml-1">(filtered)</span>
+                <span className="text-xs text-blue-500 dark:text-white ml-1">(filtered)</span>
               )}
             </div>
             <div>
-              <span className="text-blue-700 dark:text-cyan-300 font-medium">Time Slots:</span>
-              <span className="ml-1 text-blue-600 dark:text-cyan-400">{timeSlots.length}</span>
+              <span className="text-blue-700 dark:text-white font-medium">Time Slots:</span>
+              <span className="ml-1 text-blue-600 dark:text-white">{timeSlots.length}</span>
             </div>
             <div>
-              <span className="text-blue-700 dark:text-cyan-300 font-medium">Total Assignments:</span>
-              <span className="ml-1 text-blue-600 dark:text-cyan-400">{week.total_assignments}</span>
+              <span className="text-blue-700 dark:text-white font-medium">Total Assignments:</span>
+              <span className="ml-1 text-blue-600 dark:text-white">{week.total_assignments}</span>
             </div>
           </div>
         </div>
@@ -251,8 +251,8 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                                   {/* Shift header */}
                                   <div className="flex items-center justify-between mb-1">
                                     <div className="flex items-center space-x-1">
-                                      <ClockIcon className="h-3 w-3 text-blue-600 dark:text-cyan-400" />
-                                      <span className="font-medium text-blue-900 dark:text-cyan-100">
+                                      <ClockIcon className="h-3 w-3 text-blue-600 dark:text-white" />
+                                      <span className="font-medium text-blue-900 dark:text-white">
                                         {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                       </span>
                                     </div>
@@ -499,9 +499,9 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                     <h5 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-3">Employment Distribution</h5>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-blue-50 dark:bg-cyan-900/20 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 dark:text-cyan-100">Full-time</p>
-                        <p className="text-lg font-bold text-blue-900 dark:text-cyan-100">{currentWeek.employment_distribution.fulltime.staff_count}</p>
-                        <p className="text-xs text-blue-700 dark:text-cyan-300">{currentWeek.employment_distribution.fulltime.total_hours}h total</p>
+                        <p className="text-sm font-medium text-blue-900 dark:text-white">Full-time</p>
+                        <p className="text-lg font-bold text-blue-900 dark:text-white">{currentWeek.employment_distribution.fulltime.staff_count}</p>
+                        <p className="text-xs text-blue-700 dark:text-white">{currentWeek.employment_distribution.fulltime.total_hours}h total</p>
                       </div>
                       <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
                         <p className="text-sm font-medium text-green-900 dark:text-green-100">Part-time</p>

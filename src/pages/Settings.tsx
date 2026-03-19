@@ -117,7 +117,7 @@ const Settings: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600 dark:text-cyan-400'
+                  ? 'border-primary-500 text-primary-600 dark:text-white'
                   : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
               }`}
             >
@@ -284,11 +284,11 @@ const Settings: React.FC = () => {
               <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-md p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <ShieldCheckIcon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                    <ShieldCheckIcon className="h-5 w-5 text-primary-600 dark:text-white" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-primary-800 dark:text-primary-200">Password Requirements</h3>
-                    <div className="mt-2 text-sm text-primary-700 dark:text-primary-300">
+                    <h3 className="text-sm font-medium text-primary-800 dark:text-white">Password Requirements</h3>
+                    <div className="mt-2 text-sm text-primary-700 dark:text-white">
                       <ul className="list-disc pl-5 space-y-1">
                         <li>At least 8 characters long</li>
                         <li>Include uppercase and lowercase letters</li>

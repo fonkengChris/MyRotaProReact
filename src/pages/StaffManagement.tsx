@@ -436,14 +436,14 @@ const StaffManagement: React.FC = () => {
               <CardDescription>
                 {filteredStaff.length} of {staff.length || 0} staff members
                 {typeFilter !== 'all' && (
-                  <span className="ml-2 text-primary-600 dark:text-cyan-400">
+                  <span className="ml-2 text-primary-600 dark:text-white">
                     • {typeFilter === 'fulltime' ? 'Full Time' : 
                        typeFilter === 'parttime' ? 'Part Time' : 
                        typeFilter === 'bank' ? 'Bank' : typeFilter}
                   </span>
                 )}
                 {homeFilter !== 'all' && homes && (
-                  <span className="ml-2 text-primary-600 dark:text-cyan-400">
+                  <span className="ml-2 text-primary-600 dark:text-white">
                     • {getHomeDisplayName(homeFilter)}
                   </span>
                 )}
@@ -557,7 +557,7 @@ const StaffManagement: React.FC = () => {
                               <div className="flex items-center space-x-2">
                                 <HomeIcon className={`h-4 w-4 ${
                                   userHome.is_default 
-                                    ? 'text-blue-500 dark:text-blue-400' 
+                                    ? 'text-blue-500 dark:text-white' 
                                     : 'text-green-500 dark:text-green-400'
                                 }`} />
                                 <span className="text-sm text-gray-900 dark:text-neutral-100">
@@ -728,7 +728,7 @@ const StaffManagement: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <HomeIcon className={`h-3 w-3 ${
                               userHome.is_default 
-                                ? 'text-blue-500 dark:text-blue-400' 
+                                ? 'text-blue-500 dark:text-white' 
                                 : 'text-green-500 dark:text-green-400'
                             }`} />
                             <span className="text-xs text-gray-900 dark:text-neutral-100">
@@ -824,7 +824,7 @@ const StaffManagement: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <HomeIcon className={`h-4 w-4 ${
                         userHome.is_default 
-                          ? 'text-blue-500 dark:text-blue-400' 
+                          ? 'text-blue-500 dark:text-white' 
                           : 'text-green-500 dark:text-green-400'
                       }`} />
                       <span className="text-sm text-gray-900 dark:text-neutral-100">{userHome.name}</span>
@@ -887,7 +887,7 @@ const StaffManagement: React.FC = () => {
                     id="isDefault"
                     checked={newHomeAllocation.isDefault}
                     onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, isDefault: e.target.checked }))}
-                    className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-gray-300 rounded"
                   />
                   <label htmlFor="isDefault" className="text-sm text-gray-700 dark:text-neutral-300">
                     Set as default home
@@ -1081,7 +1081,7 @@ const StaffManagement: React.FC = () => {
                             setEditFormData(prev => ({ ...prev, skills: currentSkills.filter(s => s !== skill) }))
                           }
                         }}
-                        className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700 dark:text-neutral-300 capitalize">
                         {skill.replace('_', ' ')}
@@ -1108,7 +1108,7 @@ const StaffManagement: React.FC = () => {
                             setEditFormData(prev => ({ ...prev, preferred_shift_types: currentShiftTypes.filter(s => s !== shiftType) }))
                           }
                         }}
-                        className="h-4 w-4 text-primary-600 dark:text-cyan-400 focus:ring-primary-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700 dark:text-neutral-300 capitalize">
                         {shiftType.replace('_', ' ')}

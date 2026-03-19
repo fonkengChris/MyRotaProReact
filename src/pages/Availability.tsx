@@ -387,7 +387,7 @@ const AvailabilityPage: React.FC = () => {
             <div className="mb-4 p-4 bg-blue-50 dark:bg-cyan-900/20 border border-blue-200 dark:border-cyan-800 rounded-lg">
               <div className="flex items-center">
                 <LoadingSpinner size="sm" />
-                <span className="ml-2 text-sm text-blue-700 dark:text-cyan-400">Loading staff information...</span>
+                <span className="ml-2 text-sm text-blue-700 dark:text-white">Loading staff information...</span>
               </div>
             </div>
           )}

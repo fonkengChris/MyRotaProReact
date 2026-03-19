@@ -196,7 +196,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
                     type="checkbox"
                     checked={formData.home_ids.includes(home.id)}
                     onChange={() => handleHomeToggle(home.id)}
-                    className="rounded border-gray-300 dark:border-neutral-600 text-primary-600 dark:text-cyan-400 focus:ring-primary-500"
+                    className="rounded border-gray-300 dark:border-neutral-600 text-primary-600 dark:text-white focus:ring-primary-500"
                   />
                   <span className="text-sm text-neutral-700 dark:text-neutral-300">{home.name}</span>
                 </label>

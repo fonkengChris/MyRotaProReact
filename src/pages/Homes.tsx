@@ -180,7 +180,7 @@ const Homes: React.FC = () => {
                       onClick={() => handleWeeklySchedule(home)}
                       title="Weekly Schedule"
                     >
-                      <CalendarIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <CalendarIcon className="h-4 w-4 text-blue-600 dark:text-white" />
                     </Button>
                     <Button
                       variant="outline"
@@ -205,7 +205,7 @@ const Homes: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="flex items-center text-sm text-gray-600 dark:text-neutral-400">
-                    <UsersIcon className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400" />
+                    <UsersIcon className="h-4 w-4 mr-2 text-blue-500 dark:text-white" />
                     <span>Capacity: {home.capacity} residents</span>
                   </div>
 

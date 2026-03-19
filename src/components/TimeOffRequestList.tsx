@@ -140,7 +140,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-3">
                           <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-5 w-5 text-primary-600 dark:text-cyan-400" />
+                            <UserIcon className="h-5 w-5 text-primary-600 dark:text-white" />
                           </div>
                           <div>
                             <h4 className="font-medium text-neutral-900 dark:text-neutral-100">

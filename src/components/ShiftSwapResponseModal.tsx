@@ -218,8 +218,8 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                 {/* Requester Message */}
                 {swapRequest.requester_message && (
                   <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
-                    <h3 className="font-medium text-blue-900 dark:text-cyan-100 mb-2">Message from {getRequesterName()}</h3>
-                    <p className="text-blue-800 dark:text-cyan-200 text-sm">{swapRequest.requester_message}</p>
+                    <h3 className="font-medium text-blue-900 dark:text-white mb-2">Message from {getRequesterName()}</h3>
+                    <p className="text-blue-800 dark:text-white text-sm">{swapRequest.requester_message}</p>
                   </div>
                 )}
 
@@ -266,18 +266,18 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                         <ClockIcon className="h-4 w-4 text-blue-600" />
                         <span className="font-medium">{formatShiftDate(requesterShift.date)}</span>
                       </div>
-                      <div className="text-blue-800 dark:text-cyan-200 font-semibold">
+                      <div className="text-blue-800 dark:text-white font-semibold">
                         {formatShiftTime(requesterShift.start_time, requesterShift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="primary" className="text-xs">
                           {requesterShift.shift_type}
                         </Badge>
-                        <span className="text-blue-600 dark:text-cyan-300">
+                        <span className="text-blue-600 dark:text-white">
                           {getShiftDuration(requesterShift.start_time, requesterShift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-blue-600 dark:text-cyan-300">
+                      <div className="text-blue-600 dark:text-white">
                         {typeof requesterShift.home_id === 'string' 
                           ? requesterShift.home_id
                           : requesterShift.home_id.name}

@@ -164,27 +164,27 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Your Current Shift */}
                   <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
-                    <h3 className="font-medium text-blue-900 dark:text-cyan-100 mb-3 flex items-center">
+                    <h3 className="font-medium text-blue-900 dark:text-white mb-3 flex items-center">
                       <UserIcon className="h-4 w-4 mr-2" />
                       Your Current Shift
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-blue-600 dark:text-cyan-300" />
+                        <ClockIcon className="h-4 w-4 text-blue-600 dark:text-white" />
                         <span className="font-medium">{formatShiftDate(availableSwap.user_shift.date)}</span>
                       </div>
-                      <div className="text-blue-800 dark:text-cyan-200 font-semibold">
+                      <div className="text-blue-800 dark:text-white font-semibold">
                         {formatShiftTime(availableSwap.user_shift.start_time, availableSwap.user_shift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="primary" className="text-xs">
                           {availableSwap.user_shift.shift_type}
                         </Badge>
-                        <span className="text-blue-600 dark:text-cyan-300">
+                        <span className="text-blue-600 dark:text-white">
                           {getShiftDuration(availableSwap.user_shift.start_time, availableSwap.user_shift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-blue-600 dark:text-cyan-300">
+                      <div className="text-blue-600 dark:text-white">
                         {typeof availableSwap.user_shift.home_id === 'string' 
                           ? availableSwap.user_shift.home_id
                           : availableSwap.user_shift.home_id.name}

@@ -197,7 +197,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
   // Get shift type color
   const getShiftTypeColor = (shiftType: ShiftType) => {
     switch (shiftType) {
-      case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-cyan-300'
+      case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-white'
       case 'afternoon': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'evening': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
       case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
@@ -273,10 +273,10 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                 >
                   {/* Day Header */}
                   <div className="text-center mb-2">
-                    <div className={`font-medium ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                    <div className={`font-medium ${isToday ? 'text-primary-600 dark:text-white' : 'text-neutral-900 dark:text-neutral-100'}`}>
                       {format(day, 'EEE')}
                     </div>
-                    <div className={`text-sm ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                    <div className={`text-sm ${isToday ? 'text-primary-600 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
                       {format(day, 'MMM d')}
                     </div>
                   </div>

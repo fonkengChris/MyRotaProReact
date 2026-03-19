@@ -134,7 +134,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
           {/* Duration Display */}
           {duration > 0 && (
             <div className="bg-blue-50 dark:bg-cyan-900/20 border border-blue-200 dark:border-cyan-800 rounded-md p-4">
-              <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-cyan-400">
+              <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-white">
                 <CalendarIcon className="h-4 w-4" />
                 <span>Duration: {duration} day{duration > 1 ? 's' : ''}</span>
               </div>
