@@ -35,6 +35,13 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
     }
   }, [isOpen])
 
+  // Keep week index in range when timetable data changes (e.g. after delete rotas / refetch)
+  useEffect(() => {
+    if (!isOpen) return
+    const wr = Array.isArray(timetable.weekly_rotas) ? timetable.weekly_rotas : []
+    setSelectedWeek((prev) => (wr.length === 0 ? 0 : Math.min(prev, wr.length - 1)))
+  }, [isOpen, timetable.id, timetable.weekly_rotas?.length])
+
   const fetchHomes = async () => {
     try {
       setHomesLoading(true)
@@ -65,27 +72,38 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
   if (!isOpen) return null
 
-  const currentWeek = timetable.weekly_rotas[selectedWeek]
-  
+  const weeklyRotas = Array.isArray(timetable.weekly_rotas) ? timetable.weekly_rotas : []
+  const safeWeekIndex =
+    weeklyRotas.length === 0 ? 0 : Math.min(Math.max(0, selectedWeek), weeklyRotas.length - 1)
+  const currentWeek = weeklyRotas[safeWeekIndex]
+
+  const weekShifts = currentWeek?.shifts ?? []
   // Filter shifts based on user filter
-  const filteredShifts = userFilter && user
-    ? currentWeek.shifts.filter((shift: any) =>
-        shift.assigned_staff.some((staff: any) =>
-          staff.user_id === user.id
+  const filteredShifts =
+    userFilter && user
+      ? weekShifts.filter((shift: any) =>
+          (shift.assigned_staff ?? []).some((staff: any) => staff.user_id === user.id)
         )
-      )
-    : currentWeek.shifts
+      : weekShifts
 
   // Calculate filtered statistics
-  const filteredStats = userFilter ? {
-    total_shifts: filteredShifts.length,
-    total_hours: filteredShifts.reduce((total: number, shift: any) => total + (shift.duration_hours || 0), 0),
-    total_assignments: filteredShifts.reduce((total: number, shift: any) => total + (shift.assigned_staff?.length || 0), 0)
-  } : {
-    total_shifts: currentWeek.total_shifts,
-    total_hours: currentWeek.total_hours,
-    total_assignments: currentWeek.total_assignments
-  }
+  const filteredStats = userFilter
+    ? {
+        total_shifts: filteredShifts.length,
+        total_hours: filteredShifts.reduce(
+          (total: number, shift: any) => total + (shift.duration_hours || 0),
+          0
+        ),
+        total_assignments: filteredShifts.reduce(
+          (total: number, shift: any) => total + (shift.assigned_staff?.length || 0),
+          0
+        ),
+      }
+    : {
+        total_shifts: currentWeek?.total_shifts ?? 0,
+        total_hours: currentWeek?.total_hours ?? 0,
+        total_assignments: currentWeek?.total_assignments ?? 0,
+      }
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'draft': return 'secondary'
@@ -371,7 +389,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
           </div>
 
           {/* Conflicts and Errors */}
-          {(timetable.conflicts_detected > 0 || timetable.generation_errors.length > 0) && (
+          {(timetable.conflicts_detected > 0 || (timetable.generation_errors?.length ?? 0) > 0) && (
             <div className="space-y-3">
               {timetable.conflicts_detected > 0 && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -389,16 +407,16 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                 </div>
               )}
               
-              {timetable.generation_errors.length > 0 && (
+              {(timetable.generation_errors?.length ?? 0) > 0 && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                   <div className="flex items-center">
                     <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />
                     <div>
                       <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                        {timetable.generation_errors.length} generation errors
+                        {timetable.generation_errors?.length ?? 0} generation errors
                       </p>
                       <div className="mt-2 space-y-1">
-                        {timetable.generation_errors.map((error, index) => (
+                        {(timetable.generation_errors ?? []).map((error, index) => (
                           <p key={index} className="text-sm text-red-600 dark:text-red-300">
                             Week {error.week}: {error.error}
                           </p>
@@ -412,7 +430,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
           )}
 
           {/* Week Navigation */}
-          {timetable.weekly_rotas.length > 0 && (
+          {weeklyRotas.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100">Weekly Breakdown</h3>
@@ -444,18 +462,18 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedWeek(Math.max(0, selectedWeek - 1))}
-                      disabled={selectedWeek === 0}
+                      disabled={safeWeekIndex === 0}
                     >
                       Previous
                     </Button>
                     <span className="text-sm text-gray-600 dark:text-neutral-400">
-                      Week {selectedWeek + 1} of {timetable.weekly_rotas.length}
+                      Week {safeWeekIndex + 1} of {weeklyRotas.length}
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedWeek(Math.min(timetable.weekly_rotas.length - 1, selectedWeek + 1))}
-                      disabled={selectedWeek === timetable.weekly_rotas.length - 1}
+                      onClick={() => setSelectedWeek(Math.min(weeklyRotas.length - 1, selectedWeek + 1))}
+                      disabled={safeWeekIndex === weeklyRotas.length - 1}
                     >
                       Next
                     </Button>
@@ -465,7 +483,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
               {/* Week Selector */}
               <div className="flex flex-wrap gap-2">
-                {timetable.weekly_rotas.map((week, index) => (
+                {weeklyRotas.map((week, index) => (
                   <Button
                     key={index}
                     variant={selectedWeek === index ? "primary" : "outline"}
