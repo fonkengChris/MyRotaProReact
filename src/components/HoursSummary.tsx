@@ -344,7 +344,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-cyan-400">
+          <h1 className="text-2xl font-bold text-[#a5f3fc]">
             {isAdminView ? 'Hours Summary' : 'My Hours'}
           </h1>
           <p className="text-gray-600 mt-1">
@@ -382,7 +382,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-cyan-400">
+              <h2 className="text-lg font-semibold text-[#a5f3fc]">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-neutral-300">
@@ -480,7 +480,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       {/* Hours Breakdown */}
       <Card>
         <CardHeader>
-                  <CardTitle className="text-cyan-400">
+                  <CardTitle className="text-[#a5f3fc]">
           {isAdminView 
             ? userRole === 'admin' 
               ? 'All Staff Hours Breakdown' 
@@ -496,7 +496,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           {userHours.length === 0 ? (
             <div className="text-center py-8">
               <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-cyan-400">
+              <h3 className="mt-2 text-sm font-medium text-[#a5f3fc]">
                 No hours recorded
               </h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -525,7 +525,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-cyan-400">
+                        <h3 className="text-lg font-medium text-[#a5f3fc]">
                           {userHour.user.name}
                         </h3>
                         <p className="text-sm text-gray-500">
@@ -568,7 +568,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                   {/* Shift details */}
                   {userHour.shifts.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-cyan-400">Shifts:</h4>
+                      <h4 className="text-sm font-medium text-[#a5f3fc]">Shifts:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {userHour.shifts.map((shift) => (
                           <div
