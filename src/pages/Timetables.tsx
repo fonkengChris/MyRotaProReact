@@ -40,11 +40,7 @@ const Timetables: React.FC = () => {
     queryFn: () => timetablesApi.getAll(),
     select: (data) => Array.isArray(data) ? data : [],
     enabled: !!user, // Only run query if user is authenticated
-    refetchInterval: (query) => {
-      const list = Array.isArray(query.state.data) ? query.state.data : []
-      const hasGenerating = list.some((t: Timetable) => t.status === 'generating')
-      return hasGenerating ? 5000 : false
-    }
+    refetchInterval: 5000
   })
   
   // Fetch homes for create modal
