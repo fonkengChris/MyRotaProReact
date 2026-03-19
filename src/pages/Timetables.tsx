@@ -36,8 +36,6 @@ const Timetables: React.FC = () => {
   /** Optimistically hidden while deleting rotas + timetable; restored on error only */
   const [hiddenTimetableIds, setHiddenTimetableIds] = useState<Set<string>>(() => new Set())
 
-  const visibleTimetables = timetables.filter((t) => !hiddenTimetableIds.has(t.id))
-  
   // Fetch timetables
   const { data: timetables = [], isLoading: timetablesLoading, refetch: refetchTimetables, error: timetablesError } = useQuery({
     queryKey: ['timetables'],
@@ -45,6 +43,8 @@ const Timetables: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : [],
     enabled: !!user // Only run query if user is authenticated
   })
+
+  const visibleTimetables = timetables.filter((t) => !hiddenTimetableIds.has(t.id))
   
   // Fetch homes for create modal
   const { data: homes = [] } = useQuery({
