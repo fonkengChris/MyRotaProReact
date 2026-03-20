@@ -474,7 +474,8 @@ export interface Timetable {
   name: string
   description?: string
   home_ids: string[]
-  service_id: string
+  /** Set when timetable is scoped to one service; omitted for all-services timetables */
+  service_id?: string | null
   start_date: string
   end_date: string
   total_weeks: number
@@ -559,7 +560,8 @@ export interface TimetableCreateRequest {
   name: string
   description?: string
   home_ids: string[]
-  service_id: string
+  /** Optional legacy field; omit to generate across all services for the selected homes */
+  service_id?: string
   start_date: string
   end_date: string
   total_weeks: number

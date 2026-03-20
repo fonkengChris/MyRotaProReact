@@ -17,7 +17,7 @@ import {
   XCircleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { timetablesApi, homesApi, servicesApi, rotasApi } from '@/lib/api'
+import { timetablesApi, homesApi, rotasApi } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import { Timetable, TimetableCreateRequest } from '@/types'
@@ -53,13 +53,6 @@ const Timetables: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
   
-  // Fetch services for create modal
-  const { data: services = [] } = useQuery({
-    queryKey: ['services'],
-    queryFn: () => servicesApi.getAll(),
-    select: (data) => Array.isArray(data) ? data : []
-  })
-
   // Handle create timetable
   const handleCreateTimetable = async (data: TimetableCreateRequest) => {
     try {
@@ -617,7 +610,6 @@ const Timetables: React.FC = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateTimetable}
           homes={homes}
-          services={services}
         />
       )}
       

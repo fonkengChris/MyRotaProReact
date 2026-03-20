@@ -2,28 +2,25 @@ import React, { useState, useEffect } from 'react'
 import { format,} from 'date-fns'
 import Button from '@/components/ui/Button'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { Home, Service, TimetableCreateRequest } from '@/types'
+import { Home, TimetableCreateRequest } from '@/types'
 
 interface TimetableCreateModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: TimetableCreateRequest) => void
   homes: Home[]
-  services: Service[]
 }
 
 const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  homes,
-  services
+  homes
 }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     home_ids: [] as string[],
-    service_id: '',
     start_date: '',
     end_date: '',
     total_weeks: 4
@@ -38,7 +35,6 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
         name: '',
         description: '',
         home_ids: [],
-        service_id: '',
         start_date: '',
         end_date: '',
         total_weeks: 4
@@ -82,10 +78,6 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
       newErrors.home_ids = 'At least one home must be selected'
     }
 
-    if (!formData.service_id) {
-      newErrors.service_id = 'Service is required'
-    }
-
     if (!formData.start_date) {
       newErrors.start_date = 'Start date is required'
     }
@@ -109,7 +101,6 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
       home_ids: formData.home_ids,
-      service_id: formData.service_id,
       start_date: formData.start_date,
       end_date: formData.end_date,
       total_weeks: formData.total_weeks
@@ -184,6 +175,9 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
             <label className="form-label">
               Select Homes *
             </label>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+              Generation covers <strong>all services</strong> for these homes so staff who work across multiple services are scheduled in one timetable.
+            </p>
             <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 rounded-md p-2">
               {homes.map((home) => (
                 <label key={home.id} className="flex items-center space-x-2">
@@ -198,29 +192,6 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               ))}
             </div>
             {errors.home_ids && <p className="form-error">{errors.home_ids}</p>}
-          </div>
-
-          {/* Service Selection */}
-          <div>
-            <label htmlFor="service_id" className="form-label">
-              Service *
-            </label>
-            <select
-              id="service_id"
-              value={formData.service_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, service_id: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
-                errors.service_id ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
-              }`}
-            >
-              <option value="">Select a service</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                </option>
-              ))}
-            </select>
-            {errors.service_id && <p className="form-error">{errors.service_id}</p>}
           </div>
 
           {/* Start Date */}
