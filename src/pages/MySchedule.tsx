@@ -11,12 +11,11 @@ import {
   CalendarIcon,
   ClockIcon,
   MapPinIcon,
-  UserIcon
 } from '@heroicons/react/24/outline'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { extractUserDefaultHomeId } from '@/types'
-import { Shift, Home, Service, extractServiceId } from '@/types'
+import { Shift, extractServiceId } from '@/types'
 
 const MySchedule: React.FC = () => {
   const { user } = useAuth()
@@ -230,25 +229,37 @@ const MySchedule: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-6 min-w-[2000px]">
+            <div className="w-full overflow-x-hidden md:overflow-x-auto">
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-6 w-full md:min-w-[2000px]">
                 {weekDays.map((day) => {
                   const dayShifts = getShiftsForDate(day)
                   const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
                   
                   return (
-                    <div key={day.toISOString()} className="min-h-[300px] min-w-[280px]">
+                    <div key={day.toISOString()} className="min-h-[300px] w-full md:min-w-[280px]">
                     <div className={`text-center p-4 rounded-t-lg border-b-2 ${
                       isToday ? 'bg-primary-100 text-primary-900 border-primary-300' : 'bg-gray-50 text-gray-700 border-gray-200'
                     }`}>
-                      <div className="font-bold text-lg mb-1">
-                        {format(day, 'EEE')}
+                      {/* Compact day + date (md+ week strip) */}
+                      <div className="hidden md:block">
+                        <div className="font-bold text-lg mb-1">
+                          {format(day, 'EEE')}
+                        </div>
+                        <div className="text-base font-medium">
+                          {format(day, 'MMM d')}
+                        </div>
                       </div>
-                      <div className="text-base font-medium">
-                        {format(day, 'MMM d')}
+                      {/* Full day + date on small screens */}
+                      <div className="md:hidden space-y-1">
+                        <div className="font-bold text-lg">
+                          {format(day, 'EEEE')}
+                        </div>
+                        <div className="text-base font-medium text-gray-600 dark:text-neutral-300">
+                          {format(day, 'd MMMM yyyy')}
+                        </div>
                       </div>
                       {isToday && (
-                        <div className="text-sm mt-2 font-bold bg-primary-200 text-primary-800 px-2 py-1 rounded-full">Today</div>
+                        <div className="text-sm mt-2 font-bold bg-primary-200 text-primary-800 px-2 py-1 rounded-full inline-block">Today</div>
                       )}
                     </div>
                     
@@ -258,7 +269,7 @@ const MySchedule: React.FC = () => {
                           <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                             <ClockIcon className="h-8 w-8 text-gray-400" />
                           </div>
-                          <p className="text-sm font-medium text-gray-500">No shifts today</p>
+                          <p className="text-sm font-medium text-gray-500">No shift today</p>
                           <p className="text-xs text-gray-400 mt-1">Enjoy your day off!</p>
                         </div>
                       ) : (
