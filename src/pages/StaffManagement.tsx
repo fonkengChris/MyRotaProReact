@@ -18,7 +18,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
-import { User, UserRole, Home, extractHomeId } from '@/types'
+import { User, UserRole, Home, extractHomeId, formatShiftTypeLabel } from '@/types'
 import toast from 'react-hot-toast'
 
 const StaffManagement: React.FC = () => {
@@ -1095,7 +1095,7 @@ const StaffManagement: React.FC = () => {
               <div>
                 <h4 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">Preferred Shift Types</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {['morning', 'afternoon', 'evening', 'night', 'overtime', 'long_day', 'split'].map((shiftType) => (
+                  {['morning', 'day', 'afternoon', 'evening', 'night-wake', 'night-sleep', 'overtime', 'long_day', 'split'].map((shiftType) => (
                     <label key={shiftType} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -1110,8 +1110,8 @@ const StaffManagement: React.FC = () => {
                         }}
                         className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-700 dark:text-neutral-300 capitalize">
-                        {shiftType.replace('_', ' ')}
+                      <span className="text-sm text-gray-700 dark:text-neutral-300">
+                        {formatShiftTypeLabel(shiftType)}
                       </span>
                     </label>
                   ))}

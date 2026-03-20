@@ -325,9 +325,11 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                                       className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
                                     >
                                       <option value="morning">Morning</option>
+                                      <option value="day">Day</option>
                                       <option value="afternoon">Afternoon</option>
                                       <option value="evening">Evening</option>
-                                      <option value="night">Night</option>
+                                      <option value="night-wake">Waking night</option>
+                                      <option value="night-sleep">Sleeping night</option>
                                       <option value="overtime">Overtime</option>
                                       <option value="long_day">Long Day</option>
                                       <option value="split">Split</option>

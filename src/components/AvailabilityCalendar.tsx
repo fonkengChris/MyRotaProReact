@@ -10,7 +10,7 @@ import {
   XMarkIcon,
   PlusIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType } from '@/types'
+import { Availability, ShiftType, formatShiftTypeLabel } from '@/types'
 import AvailabilityFormModal from './AvailabilityFormModal'
 
 interface AvailabilityCalendarProps {
@@ -134,10 +134,15 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const getShiftTypeColor = (shiftType: ShiftType) => {
     switch (shiftType) {
       case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-white'
+      case 'day': return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200'
       case 'afternoon': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'evening': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+      case 'night-wake':
+      case 'night-sleep':
       case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
       case 'overtime': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+      case 'long_day': return 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200'
+      case 'none': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
       default: return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
     }
   }
@@ -239,7 +244,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                             {preferredShiftType && (
                               <div className="text-xs">
                                 <span className={`inline-block px-2 py-1 rounded ${getShiftTypeColor(preferredShiftType)}`}>
-                                  {preferredShiftType.replace('_', ' ')}
+                                  {formatShiftTypeLabel(preferredShiftType)}
                                 </span>
                               </div>
                             )}

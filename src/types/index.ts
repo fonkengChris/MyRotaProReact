@@ -24,7 +24,48 @@ export type UserRole = 'admin' | 'home_manager' | 'senior_staff' | 'support_work
 
 export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'social_support' | 'specialist_care'
 
-export type ShiftType = 'morning' | 'afternoon' | 'evening' | 'night-wake' | 'night-sleep' | 'overtime' | 'long_day' | 'none' | 'split'
+/**
+ * Must match `shift_type` enum on the Shift model (`MyRotaProNode/models/Shift.js`).
+ * - `night-wake`: waking night (active / on-duty all night)
+ * - `night-sleep`: sleeping night (sleep-in / on-call with sleep)
+ */
+export type ShiftType =
+  | 'morning'
+  | 'day'
+  | 'afternoon'
+  | 'evening'
+  | 'night-wake'
+  | 'night-sleep'
+  | 'night' // legacy; use night-wake or night-sleep for new shifts
+  | 'overtime'
+  | 'long_day'
+  | 'none'
+  | 'split'
+
+/** Human-readable labels for UI (selects, badges). */
+export const SHIFT_TYPE_LABELS: Record<ShiftType, string> = {
+  morning: 'Morning',
+  day: 'Day',
+  afternoon: 'Afternoon',
+  evening: 'Evening',
+  'night-wake': 'Waking night',
+  'night-sleep': 'Sleeping night',
+  night: 'Night',
+  overtime: 'Overtime',
+  long_day: 'Long day',
+  none: 'None',
+  split: 'Split',
+}
+
+export function formatShiftTypeLabel(shiftType: string | undefined | null): string {
+  if (!shiftType) return 'Standard'
+  if (Object.prototype.hasOwnProperty.call(SHIFT_TYPE_LABELS, shiftType)) {
+    return SHIFT_TYPE_LABELS[shiftType as ShiftType]
+  }
+  return shiftType
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 // Authentication types
 export interface LoginCredentials {

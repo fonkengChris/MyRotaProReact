@@ -214,9 +214,12 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                     >
                       <option value="">No preference</option>
                       <option value="morning">Morning (6 AM - 2 PM)</option>
+                      <option value="day">Day</option>
                       <option value="afternoon">Afternoon (2 PM - 10 PM)</option>
                       <option value="evening">Evening (4 PM - 12 AM)</option>
-                      <option value="night">Night (10 PM - 6 AM)</option>
+                      <option value="night-wake">Waking night (10 PM - 6 AM)</option>
+                      <option value="night-sleep">Sleeping night / sleep-in</option>
+                      <option value="long_day">Long day</option>
                       <option value="overtime">Overtime</option>
                     </select>
                     {errors.preferred_shift_type && (

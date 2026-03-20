@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User } from '@/types'
+import { Shift, User, formatShiftTypeLabel } from '@/types'
 import { shiftsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -260,10 +260,10 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                 </Badge>
                                 
                                 <Badge 
-                                  variant={shift.shift_type === 'night' ? 'secondary' : 'primary'} 
+                                  variant={['night', 'night-wake', 'night-sleep'].includes(shift.shift_type) ? 'secondary' : 'primary'} 
                                   className="text-xs"
                                 >
-                                  {shift.shift_type}
+                                  {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
                                 
                                 {hasConflict && (

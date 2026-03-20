@@ -14,8 +14,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
-import { extractUserDefaultHomeId } from '@/types'
-import { Shift, extractServiceId } from '@/types'
+import { extractUserDefaultHomeId, Shift, extractServiceId, formatShiftTypeLabel } from '@/types'
 
 const MySchedule: React.FC = () => {
   const { user } = useAuth()
@@ -345,7 +344,7 @@ const MySchedule: React.FC = () => {
                                     variant="secondary" 
                                     className="text-xs px-3 py-1.5 bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border border-primary-300 font-medium"
                                   >
-                                    {shift.shift_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Standard'}
+                                    {formatShiftTypeLabel(shift.shift_type)}
                                   </Badge>
                                 </div>
                               </div>

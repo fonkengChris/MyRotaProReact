@@ -40,9 +40,9 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
         {
           start_time: '20:00',
           end_time: '08:00',
-          shift_type: 'night',
+          shift_type: 'night-wake',
           required_staff_count: 1,
-          notes: 'Night shift - 12 hours'
+          notes: 'Waking night shift - 12 hours'
         }
       ]
     },
@@ -68,9 +68,9 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
         {
           start_time: '23:00',
           end_time: '07:00',
-          shift_type: 'night',
+          shift_type: 'night-wake',
           required_staff_count: 1,
-          notes: 'Night shift - 8 hours'
+          notes: 'Waking night shift - 8 hours'
         }
       ]
     },
@@ -103,9 +103,9 @@ const ShiftTemplateLibrary: React.FC<ShiftTemplateLibraryProps> = ({
         {
           start_time: '00:00',
           end_time: '06:00',
-          shift_type: 'night',
+          shift_type: 'night-wake',
           required_staff_count: 1,
-          notes: 'Night shift - 6 hours'
+          notes: 'Waking night shift - 6 hours'
         }
       ]
     },

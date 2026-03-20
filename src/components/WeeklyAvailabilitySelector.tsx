@@ -10,7 +10,7 @@ import {
   XMarkIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType } from '@/types'
+import { Availability, ShiftType, formatShiftTypeLabel } from '@/types'
 import toast from 'react-hot-toast'
 
 interface WeeklyAvailabilitySelectorProps {
@@ -198,8 +198,11 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
   const getShiftTypeColor = (shiftType: ShiftType) => {
     switch (shiftType) {
       case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-white'
+      case 'day': return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200'
       case 'afternoon': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'evening': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+      case 'night-wake':
+      case 'night-sleep':
       case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
       case 'overtime': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
       case 'none': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -301,7 +304,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                       {dayAvailability.preferredShiftType && (
                         <div className="text-xs">
                           <span className={`inline-block px-2 py-1 rounded w-full text-center ${getShiftTypeColor(dayAvailability.preferredShiftType)}`}>
-                            {dayAvailability.preferredShiftType.replace('_', ' ')}
+                            {formatShiftTypeLabel(dayAvailability.preferredShiftType)}
                           </span>
                         </div>
                       )}
@@ -380,9 +383,11 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                     className="input text-sm"
                   >
                     <option value="morning">Morning</option>
+                    <option value="day">Day</option>
                     <option value="afternoon">Afternoon</option>
                     <option value="evening">Evening</option>
-                    <option value="night">Night</option>
+                    <option value="night-wake">Waking night</option>
+                    <option value="night-sleep">Sleeping night</option>
                     <option value="overtime">Overtime</option>
                     <option value="long_day">Long Day</option>
                   </select>
