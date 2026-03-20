@@ -152,16 +152,27 @@ const Timetables: React.FC = () => {
     }
   }
 
-  // Handle delete timetable
+  // Handle delete timetable (server also deletes linked Shift rows from the snapshot)
   const handleDeleteTimetable = async (timetable: Timetable) => {
-    if (!window.confirm(`Are you sure you want to delete the timetable "${timetable.name}"? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Delete "${timetable.name}" and all shifts stored for this timetable in the database? This cannot be undone.`
+      )
+    ) {
       return
     }
-    
+
     try {
-      await timetablesApi.delete(timetable.id)
-      toast.success('Timetable deleted successfully')
+      const result = await timetablesApi.delete(timetable.id)
+      const n = result?.shifts_deleted
+      toast.success(
+        typeof n === 'number'
+          ? `Timetable removed (${n} shift${n === 1 ? '' : 's'} deleted)`
+          : 'Timetable and linked shifts removed'
+      )
       queryClient.invalidateQueries({ queryKey: ['timetables'] })
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['rota'] })
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to delete timetable')
     }

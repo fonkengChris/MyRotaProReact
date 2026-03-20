@@ -624,9 +624,10 @@ export const timetablesApi = {
     return response.data;
   },
 
-  // Delete timetable (only draft status)
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/timetables/${id}`);
+  // Delete timetable and linked shifts (server removes shifts in timetable scope + rota refs)
+  delete: async (id: string): Promise<{ message?: string; shifts_deleted?: number }> => {
+    const response = await api.delete(`/timetables/${id}`);
+    return response.data;
   },
 
   // Generate timetable from existing rotas
