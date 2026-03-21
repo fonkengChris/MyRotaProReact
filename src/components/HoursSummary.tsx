@@ -577,9 +577,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                 <p className="font-medium text-gray-900 dark:text-neutral-100">
                                   {br.duration_hours.toFixed(1)}h rostered
                                 </p>
-                                <p className="text-indigo-700 dark:text-indigo-300 text-xs">
-                                  {br.sleep_in_hours.toFixed(1)}h sleep-in
-                                </p>
+                                {shift.shift_type === 'night-sleep' && (
+                                  <p className="text-indigo-700 dark:text-indigo-300 text-xs">
+                                    {br.sleep_in_hours.toFixed(1)}h sleep-in
+                                  </p>
+                                )}
                                 <Badge variant="secondary" className="text-xs mt-1">
                                   {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
