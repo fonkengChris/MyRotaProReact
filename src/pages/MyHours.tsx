@@ -11,11 +11,12 @@ import {
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline'
 import { shiftsApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { Shift } from '@/types'
+import { Shift, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 
 interface PaidHoursData {
@@ -196,7 +197,7 @@ const MyHours: React.FC = () => {
       </Card>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -204,15 +205,32 @@ const MyHours: React.FC = () => {
                 <ClockIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Rostered hours</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Rostered hours</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                   {paidHoursData.rosteredHours.toFixed(1)}h
                 </p>
-                {paidHoursData.totalSleepInHours > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    incl. {paidHoursData.totalSleepInHours.toFixed(1)}h sleep-in
-                  </p>
-                )}
+                <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1">
+                  Total time on shift (incl. sleep-in)
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <MoonIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Sleep-in hours</p>
+                <p className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
+                  {paidHoursData.totalSleepInHours.toFixed(1)}h
+                </p>
+                <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1">
+                  From sleeping-night shifts (not paid as work)
+                </p>
               </div>
             </div>
           </CardContent>
@@ -225,9 +243,12 @@ const MyHours: React.FC = () => {
                 <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Paid Hours</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Paid hours</p>
                 <p className="text-2xl font-semibold text-green-600">
                   {paidHoursData.paidHours.toFixed(1)}h
+                </p>
+                <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1">
+                  After sleep-in split &amp; breaks
                 </p>
               </div>
             </div>
@@ -241,7 +262,7 @@ const MyHours: React.FC = () => {
                 <ExclamationTriangleIcon className="h-8 w-8 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Break Deductions</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Break deductions</p>
                 <p className="text-2xl font-semibold text-orange-600">
                   -{paidHoursData.breakDeductions.toFixed(1)}h
                 </p>
@@ -316,20 +337,23 @@ const MyHours: React.FC = () => {
                           {shift.start_time} - {shift.end_time}
                         </p>
                         <Badge variant="secondary" className="text-xs mt-1">
-                          {shift.shift_type}
+                          {formatShiftTypeLabel(shift.shift_type)}
                         </Badge>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-start justify-end gap-4 sm:gap-6">
                         <div>
-                          <p className="text-sm text-gray-500">Rostered</p>
-                          <p className="text-lg font-semibold text-gray-900">
+                          <p className="text-sm text-gray-500 dark:text-neutral-400">Rostered</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                             {shift.rosteredHours}h
                           </p>
-                          {shift.sleepInHours > 0 && (
-                            <p className="text-xs text-gray-500">{shift.sleepInHours}h sleep-in</p>
-                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-neutral-400">Sleep-in</p>
+                          <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
+                            {shift.sleepInHours.toFixed(1)}h
+                          </p>
                         </div>
                         {shift.paidWorkBeforeBreak !== shift.rosteredHours && shift.paidWorkBeforeBreak >= 0 && (
                           <div>

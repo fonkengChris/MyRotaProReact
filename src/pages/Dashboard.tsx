@@ -13,12 +13,13 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
   EyeIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline'
 import { rotasApi, shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { extractUserDefaultHomeId } from '@/types'
-import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
 import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
 
@@ -79,8 +80,10 @@ const Dashboard: React.FC = () => {
 
   // Calculate statistics (data should now be guaranteed arrays from select option)
   const totalShifts = staff.length || 0
-  const totalHours =
+  const totalPaidHours =
     shifts.reduce((sum, shift) => sum + computeShiftPaidWithBreaks(shift).paidHours, 0) || 0
+  const totalSleepInHours =
+    shifts.reduce((sum, shift) => sum + getShiftHourBreakdown(shift).sleep_in_hours, 0) || 0
   const activeStaff = staff.filter(s => s.is_active).length || 0
   const pendingRequests = 0 // TODO: Implement time off requests
 
@@ -149,7 +152,7 @@ const Dashboard: React.FC = () => {
       {activeTab === 'overview' ? (
         <>
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             <Card className="group hover:shadow-lg transition-all duration-200">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
@@ -174,9 +177,35 @@ const Dashboard: React.FC = () => {
                       <ClockIcon className="h-5 w-5 sm:h-6 sm:w-6 text-success-600" />
                     </div>
                   </div>
-                  <div className="ml-3 sm:ml-4">
-                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Total Hours</p>
-                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">{totalHours}</p>
+                  <div className="ml-3 sm:ml-4 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Paid hours</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {totalPaidHours.toFixed(1)}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-neutral-500 mt-0.5 leading-tight">
+                      After sleep-in &amp; breaks (this week)
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-lg transition-all duration-200">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-indigo-100 dark:bg-indigo-950/50 flex items-center justify-center group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors">
+                      <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                  </div>
+                  <div className="ml-3 sm:ml-4 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-600">Sleep-in hours</p>
+                    <p className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {totalSleepInHours.toFixed(1)}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-neutral-500 mt-0.5 leading-tight">
+                      Sleeping-night shifts (not paid as work)
+                    </p>
                   </div>
                 </div>
               </CardContent>
