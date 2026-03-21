@@ -9,16 +9,21 @@ import {
   ClockIcon, 
   UserIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline'
 import { shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { Shift, User } from '@/types'
+import { Shift, User, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
 
 function aggregateUserShiftHours(userShifts: Shift[]) {
   const totalHours = userShifts.reduce(
     (sum, shift) => sum + getShiftHourBreakdown(shift).duration_hours,
+    0
+  )
+  const sleepInHours = userShifts.reduce(
+    (sum, shift) => sum + getShiftHourBreakdown(shift).sleep_in_hours,
     0
   )
   let paidHours = 0
@@ -28,7 +33,7 @@ function aggregateUserShiftHours(userShifts: Shift[]) {
     paidHours += c.paidHours
     totalBreakDeductions += c.breakDeduction
   })
-  return { totalHours, paidHours, breakDeductions: totalBreakDeductions }
+  return { totalHours, sleepInHours, paidHours, breakDeductions: totalBreakDeductions }
 }
 
 interface HoursSummaryProps {
@@ -41,6 +46,7 @@ interface HoursSummaryProps {
 interface UserHours {
   user: User
   totalHours: number
+  sleepInHours: number
   paidHours: number
   breakDeductions: number
   totalShifts: number
@@ -104,11 +110,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return {
           user: staffMember,
           totalHours,
+          sleepInHours,
           paidHours,
           breakDeductions,
           totalShifts: userShifts.length,
@@ -127,11 +134,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return [{
           user: userData || { id: userId, name: 'Unknown User', role: userRole },
           totalHours,
+          sleepInHours,
           paidHours,
           breakDeductions,
           totalShifts: userShifts.length,
@@ -145,11 +153,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         )
       )
       
-      const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+      const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
       
       return [{
         user: userData || { id: userId, name: 'Unknown User', role: userRole },
         totalHours,
+        sleepInHours,
         paidHours,
         breakDeductions,
         totalShifts: userShifts.length,
@@ -160,6 +169,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
   const userHours = calculateUserHours
   const totalHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalHours, 0), [userHours])
+  const totalSleepInHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.sleepInHours, 0), [userHours])
   const totalPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.paidHours, 0), [userHours])
   const totalBreakDeductions = useMemo(() => userHours.reduce((sum, uh) => sum + uh.breakDeductions, 0), [userHours])
   const totalShifts = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalShifts, 0), [userHours])
@@ -353,7 +363,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       </Card>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -384,6 +394,27 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                   {totalHours.toFixed(1)}h
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <MoonIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="ml-4 min-w-0">
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">
+                  {isAdminView ? 'Sleep-in hours' : 'My sleep-in hours'}
+                </p>
+                <p className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
+                  {totalSleepInHours.toFixed(1)}h
+                </p>
+                <p className="text-xs text-gray-500 dark:text-neutral-500 mt-0.5">
+                  Not paid as work
                 </p>
               </div>
             </div>
@@ -484,29 +515,35 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-start justify-end gap-4 sm:gap-5">
                         <div>
-                          <p className="text-sm text-gray-500">Assigned Hours</p>
+                          <p className="text-sm text-gray-500 dark:text-neutral-400">Rostered</p>
                           <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                             {userHour.totalHours.toFixed(1)}h
                           </p>
                         </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-neutral-400">Sleep-in</p>
+                          <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
+                            {userHour.sleepInHours.toFixed(1)}h
+                          </p>
+                        </div>
                         {userHour.breakDeductions > 0 && (
                           <div>
-                            <p className="text-sm text-orange-500">Break Deductions</p>
+                            <p className="text-sm text-orange-500">Break</p>
                             <p className="text-lg font-semibold text-orange-600">
                               -{userHour.breakDeductions.toFixed(1)}h
                             </p>
                           </div>
                         )}
                         <div>
-                          <p className="text-sm text-green-500">Paid Hours</p>
+                          <p className="text-sm text-green-500">Paid</p>
                           <p className="text-xl font-bold text-green-600">
                             {userHour.paidHours.toFixed(1)}h
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Shifts</p>
+                          <p className="text-sm text-gray-500 dark:text-neutral-400">Shifts</p>
                           <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                             {userHour.totalShifts}
                           </p>
@@ -520,31 +557,37 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-[#a5f3fc]">Shifts:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {userHour.shifts.map((shift) => (
+                        {userHour.shifts.map((shift) => {
+                          const br = getShiftHourBreakdown(shift)
+                          return (
                           <div
                             key={shift.id}
-                            className="bg-gray-50 rounded p-2 text-sm"
+                            className="bg-gray-50 dark:bg-neutral-800/80 rounded p-2 text-sm"
                           >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-gray-900">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-900 dark:text-neutral-100">
                                   {format(new Date(shift.date), 'EEE, MMM d')}
                                 </p>
-                                <p className="text-gray-600">
+                                <p className="text-gray-600 dark:text-neutral-400">
                                   {shift.start_time} - {shift.end_time}
                                 </p>
                               </div>
-                              <div className="text-right">
-                                <p className="font-medium text-gray-900">
-                                  {shift.duration_hours}h
+                              <div className="text-right shrink-0">
+                                <p className="font-medium text-gray-900 dark:text-neutral-100">
+                                  {br.duration_hours.toFixed(1)}h rostered
                                 </p>
-                                <Badge variant="secondary" className="text-xs">
-                                  {shift.shift_type}
+                                <p className="text-indigo-700 dark:text-indigo-300 text-xs">
+                                  {br.sleep_in_hours.toFixed(1)}h sleep-in
+                                </p>
+                                <Badge variant="secondary" className="text-xs mt-1">
+                                  {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
                               </div>
                             </div>
                           </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   )}
