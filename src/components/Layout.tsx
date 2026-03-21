@@ -59,7 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-neutral-900 bg-opacity-50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
@@ -94,7 +94,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Link>
             ))}
           </nav>
-          <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-50 dark:bg-neutral-700">
+          <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-100 dark:bg-neutral-700">
             <div className="flex items-center mb-3">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{user?.name}</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-xs text-neutral-700 dark:text-neutral-400 capitalize">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <Button
@@ -146,7 +146,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Link>
             ))}
           </nav>
-          <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-50 dark:bg-neutral-700">
+          <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 bg-neutral-100 dark:bg-neutral-700">
             <div className="flex items-center mb-3">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
@@ -157,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{user?.name}</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-xs text-neutral-700 dark:text-neutral-400 capitalize">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <Button

@@ -187,8 +187,8 @@ const ShiftSwaps: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">Shift Swaps</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">Shift Swaps</h1>
+          <p className="text-neutral-700 mt-1">
             Request and manage shift exchanges with other staff members
           </p>
         </div>
@@ -222,7 +222,7 @@ const ShiftSwaps: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary-600">{swapStats.total}</p>
-                <p className="text-sm text-gray-600">Total Swaps</p>
+                <p className="text-sm text-neutral-700">Total Swaps</p>
               </div>
             </CardContent>
           </Card>
@@ -230,7 +230,7 @@ const ShiftSwaps: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-warning-600">{swapStats.pending}</p>
-                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-sm text-neutral-700">Pending</p>
               </div>
             </CardContent>
           </Card>
@@ -238,7 +238,7 @@ const ShiftSwaps: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-success-600">{swapStats.completed}</p>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-neutral-700">Completed</p>
               </div>
             </CardContent>
           </Card>
@@ -246,7 +246,7 @@ const ShiftSwaps: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-danger-600">{swapStats.rejected}</p>
-                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-sm text-neutral-700">Rejected</p>
               </div>
             </CardContent>
           </Card>
@@ -254,7 +254,7 @@ const ShiftSwaps: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-secondary-600">{swapStats.cancelled}</p>
-                <p className="text-sm text-gray-600">Cancelled</p>
+                <p className="text-sm text-neutral-700">Cancelled</p>
               </div>
             </CardContent>
           </Card>
@@ -262,7 +262,7 @@ const ShiftSwaps: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-neutral-300">
         <nav className="-mb-px flex space-x-8">
           {[
             { key: 'pending', label: 'Pending Requests', count: pendingSwaps.length },
@@ -276,7 +276,7 @@ const ShiftSwaps: React.FC = () => {
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.key
                   ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-neutral-600 hover:text-neutral-800 hover:border-neutral-400'
               }`}
             >
               {tab.label}
@@ -284,7 +284,7 @@ const ShiftSwaps: React.FC = () => {
                 <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
                   activeTab === tab.key
                     ? 'bg-primary-100 text-primary-600'
-                    : 'bg-gray-100 text-gray-600'
+                    : 'bg-neutral-200 text-neutral-700'
                 }`}>
                   {tab.count}
                 </span>
@@ -313,23 +313,23 @@ const ShiftSwaps: React.FC = () => {
               </div>
             ) : pendingSwaps.length === 0 ? (
               <div className="text-center py-8">
-                <CheckCircleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
-                <p className="text-gray-600">
+                <CheckCircleIcon className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-950 mb-2">No Pending Requests</h3>
+                <p className="text-neutral-700">
                   You don't have any pending shift swap requests.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {pendingSwaps.map((swap) => (
-                  <div key={swap._id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={swap._id} className="border border-neutral-300 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-500" />
+                        <UserIcon className="h-4 w-4 text-neutral-600" />
                         <span className="font-medium">Request from {getRequesterName(swap)}</span>
                         {getStatusBadge(swap.status)}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600">
                         {format(new Date(swap.requested_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
@@ -342,9 +342,9 @@ const ShiftSwaps: React.FC = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Your Current Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Your Current Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.target_shift_id === 'string' 
                               ? 'Loading...'
@@ -353,9 +353,9 @@ const ShiftSwaps: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Requested Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Requested Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.requester_shift_id === 'string' 
                               ? 'Loading...'
@@ -401,23 +401,23 @@ const ShiftSwaps: React.FC = () => {
               </div>
             ) : sentSwaps.length === 0 ? (
               <div className="text-center py-8">
-                <ArrowPathIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Sent Requests</h3>
-                <p className="text-gray-600">
+                <ArrowPathIcon className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-950 mb-2">No Sent Requests</h3>
+                <p className="text-neutral-700">
                   You haven't sent any shift swap requests yet.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {sentSwaps.map((swap) => (
-                  <div key={swap._id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={swap._id} className="border border-neutral-300 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-500" />
+                        <UserIcon className="h-4 w-4 text-neutral-600" />
                         <span className="font-medium">Request to {getTargetUserName(swap)}</span>
                         {getStatusBadge(swap.status)}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600">
                         {format(new Date(swap.requested_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
@@ -429,8 +429,8 @@ const ShiftSwaps: React.FC = () => {
                     )}
                     
                     {swap.response_message && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded border border-gray-200">
-                        <p className="text-sm text-gray-800">
+                      <div className="mb-3 p-3 bg-neutral-100 rounded border border-neutral-300">
+                        <p className="text-sm text-neutral-900">
                           <span className="font-medium">Response:</span> {swap.response_message}
                         </p>
                       </div>
@@ -438,9 +438,9 @@ const ShiftSwaps: React.FC = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Your Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Your Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.requester_shift_id === 'string' 
                               ? 'Loading...'
@@ -449,9 +449,9 @@ const ShiftSwaps: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Requested Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Requested Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.target_shift_id === 'string' 
                               ? 'Loading...'
@@ -486,23 +486,23 @@ const ShiftSwaps: React.FC = () => {
               </div>
             ) : receivedSwaps.length === 0 ? (
               <div className="text-center py-8">
-                <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Received Requests</h3>
-                <p className="text-gray-600">
+                <UserIcon className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-950 mb-2">No Received Requests</h3>
+                <p className="text-neutral-700">
                   You haven't received any shift swap requests yet.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {receivedSwaps.map((swap) => (
-                  <div key={swap._id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={swap._id} className="border border-neutral-300 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-500" />
+                        <UserIcon className="h-4 w-4 text-neutral-600" />
                         <span className="font-medium">Request from {getRequesterName(swap)}</span>
                         {getStatusBadge(swap.status)}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600">
                         {format(new Date(swap.requested_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
@@ -514,8 +514,8 @@ const ShiftSwaps: React.FC = () => {
                     )}
                     
                     {swap.response_message && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded border border-gray-200">
-                        <p className="text-sm text-gray-800">
+                      <div className="mb-3 p-3 bg-neutral-100 rounded border border-neutral-300">
+                        <p className="text-sm text-neutral-900">
                           <span className="font-medium">Your Response:</span> {swap.response_message}
                         </p>
                       </div>
@@ -523,9 +523,9 @@ const ShiftSwaps: React.FC = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Your Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Your Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.target_shift_id === 'string' 
                               ? 'Loading...'
@@ -534,9 +534,9 @@ const ShiftSwaps: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Requested Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Requested Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.requester_shift_id === 'string' 
                               ? 'Loading...'
@@ -557,7 +557,7 @@ const ShiftSwaps: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <ClockIcon className="h-5 w-5 text-gray-600" />
+              <ClockIcon className="h-5 w-5 text-neutral-700" />
               <span>Swap History</span>
             </CardTitle>
             <CardDescription>
@@ -571,25 +571,25 @@ const ShiftSwaps: React.FC = () => {
               </div>
             ) : swapHistory.length === 0 ? (
               <div className="text-center py-8">
-                <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Swap History</h3>
-                <p className="text-gray-600">
+                <ClockIcon className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-950 mb-2">No Swap History</h3>
+                <p className="text-neutral-700">
                   You don't have any completed swap requests yet.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {swapHistory.map((swap) => (
-                  <div key={swap._id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={swap._id} className="border border-neutral-300 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-500" />
+                        <UserIcon className="h-4 w-4 text-neutral-600" />
                         <span className="font-medium">
                           {swap.requester_id === user.id ? `Request to ${getTargetUserName(swap)}` : `Request from ${getRequesterName(swap)}`}
                         </span>
                         {getStatusBadge(swap.status)}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600">
                         {format(new Date(swap.requested_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
@@ -601,8 +601,8 @@ const ShiftSwaps: React.FC = () => {
                     )}
                     
                     {swap.response_message && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded border border-gray-200">
-                        <p className="text-sm text-gray-800">
+                      <div className="mb-3 p-3 bg-neutral-100 rounded border border-neutral-300">
+                        <p className="text-sm text-neutral-900">
                           <span className="font-medium">Response:</span> {swap.response_message}
                         </p>
                       </div>
@@ -610,9 +610,9 @@ const ShiftSwaps: React.FC = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Original Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Original Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.requester_shift_id === 'string' 
                               ? 'Loading...'
@@ -621,9 +621,9 @@ const ShiftSwaps: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-1">Target Shift</div>
+                        <div className="font-medium text-neutral-800 mb-1">Target Shift</div>
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-4 w-4 text-gray-500" />
+                          <ClockIcon className="h-4 w-4 text-neutral-600" />
                           <span>
                             {typeof swap.target_shift_id === 'string' 
                               ? 'Loading...'
@@ -683,30 +683,30 @@ const ShiftSwaps: React.FC = () => {
             </div>
           ) : availableSwaps.length === 0 ? (
             <div className="text-center py-8">
-              <PlusIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Available Swaps</h3>
-              <p className="text-gray-600">
+              <PlusIcon className="h-12 w-12 text-neutral-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neutral-950 mb-2">No Available Swaps</h3>
+              <p className="text-neutral-700">
                 There are no shifts available for swapping this week.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {availableSwaps.map((availableSwap, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div key={index} className="border border-neutral-300 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="text-sm">
-                      <div className="font-medium text-gray-700 mb-1">Your Current Shift</div>
+                      <div className="font-medium text-neutral-800 mb-1">Your Current Shift</div>
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-gray-500" />
+                        <ClockIcon className="h-4 w-4 text-neutral-600" />
                         <span>
                           {formatShiftDate(availableSwap.user_shift.date)} • {formatShiftTime(availableSwap.user_shift.start_time, availableSwap.user_shift.end_time)}
                         </span>
                       </div>
                     </div>
                     <div className="text-sm">
-                      <div className="font-medium text-gray-700 mb-1">Available Shift</div>
+                      <div className="font-medium text-neutral-800 mb-1">Available Shift</div>
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-gray-500" />
+                        <ClockIcon className="h-4 w-4 text-neutral-600" />
                         <span>
                           {formatShiftDate(availableSwap.target_shift.date)} • {formatShiftTime(availableSwap.target_shift.start_time, availableSwap.target_shift.end_time)}
                         </span>
@@ -715,7 +715,7 @@ const ShiftSwaps: React.FC = () => {
                   </div>
                   
                   <div className="mb-4">
-                    <div className="font-medium text-gray-700 mb-2">Available Swappers:</div>
+                    <div className="font-medium text-neutral-800 mb-2">Available Swappers:</div>
                     <div className="flex flex-wrap gap-2">
                       {availableSwap.potential_swappers.map((swapper) => (
                         <Badge key={swapper.user_id} variant="secondary" className="text-xs">

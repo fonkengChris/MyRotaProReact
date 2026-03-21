@@ -182,17 +182,17 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75 transition-opacity" onClick={onClose} />
         
         <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <div className="bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-neutral-100">
+              <h3 className="text-lg font-medium leading-6 text-neutral-950 dark:text-neutral-100">
                 {service ? 'Edit Service' : 'Create New Service'}
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-md bg-white dark:bg-neutral-800 text-gray-400 hover:text-gray-500 dark:text-neutral-300 dark:hover:text-neutral-100"
+                className="rounded-md bg-white dark:bg-neutral-800 text-neutral-500 hover:text-neutral-600 dark:text-neutral-300 dark:hover:text-neutral-100"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -201,7 +201,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Service Name *
                   </label>
                   <Input
@@ -214,10 +214,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Homes *
                   </label>
-                  <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-700/30 rounded-md p-2">
+                  <div className="max-h-32 overflow-y-auto border border-neutral-400 dark:border-neutral-700 bg-white dark:bg-neutral-700/30 rounded-md p-2">
                     {homes.map((home) => (
                       <label key={home.id} className="flex items-center mb-2 last:mb-0">
                         <input
@@ -230,9 +230,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                               handleInputChange('home_ids', formData.home_ids.filter(id => id !== home.id))
                             }
                           }}
-                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-neutral-600 rounded"
+                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 dark:border-neutral-600 rounded"
                         />
-                        <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">{home.name}</span>
+                        <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-300">{home.name}</span>
                       </label>
                     ))}
                   </div>
@@ -243,14 +243,14 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                   Description *
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={3}
-                  className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 placeholder:text-neutral-500 dark:placeholder-neutral-400"
+                  className="w-full rounded-md border border-neutral-400 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 placeholder:text-neutral-500 dark:placeholder-neutral-400"
                   placeholder="Enter service description"
                   required
                 />
@@ -258,13 +258,13 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Category *
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    className="w-full rounded-md border border-neutral-400 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     required
                   >
                     {categoryOptions.map((option) => (
@@ -276,13 +276,13 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Priority Level
                   </label>
                   <select
                     value={formData.priority_level}
                     onChange={(e) => handleInputChange('priority_level', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    className="w-full rounded-md border border-neutral-400 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                   >
                     {priorityOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -293,7 +293,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Duration (hours) *
                   </label>
                   <Input
@@ -310,7 +310,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Min Staff Count *
                   </label>
                   <Input
@@ -324,7 +324,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Max Staff Count *
                   </label>
                   <Input
@@ -339,7 +339,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
               </div>
 
               <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                   Required Skills *
                 </label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -349,9 +349,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                         type="checkbox"
                         checked={formData.required_skills.includes(skill.value as Skill)}
                         onChange={() => handleSkillToggle(skill.value as Skill)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-neutral-600 rounded"
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 dark:border-neutral-600 rounded"
                       />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">{skill.label}</span>
+                      <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-300">{skill.label}</span>
                     </label>
                   ))}
                 </div>
@@ -363,9 +363,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     type="checkbox"
                     checked={formData.is_24_hour}
                     onChange={(e) => handleInputChange('is_24_hour', e.target.checked)}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-neutral-600 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 dark:border-neutral-600 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">24-Hour Service</span>
+                  <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-300">24-Hour Service</span>
                 </label>
 
                 <label className="flex items-center">
@@ -373,9 +373,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => handleInputChange('is_active', e.target.checked)}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-neutral-600 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 dark:border-neutral-600 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-neutral-300">Active</span>
+                  <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-300">Active</span>
                 </label>
               </div>
 

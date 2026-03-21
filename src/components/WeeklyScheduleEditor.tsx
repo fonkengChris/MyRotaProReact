@@ -241,13 +241,13 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
   if (!schedule) {
     return (
       <div className="text-center py-12">
-        <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+        <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
           <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">No Weekly Schedule Found</h3>
-        <p className="text-gray-500 dark:text-neutral-400 mb-6">
+        <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">No Weekly Schedule Found</h3>
+        <p className="text-neutral-600 dark:text-neutral-400 mb-6">
           This care home doesn't have a weekly schedule configured yet.
         </p>
         {canEdit && (
@@ -268,8 +268,8 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Weekly Schedule</h2>
-          <p className="text-gray-600 dark:text-neutral-400 mt-1">
+          <h2 className="text-xl font-semibold text-neutral-950 dark:text-neutral-100">Weekly Schedule</h2>
+          <p className="text-neutral-700 dark:text-neutral-400 mt-1">
             Configure the standard shift patterns for each day of the week
           </p>
         </div>
@@ -294,37 +294,37 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
       </div>
 
       {/* Schedule Grid */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-            <thead className="bg-gray-50 dark:bg-neutral-700">
+          <table className="min-w-full divide-y divide-neutral-300 dark:divide-neutral-700">
+            <thead className="bg-neutral-100 dark:bg-neutral-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Day
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Shifts
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-300 dark:divide-neutral-700">
               {dayNames.map(({ key, label }) => {
                 const daySchedule = schedule.schedule[key as keyof typeof schedule.schedule]
                 const isActive = daySchedule?.is_active || false
                 const shifts = daySchedule?.shifts || []
 
                 return (
-                  <tr key={key} className={!isActive ? 'bg-gray-50 dark:bg-neutral-700' : ''}>
+                  <tr key={key} className={!isActive ? 'bg-neutral-100 dark:bg-neutral-700' : ''}>
                     {/* Day Name */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <span className={`text-sm font-medium ${!isActive ? 'text-gray-400 dark:text-neutral-500' : 'text-gray-900 dark:text-neutral-100'}`}>
+                        <span className={`text-sm font-medium ${!isActive ? 'text-neutral-500 dark:text-neutral-500' : 'text-neutral-950 dark:text-neutral-100'}`}>
                           {label}
                         </span>
                       </div>
@@ -347,9 +347,9 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                             onClick={() => toggleDayActive(key)}
                           >
                             {isActive ? (
-                              <EyeSlashIcon className="h-4 w-4 text-gray-500 dark:text-neutral-400" />
+                              <EyeSlashIcon className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                             ) : (
-                              <EyeIcon className="h-4 w-4 text-gray-500 dark:text-neutral-400" />
+                              <EyeIcon className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                             )}
                           </Button>
                         )}
@@ -360,33 +360,33 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                     <td className="px-6 py-4">
                       <div className="space-y-2">
                         {shifts.length === 0 ? (
-                          <p className="text-sm text-gray-500 dark:text-neutral-400 italic">No shifts configured</p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 italic">No shifts configured</p>
                         ) : (
                           shifts.map((shift, index) => (
                             <div
                               key={index}
-                              className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700 rounded-lg p-3 border border-gray-200 dark:border-neutral-600"
+                              className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-700 rounded-lg p-3 border border-neutral-300 dark:border-neutral-600"
                             >
                               <div className="flex-1">
                                 <div className="flex items-center space-x-3">
-                                  <ClockIcon className="h-4 w-4 text-gray-400 dark:text-neutral-500" />
-                                  <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                                  <ClockIcon className="h-4 w-4 text-neutral-500 dark:text-neutral-500" />
+                                  <span className="text-sm font-medium text-neutral-950 dark:text-neutral-100">
                                     {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
                                   </span>
                                   <Badge variant="secondary" className="text-xs">
                                     {shift.shift_type}
                                   </Badge>
                                   <div className="flex items-center space-x-1">
-                                    <UserGroupIcon className="h-3 w-3 text-gray-400 dark:text-neutral-500" />
-                                    <span className="text-xs text-gray-600 dark:text-neutral-400">
+                                    <UserGroupIcon className="h-3 w-3 text-neutral-500 dark:text-neutral-500" />
+                                    <span className="text-xs text-neutral-700 dark:text-neutral-400">
                                       {shift.required_staff_count}
                                     </span>
                                   </div>
                                 </div>
-                                <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
+                                <div className="mt-1 text-xs text-neutral-700 dark:text-neutral-400">
                                   {typeof shift.service_id === 'string' ? getServiceName(shift.service_id) : shift.service_id.name}
                                   {shift.notes && (
-                                    <span className="ml-2 text-gray-500 dark:text-neutral-500">• {shift.notes}</span>
+                                    <span className="ml-2 text-neutral-600 dark:text-neutral-500">• {shift.notes}</span>
                                   )}
                                 </div>
                               </div>
@@ -462,12 +462,12 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
             <div className="relative w-full max-w-4xl transform rounded-lg bg-white dark:bg-neutral-800 p-6 shadow-xl transition-all">
               {/* Header */}
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
                   Shift Templates
                 </h2>
                 <button
                   onClick={() => setShowTemplates(false)}
-                  className="rounded-md p-1 text-gray-400 hover:text-gray-600 dark:text-neutral-500 dark:hover:text-neutral-300"
+                  className="rounded-md p-1 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

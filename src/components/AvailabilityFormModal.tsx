@@ -118,7 +118,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75 transition-opacity" onClick={onClose} />
 
         <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-lg">
           <Card>
@@ -136,7 +136,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                   <XMarkIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {format(date, 'EEEE, MMMM d, yyyy')}
               </p>
             </CardHeader>
@@ -144,12 +144,12 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
             <CardContent>
               <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 {/* Availability Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <CalendarIcon className="h-5 w-5 text-gray-600 dark:text-neutral-400" />
+                    <CalendarIcon className="h-5 w-5 text-neutral-700 dark:text-neutral-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">Available</p>
-                      <p className="text-xs text-gray-500 dark:text-neutral-400">Set your availability for this time</p>
+                      <p className="text-sm font-medium text-neutral-950 dark:text-neutral-100">Available</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Set your availability for this time</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -159,14 +159,14 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                       checked={isAvailable}
                       onChange={(e) => setValue('is_available', e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                    <div className="w-11 h-6 bg-neutral-400 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-400 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
 
                 {/* Time Selection */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                       Start Time
                     </label>
                     <input
@@ -180,7 +180,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                       End Time
                     </label>
                     <input
@@ -195,8 +195,8 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                 </div>
 
                 {/* Duration Display */}
-                <div className="bg-gray-50 dark:bg-neutral-700 p-3 rounded-md">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-neutral-400">
+                <div className="bg-neutral-100 dark:bg-neutral-700 p-3 rounded-md">
+                  <div className="flex items-center space-x-2 text-sm text-neutral-700 dark:text-neutral-400">
                     <ClockIcon className="h-4 w-4" />
                     <span>Duration: {duration.toFixed(1)} hours</span>
                   </div>
@@ -205,7 +205,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
                 {/* Preferred Shift Type */}
                 {isAvailable && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                       Preferred Shift Type
                     </label>
                     <select
@@ -230,7 +230,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                     Notes (Optional)
                   </label>
                   <textarea

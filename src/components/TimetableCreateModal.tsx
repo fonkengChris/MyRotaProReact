@@ -145,7 +145,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
-                errors.name ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
+                errors.name ? 'border-red-300 dark:border-red-400' : 'border-neutral-400 dark:border-neutral-600'
               }`}
               placeholder="Enter timetable name"
             />
@@ -162,7 +162,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
-                errors.description ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
+                errors.description ? 'border-red-300 dark:border-red-400' : 'border-neutral-400 dark:border-neutral-600'
               } placeholder:text-neutral-500 dark:placeholder-neutral-400`}
               placeholder="Enter timetable description (optional)"
               rows={3}
@@ -178,14 +178,14 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
               Generation covers <strong>all services</strong> for these homes so staff who work across multiple services are scheduled in one timetable.
             </p>
-            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 rounded-md p-2">
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-neutral-400 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 rounded-md p-2">
               {homes.map((home) => (
                 <label key={home.id} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={formData.home_ids.includes(home.id)}
                     onChange={() => handleHomeToggle(home.id)}
-                    className="rounded border-gray-300 dark:border-neutral-600 text-primary-600 dark:text-white focus:ring-primary-500"
+                    className="rounded border-neutral-400 dark:border-neutral-600 text-primary-600 dark:text-white focus:ring-primary-500"
                   />
                   <span className="text-sm text-neutral-700 dark:text-neutral-300">{home.name}</span>
                 </label>
@@ -205,7 +205,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               value={formData.start_date}
               onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
-                errors.start_date ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
+                errors.start_date ? 'border-red-300 dark:border-red-400' : 'border-neutral-400 dark:border-neutral-600'
               }`}
             />
             {errors.start_date && <p className="form-error">{errors.start_date}</p>}
@@ -224,7 +224,7 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
               value={formData.total_weeks}
               onChange={(e) => setFormData(prev => ({ ...prev, total_weeks: parseInt(e.target.value) || 1 }))}
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 ${
-                errors.total_weeks ? 'border-red-300 dark:border-red-400' : 'border-gray-300 dark:border-neutral-600'
+                errors.total_weeks ? 'border-red-300 dark:border-red-400' : 'border-neutral-400 dark:border-neutral-600'
               }`}
             />
             {errors.total_weeks && <p className="form-error">{errors.total_weeks}</p>}

@@ -185,11 +185,11 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden border border-neutral-200 dark:border-neutral-700">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
+        <div className="px-6 py-4 border-b border-neutral-300 dark:border-neutral-700">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Available Shifts</h2>
-              <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
+              <h2 className="text-xl font-semibold text-neutral-950 dark:text-neutral-100">Available Shifts</h2>
+              <p className="text-sm text-neutral-700 dark:text-neutral-400 mt-1">
                 Select shifts that fit your schedule. Conflicts will be highlighted.
               </p>
             </div>
@@ -208,22 +208,22 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner size="lg" />
-              <span className="ml-3 text-gray-600 dark:text-neutral-400">Loading available shifts...</span>
+              <span className="ml-3 text-neutral-700 dark:text-neutral-400">Loading available shifts...</span>
             </div>
           ) : availableShifts.length === 0 ? (
             <div className="text-center py-12">
-              <CalendarIcon className="h-12 w-12 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">No Available Shifts</h3>
-              <p className="text-gray-600 dark:text-neutral-400">
+              <CalendarIcon className="h-12 w-12 text-neutral-500 dark:text-neutral-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">No Available Shifts</h3>
+              <p className="text-neutral-700 dark:text-neutral-400">
                 There are currently no shifts available for selection.
               </p>
             </div>
           ) : (
             <div className="space-y-6">
               {Object.entries(groupedShifts).map(([date, shifts]) => (
-                <div key={date} className="border border-gray-200 dark:border-neutral-700 rounded-lg">
-                  <div className="bg-gray-50 dark:bg-neutral-700 px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
-                    <h3 className="font-medium text-gray-900 dark:text-neutral-100">
+                <div key={date} className="border border-neutral-300 dark:border-neutral-700 rounded-lg">
+                  <div className="bg-neutral-100 dark:bg-neutral-700 px-4 py-3 border-b border-neutral-300 dark:border-neutral-700">
+                    <h3 className="font-medium text-neutral-950 dark:text-neutral-100">
                       {formatShiftDate(date)}
                     </h3>
                   </div>
@@ -242,15 +242,15 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                               ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20' 
                               : isSelected 
                                 ? 'border-primary-300 bg-primary-50 dark:border-primary-600 dark:bg-primary-900/20 dark:text-neutral-100' 
-                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-700'
+                                : 'border-neutral-300 hover:border-neutral-400 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-700'
                           }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
                                 <div className="flex items-center space-x-1">
-                                  <ClockIcon className="h-4 w-4 text-gray-500 dark:text-neutral-400" />
-                                  <span className="font-medium text-gray-900 dark:text-neutral-100">
+                                  <ClockIcon className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                                  <span className="font-medium text-neutral-950 dark:text-neutral-100">
                                     {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                   </span>
                                 </div>
@@ -274,7 +274,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                 )}
                               </div>
                               
-                              <div className="text-sm text-gray-600 dark:text-neutral-400 space-y-1">
+                              <div className="text-sm text-neutral-700 dark:text-neutral-400 space-y-1">
                                 <div className="flex items-center space-x-2">
                                   <UserIcon className="h-4 w-4" />
                                   <span>
@@ -283,7 +283,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                 </div>
                                 
                                 {shift.notes && (
-                                  <div className="text-gray-500 dark:text-neutral-400 italic">
+                                  <div className="text-neutral-600 dark:text-neutral-400 italic">
                                     Note: {shift.notes}
                                   </div>
                                 )}
@@ -326,9 +326,9 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700">
+        <div className="px-6 py-4 border-t border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-700">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-neutral-400">
+            <div className="text-sm text-neutral-700 dark:text-neutral-400">
               {availableShifts.length} shift{availableShifts.length !== 1 ? 's' : ''} available
             </div>
             <div className="flex space-x-3">

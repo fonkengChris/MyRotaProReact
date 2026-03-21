@@ -64,11 +64,11 @@ const ShiftSwapNotification: React.FC<ShiftSwapNotificationProps> = ({ onClose }
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-sm w-full">
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+      <div className="bg-white rounded-lg shadow-lg border border-neutral-300 p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
             <ArrowPathIcon className="h-5 w-5 text-primary-600" />
-            <h3 className="font-medium text-gray-900">Shift Swap Requests</h3>
+            <h3 className="font-medium text-neutral-950">Shift Swap Requests</h3>
             <Badge variant="warning" className="text-xs">
               {pendingSwaps.length}
             </Badge>
@@ -85,13 +85,13 @@ const ShiftSwapNotification: React.FC<ShiftSwapNotificationProps> = ({ onClose }
 
         <div className="space-y-3 mb-4">
           {pendingSwaps.slice(0, 2).map((swap) => (
-            <div key={swap._id} className="border border-gray-200 rounded p-3">
+            <div key={swap._id} className="border border-neutral-300 rounded p-3">
               <div className="flex items-center space-x-2 mb-2">
-                <UserIcon className="h-4 w-4 text-gray-500" />
+                <UserIcon className="h-4 w-4 text-neutral-600" />
                 <span className="text-sm font-medium">{getRequesterName(swap)}</span>
               </div>
               
-              <div className="text-xs text-gray-600 space-y-1">
+              <div className="text-xs text-neutral-700 space-y-1">
                 <div className="flex items-center space-x-2">
                   <ClockIcon className="h-3 w-3" />
                   <span>
@@ -100,7 +100,7 @@ const ShiftSwapNotification: React.FC<ShiftSwapNotificationProps> = ({ onClose }
                       : `${formatShiftDate(swap.requester_shift_id.date)} • ${formatShiftTime(swap.requester_shift_id.start_time, swap.requester_shift_id.end_time)}`}
                   </span>
                 </div>
-                <div className="text-gray-500">
+                <div className="text-neutral-600">
                   {format(new Date(swap.requested_at), 'MMM d, h:mm a')}
                 </div>
               </div>
@@ -108,7 +108,7 @@ const ShiftSwapNotification: React.FC<ShiftSwapNotificationProps> = ({ onClose }
           ))}
           
           {pendingSwaps.length > 2 && (
-            <div className="text-xs text-gray-500 text-center">
+            <div className="text-xs text-neutral-600 text-center">
               +{pendingSwaps.length - 2} more request{pendingSwaps.length - 2 !== 1 ? 's' : ''}
             </div>
           )}

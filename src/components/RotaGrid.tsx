@@ -255,7 +255,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
-        <div className="ml-3 text-gray-600">
+        <div className="ml-3 text-neutral-700">
           {isCreatingShifts ? 'Creating shifts from weekly schedule...' : 'Loading weekly schedule...'}
         </div>
       </div>
@@ -266,9 +266,9 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     <div className="space-y-4">
       {/* Action buttons for week management */}
       {canEdit && shifts.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between p-4 bg-neutral-100 rounded-lg border">
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-medium text-gray-900">Week Actions</h3>
+            <h3 className="text-lg font-medium text-neutral-950">Week Actions</h3>
             <Badge variant="primary" className="text-xs">
               {shifts.length} shifts • {shifts.reduce((total, shift) => total + (shift.assigned_staff?.length || 0), 0)} assignments
             </Badge>
@@ -316,13 +316,13 @@ const RotaGrid: React.FC<RotaGridProps> = ({
         <div className="min-w-[1200px]">
           {/* Header row with day names */}
           <div className="grid grid-cols-8 gap-1 mb-2">
-            <div className="p-2 font-medium text-gray-500 text-sm">Time</div>
+            <div className="p-2 font-medium text-neutral-600 text-sm">Time</div>
             {weekDays.map((day) => (
               <div key={day.toISOString()} className="p-2 text-center">
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-neutral-950">
                   {format(day, 'EEE')}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-neutral-600">
                   {format(day, 'MMM d')}
                 </div>
               </div>
@@ -333,7 +333,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
           {timeSlots.map((time) => (
             <div key={time} className="grid grid-cols-8 gap-1 mb-1">
               {/* Time label */}
-              <div className="p-2 text-sm text-gray-500 font-mono bg-gray-50 border-r">
+              <div className="p-2 text-sm text-neutral-600 font-mono bg-neutral-100 border-r">
                 {time}
               </div>
 
@@ -349,19 +349,19 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                       // No actual shifts - show weekly schedule if exists, otherwise add button
                       hasWeeklySchedule ? (
                         // Show weekly schedule shift template
-                        <div className="p-2 text-xs bg-gray-100 border border-gray-300 rounded">
-                          <div className="text-gray-600 mb-1">
+                        <div className="p-2 text-xs bg-neutral-200 border border-neutral-400 rounded">
+                          <div className="text-neutral-700 mb-1">
                             <ClockIcon className="inline h-3 w-3 mr-1" />
                             {weeklyShift?.start_time.substring(0, 5)} - {weeklyShift?.end_time.substring(0, 5)}
                           </div>
-                          <div className="text-gray-500 mb-1">
+                          <div className="text-neutral-600 mb-1">
                             {weeklyShift?.shift_type} • {weeklyShift?.required_staff_count} staff needed
                           </div>
                           {canEdit && (
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 w-full text-xs border-dashed border-gray-400 hover:border-primary-400 hover:bg-primary-50"
+                              className="h-6 w-full text-xs border-dashed border-neutral-500 hover:border-primary-400 hover:bg-primary-50"
                               onClick={() => onAddShift(day, time)}
                             >
                               <PlusIcon className="h-3 w-3 mr-1" />
@@ -375,10 +375,10 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
+                            className="h-full w-full border-dashed border-neutral-400 hover:border-primary-400 hover:bg-primary-50"
                             onClick={() => onAddShift(day, time)}
                           >
-                            <PlusIcon className="h-4 w-4 text-gray-400" />
+                            <PlusIcon className="h-4 w-4 text-neutral-500" />
                           </Button>
                         )
                       )
@@ -447,8 +447,8 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                       className="flex items-center justify-between bg-white rounded px-2 py-1 border"
                                     >
                                       <div className="flex items-center space-x-1">
-                                        <UserIcon className="h-3 w-3 text-gray-500" />
-                                        <span className="text-gray-700">
+                                        <UserIcon className="h-3 w-3 text-neutral-600" />
+                                        <span className="text-neutral-800">
                                           {staffMember?.name || 'Unknown Staff'}
                                         </span>
                                       </div>
@@ -481,7 +481,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
                                     {/* Staff selector dropdown */}
                                     {showStaffSelector === shift.id && (
-                                      <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
+                                      <div className="absolute z-10 mt-1 w-48 bg-white border border-neutral-300 rounded-md shadow-lg">
                                         <div className="p-2 max-h-32 overflow-y-auto">
                                           {staff
                                             .filter(member => member.is_active)
@@ -489,7 +489,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                             .map(member => (
                                               <button
                                                 key={member.id}
-                                                className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                                                className="w-full text-left px-2 py-1 text-sm hover:bg-neutral-200 rounded"
                                                 onClick={() => handleAssignStaff(shift.id, member.id)}
                                               >
                                                 <div className="flex items-center space-x-2">
@@ -506,7 +506,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                             member.is_active && 
                                             !shiftAssignments.some(a => a.user_id === member.id)
                                           ).length === 0 && (
-                                            <div className="px-2 py-1 text-sm text-gray-500">
+                                            <div className="px-2 py-1 text-sm text-neutral-600">
                                               No available staff
                                             </div>
                                           )}

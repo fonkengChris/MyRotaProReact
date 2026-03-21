@@ -137,7 +137,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75 transition-opacity" onClick={onClose} />
 
         <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <Card>
@@ -225,7 +225,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
 
                 {/* Available Swappers */}
                 <div>
-                  <h3 className="font-medium text-gray-900 dark:text-neutral-100 mb-3">Select User to Swap With</h3>
+                  <h3 className="font-medium text-neutral-950 dark:text-neutral-100 mb-3">Select User to Swap With</h3>
                   <div className="space-y-2">
                     {availableSwap.potential_swappers.map((swapper) => (
                       <div
@@ -233,7 +233,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                         className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                           selectedSwapper === swapper.user_id
                             ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:text-neutral-100'
-                            : 'border-gray-200 hover:border-gray-300 dark:border-neutral-700 dark:hover:border-neutral-600'
+                            : 'border-neutral-300 hover:border-neutral-400 dark:border-neutral-700 dark:hover:border-neutral-600'
                         }`}
                         onClick={() => setSelectedSwapper(swapper.user_id)}
                       >
@@ -241,15 +241,15 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                           <div className={`w-4 h-4 rounded-full border-2 ${
                             selectedSwapper === swapper.user_id
                               ? 'border-primary-500 bg-primary-500'
-                              : 'border-gray-300'
+                              : 'border-neutral-400'
                           }`}>
                             {selectedSwapper === swapper.user_id && (
                               <CheckCircleIcon className="h-3 w-3 text-white" />
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="font-medium text-gray-900 dark:text-neutral-100">{swapper.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-neutral-400">{swapper.email}</div>
+                            <div className="font-medium text-neutral-950 dark:text-neutral-100">{swapper.name}</div>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-400">{swapper.email}</div>
                           </div>
                         </div>
                       </div>
@@ -259,7 +259,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
 
                 {/* Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                     Message (Optional)
                   </label>
                   <textarea
@@ -272,7 +272,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                   {errors.requester_message && (
                     <p className="mt-1 text-sm text-danger-600">{errors.requester_message.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">
+                  <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
                     {requesterMessage?.length || 0}/500 characters
                   </p>
                 </div>

@@ -47,10 +47,10 @@ const MultiHomeSelector: React.FC<MultiHomeSelectorProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-neutral-700 mb-2">
                 Select homes for AI rota generation. Staff can be assigned across multiple homes.
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-neutral-600">
                 Selected: {selectedHomes.length} of {homes.length} homes
               </p>
             </div>
@@ -79,17 +79,17 @@ const MultiHomeSelector: React.FC<MultiHomeSelectorProps> = ({
               {homes.map((home) => (
                 <label
                   key={home.id}
-                  className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                  className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-neutral-100"
                 >
                   <input
                     type="checkbox"
                     checked={selectedHomes.includes(home.id)}
                     onChange={() => handleHomeToggle(home.id)}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 rounded"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{home.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="font-medium text-neutral-950">{home.name}</div>
+                    <div className="text-sm text-neutral-600">
                       {home.location.city}
                     </div>
                   </div>
@@ -97,17 +97,17 @@ const MultiHomeSelector: React.FC<MultiHomeSelectorProps> = ({
               ))}
             </div>
           ) : (
-            <div className="p-4 border rounded-lg bg-gray-50">
+            <div className="p-4 border rounded-lg bg-neutral-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-neutral-950">
                     {selectedHomes.length > 0 
                       ? `${selectedHomes.length} home(s) selected`
                       : 'No homes selected'
                     }
                   </p>
                   {selectedHomes.length > 0 && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-neutral-600 mt-1">
                       {selectedHomesData.map(home => home.name).join(', ')}
                     </p>
                   )}

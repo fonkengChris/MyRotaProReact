@@ -76,8 +76,8 @@ const UserTimetables: React.FC = () => {
     return (
       <div className="text-center py-12">
         <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">Error loading timetables</h3>
-        <p className="mt-1 text-sm text-gray-500">
+        <h3 className="mt-2 text-sm font-medium text-neutral-950">Error loading timetables</h3>
+        <p className="mt-1 text-sm text-neutral-600">
           There was an error loading your timetables. Please try again later.
         </p>
       </div>
@@ -89,8 +89,8 @@ const UserTimetables: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">My Timetables</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">My Timetables</h1>
+          <p className="text-neutral-700 mt-1">
             View your published work schedules and timetables
           </p>
         </div>
@@ -100,9 +100,9 @@ const UserTimetables: React.FC = () => {
       {timetables.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No timetables available</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <CalendarIcon className="mx-auto h-12 w-12 text-neutral-500" />
+            <h3 className="mt-2 text-sm font-medium text-neutral-950">No timetables available</h3>
+            <p className="mt-1 text-sm text-neutral-600">
               You don't have access to any published timetables yet.
             </p>
           </CardContent>
@@ -127,7 +127,7 @@ const UserTimetables: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {/* Date Range */}
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-neutral-700">
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     <span>
                       {format(parseISO(timetable.start_date), 'MMM d, yyyy')} - {format(parseISO(timetable.end_date), 'MMM d, yyyy')}
@@ -136,28 +136,28 @@ const UserTimetables: React.FC = () => {
 
                   {/* Statistics */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-lg font-bold text-gray-900">{timetable.total_weeks}</div>
-                      <div className="text-xs text-gray-600">Weeks</div>
+                    <div className="text-center p-3 bg-neutral-100 rounded-lg">
+                      <div className="text-lg font-bold text-neutral-950">{timetable.total_weeks}</div>
+                      <div className="text-xs text-neutral-700">Weeks</div>
                     </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-lg font-bold text-gray-900">{timetable.total_shifts}</div>
-                      <div className="text-xs text-gray-600">Shifts</div>
+                    <div className="text-center p-3 bg-neutral-100 rounded-lg">
+                      <div className="text-lg font-bold text-neutral-950">{timetable.total_shifts}</div>
+                      <div className="text-xs text-neutral-700">Shifts</div>
                     </div>
                   </div>
 
                   {/* Additional Stats */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Total Hours:</span>
+                      <span className="text-neutral-700">Total Hours:</span>
                       <span className="font-medium">{timetable.total_hours}h</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Assignments:</span>
+                      <span className="text-neutral-700">Assignments:</span>
                       <span className="font-medium">{timetable.total_assignments}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Avg Weekly Hours:</span>
+                      <span className="text-neutral-700">Avg Weekly Hours:</span>
                       <span className="font-medium">{timetable.average_weekly_hours}h</span>
                     </div>
                   </div>

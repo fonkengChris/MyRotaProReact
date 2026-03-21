@@ -21,12 +21,12 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-neutral-50 to-neutral-100 text-neutral-900 antialiased dark:from-neutral-900 dark:to-neutral-800 dark:text-neutral-100;
+    @apply bg-gradient-to-br from-neutral-100 to-neutral-200 text-neutral-950 antialiased dark:from-neutral-900 dark:to-neutral-800 dark:text-neutral-100;
     line-height: 1.6;
   }
   
   * {
-    @apply border-neutral-200 dark:border-neutral-700;
+    @apply border-neutral-300 dark:border-neutral-700;
   }
 
   /* Improved scrollbar styling */
@@ -36,15 +36,15 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-neutral-100 dark:bg-neutral-800;
+    @apply bg-neutral-200 dark:bg-neutral-800;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-300 dark:bg-neutral-600 rounded-full;
+    @apply bg-neutral-400 dark:bg-neutral-600 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-neutral-400 dark:bg-neutral-500;
+    @apply bg-neutral-500 dark:bg-neutral-500;
   }
 
   /* Focus styles */
@@ -63,11 +63,11 @@
   }
   
   .btn-secondary {
-    @apply btn bg-secondary-100 text-secondary-900 hover:bg-secondary-200 hover:shadow-md focus-visible:ring-secondary-500 active:scale-95;
+    @apply btn bg-secondary-200 text-secondary-950 hover:bg-secondary-300 hover:shadow-md focus-visible:ring-secondary-500 active:scale-95 dark:bg-secondary-800 dark:text-secondary-100 dark:hover:bg-secondary-700;
   }
   
   .btn-outline {
-    @apply btn border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 hover:shadow-md focus-visible:ring-neutral-500 active:scale-95 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:border-neutral-500;
+    @apply btn border border-neutral-400 bg-white text-neutral-800 hover:bg-neutral-100 hover:border-neutral-500 hover:shadow-md focus-visible:ring-neutral-500 active:scale-95 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:border-neutral-500;
   }
   
   .btn-danger {
@@ -91,24 +91,23 @@
   }
   
   .input {
-    @apply flex h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-400 dark:ring-offset-neutral-800 dark:focus-visible:border-primary-400;
+    @apply flex h-10 w-full rounded-lg border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-400 dark:ring-offset-neutral-800 dark:focus-visible:border-primary-400;
   }
   
   .card {
-    @apply rounded-xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-200 dark:border-neutral-700 dark:bg-neutral-800;
+    @apply rounded-xl border border-neutral-300 bg-white shadow-sm hover:shadow-md transition-shadow duration-200 dark:border-neutral-700 dark:bg-neutral-800;
   }
   
   .card-header {
-    @apply flex flex-col space-y-1.5 p-6 border-b border-neutral-100 dark:border-neutral-700;
+    @apply flex flex-col space-y-1.5 p-6 border-b border-neutral-200 dark:border-neutral-700;
   }
   
   .card-title {
-    @apply text-2xl font-semibold leading-none tracking-tight;
-    color: #a5f3fc;
+    @apply text-2xl font-semibold leading-none tracking-tight text-primary-900 dark:text-cyan-200;
   }
   
   .card-description {
-    @apply text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed;
+    @apply text-sm text-neutral-700 dark:text-neutral-400 leading-relaxed;
   }
   
   .card-content {
@@ -116,7 +115,7 @@
   }
   
   .card-footer {
-    @apply flex items-center p-6 pt-0 border-t border-neutral-100 dark:border-neutral-700;
+    @apply flex items-center p-6 pt-0 border-t border-neutral-200 dark:border-neutral-700;
   }
   
   .badge {
@@ -124,31 +123,31 @@
   }
   
   .badge-primary {
-    @apply badge bg-primary-50 text-primary-700 ring-primary-600/20;
+    @apply badge bg-primary-100 text-primary-900 ring-primary-700/35 dark:bg-primary-950/50 dark:text-primary-200 dark:ring-primary-500/30;
   }
   
   .badge-secondary {
-    @apply badge bg-secondary-50 text-secondary-700 ring-secondary-600/20;
+    @apply badge bg-secondary-200 text-secondary-900 ring-secondary-700/30 dark:bg-secondary-900/40 dark:text-secondary-200 dark:ring-secondary-500/25;
   }
   
   .badge-success {
-    @apply badge bg-success-50 text-success-700 ring-success-600/20;
+    @apply badge bg-success-100 text-success-900 ring-success-700/35 dark:bg-success-950/40 dark:text-success-200 dark:ring-success-500/30;
   }
   
   .badge-warning {
-    @apply badge bg-warning-50 text-warning-700 ring-warning-600/20;
+    @apply badge bg-warning-100 text-warning-900 ring-warning-700/35 dark:bg-warning-950/40 dark:text-warning-200 dark:ring-warning-500/30;
   }
   
   .badge-danger {
-    @apply badge bg-danger-50 text-danger-700 ring-danger-600/20;
+    @apply badge bg-danger-100 text-danger-900 ring-danger-700/35 dark:bg-danger-950/40 dark:text-danger-200 dark:ring-danger-500/30;
   }
 
   .badge-accent {
-    @apply badge bg-accent-50 text-accent-700 ring-accent-600/20;
+    @apply badge bg-accent-100 text-accent-900 ring-accent-700/35 dark:bg-accent-950/40 dark:text-accent-200 dark:ring-accent-500/30;
   }
 
   .badge-neutral {
-    @apply badge bg-neutral-50 text-neutral-700 ring-neutral-600/20;
+    @apply badge bg-neutral-200 text-neutral-900 ring-neutral-600/30 dark:bg-neutral-700 dark:text-neutral-100 dark:ring-neutral-500/25;
   }
 
   /* Navigation styles */
@@ -157,16 +156,16 @@
   }
 
   .nav-item-active {
-    @apply bg-primary-100 text-primary-900 shadow-sm;
+    @apply bg-primary-200 text-primary-950 shadow-sm dark:bg-primary-900/60 dark:text-primary-100;
   }
 
   .nav-item-inactive {
-    @apply text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100;
+    @apply text-neutral-700 hover:bg-neutral-200 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100;
   }
 
   /* Form styles */
   .form-label {
-    @apply block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1;
+    @apply block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1;
   }
 
   .form-error {
@@ -174,32 +173,32 @@
   }
 
   .form-help {
-    @apply text-sm text-neutral-500 dark:text-neutral-400 mt-1;
+    @apply text-sm text-neutral-600 dark:text-neutral-400 mt-1;
   }
 
   /* Table styles */
   .table {
-    @apply min-w-full divide-y divide-neutral-200;
+    @apply min-w-full divide-y divide-neutral-200 dark:divide-neutral-700;
   }
 
   .table-header {
-    @apply bg-neutral-50;
+    @apply bg-neutral-100 dark:bg-neutral-800/80;
   }
 
   .table-header-cell {
-    @apply px-3 sm:px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider;
+    @apply px-3 sm:px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider;
   }
 
   .table-body {
-    @apply bg-white divide-y divide-neutral-200;
+    @apply bg-white divide-y divide-neutral-200 dark:divide-neutral-700 dark:bg-neutral-900/20;
   }
 
   .table-row {
-    @apply hover:bg-neutral-50 transition-colors;
+    @apply hover:bg-neutral-100 transition-colors dark:hover:bg-neutral-800/60;
   }
 
   .table-cell {
-    @apply px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-neutral-900;
+    @apply px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-neutral-950 dark:text-neutral-100;
   }
 
   /* Mobile-first responsive utilities */
@@ -229,6 +228,11 @@
 }
 
 @layer utilities {
+  /* Light mode: dark heading color; dark mode: keep bright cyan accent */
+  .text-heading-accent {
+    @apply text-primary-900 dark:text-cyan-200;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

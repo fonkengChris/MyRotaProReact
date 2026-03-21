@@ -196,7 +196,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <p className="text-sm text-red-600 mb-4">
             There was an error loading your hours data.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-600">
             Error: {shiftsError.message || 'Unknown error'}
           </p>
         </div>
@@ -209,11 +209,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Care Home Assigned</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 mb-2">No Care Home Assigned</h3>
+          <p className="text-sm text-neutral-600 mb-4">
             You need to be assigned to a care home to view the hours summary for staff members.
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-neutral-500">
             Contact your administrator to assign you to a care home.
           </p>
         </div>
@@ -226,8 +226,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">User Not Found</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 mb-2">User Not Found</h3>
+          <p className="text-sm text-neutral-600 mb-4">
             Unable to load user information
           </p>
         </div>
@@ -241,8 +241,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 mb-2">No Data Available</h3>
+          <p className="text-sm text-neutral-600 mb-4">
             {isAdminView 
               ? 'Please select a care home to view hours summary'
               : 'You are not assigned to any care home'
@@ -258,11 +258,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Care Home Assigned</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 mb-2">No Care Home Assigned</h3>
+          <p className="text-sm text-neutral-600 mb-4">
             You need to be assigned to a care home to view your hours.
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-neutral-500">
             Contact your administrator to assign you to a care home.
           </p>
         </div>
@@ -283,8 +283,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Data</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 mb-2">Error Loading Data</h3>
+          <p className="text-sm text-neutral-600 mb-4">
             Failed to load hours data
           </p>
           <Button
@@ -304,10 +304,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">
+          <h1 className="text-2xl font-bold text-heading-accent">
             {isAdminView ? 'Hours Summary' : 'My Hours'}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-neutral-700 mt-1">
             {isAdminView 
               ? userRole === 'admin'
                 ? 'Total hours worked by all staff across all homes for the selected week'
@@ -342,10 +342,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-[#a5f3fc]">
+              <h2 className="text-lg font-semibold text-heading-accent">
                 Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-300">
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">
                 {format(weekStart, 'EEEE, MMMM d')} to {format(weekEnd, 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
@@ -371,10 +371,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <UserIcon className="h-8 w-8 text-primary-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Total Staff' : 'My Shifts'}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
+                <p className="text-2xl font-semibold text-neutral-950 dark:text-neutral-100">
                   {isAdminView ? userHours.length : userHours[0]?.totalShifts || 0}
                 </p>
               </div>
@@ -389,10 +389,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <ClockIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Rostered hours' : 'My rostered hours'}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
+                <p className="text-2xl font-semibold text-neutral-950 dark:text-neutral-100">
                   {totalHours.toFixed(1)}h
                 </p>
               </div>
@@ -407,13 +407,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <MoonIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="ml-4 min-w-0">
-                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">
+                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                   {isAdminView ? 'Sleep-in hours' : 'My sleep-in hours'}
                 </p>
                 <p className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
                   {totalSleepInHours.toFixed(1)}h
                 </p>
-                <p className="text-xs text-gray-500 dark:text-neutral-500 mt-0.5">
+                <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-0.5">
                   Not paid as work
                 </p>
               </div>
@@ -428,7 +428,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <ClockIcon className="h-8 w-8 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Paid Hours' : 'My Paid Hours'}
                 </p>
                 <p className="text-2xl font-semibold text-green-600">
@@ -446,7 +446,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <CalendarIcon className="h-8 w-8 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Break Deductions' : 'My Break Deductions'}
                 </p>
                 <p className="text-2xl font-semibold text-orange-600">
@@ -461,7 +461,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       {/* Hours Breakdown */}
       <Card>
         <CardHeader>
-                  <CardTitle className="text-[#a5f3fc]">
+                  <CardTitle>
           {isAdminView 
             ? userRole === 'admin' 
               ? 'All Staff Hours Breakdown' 
@@ -476,11 +476,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         <CardContent>
           {userHours.length === 0 ? (
             <div className="text-center py-8">
-              <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-[#a5f3fc]">
+              <ClockIcon className="mx-auto h-12 w-12 text-neutral-500" />
+              <h3 className="mt-2 text-sm font-medium text-heading-accent">
                 No hours recorded
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-neutral-600">
                 {isAdminView 
                   ? userRole === 'admin' 
                     ? 'No shifts have been created this week'
@@ -496,7 +496,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
               {userHours.map((userHour) => (
                 <div
                   key={userHour.user.id}
-                  className="border border-gray-200 rounded-lg p-4"
+                  className="border border-neutral-300 rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -506,10 +506,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-[#a5f3fc]">
+                        <h3 className="text-lg font-medium text-heading-accent">
                           {userHour.user.name}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-neutral-600">
                           {userHour.user.role} • {userHour.user.type}
                         </p>
                       </div>
@@ -517,13 +517,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                     <div className="text-right">
                       <div className="flex flex-wrap items-start justify-end gap-4 sm:gap-5">
                         <div>
-                          <p className="text-sm text-gray-500 dark:text-neutral-400">Rostered</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Rostered</p>
+                          <p className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
                             {userHour.totalHours.toFixed(1)}h
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 dark:text-neutral-400">Sleep-in</p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep-in</p>
                           <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
                             {userHour.sleepInHours.toFixed(1)}h
                           </p>
@@ -543,8 +543,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 dark:text-neutral-400">Shifts</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Shifts</p>
+                          <p className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
                             {userHour.totalShifts}
                           </p>
                         </div>
@@ -555,26 +555,26 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                   {/* Shift details */}
                   {userHour.shifts.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-[#a5f3fc]">Shifts:</h4>
+                      <h4 className="text-sm font-medium text-heading-accent">Shifts:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {userHour.shifts.map((shift) => {
                           const br = getShiftHourBreakdown(shift)
                           return (
                           <div
                             key={shift.id}
-                            className="rounded p-2 text-sm bg-primary-50 border border-primary-200 dark:bg-primary-900/25 dark:border-primary-800"
+                            className="rounded p-2 text-sm bg-primary-100 border border-primary-300 dark:bg-primary-900/25 dark:border-primary-800"
                           >
                             <div className="flex items-center justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="font-medium text-gray-900 dark:text-neutral-100">
+                                <p className="font-medium text-neutral-950 dark:text-neutral-100">
                                   {format(new Date(shift.date), 'EEE, MMM d')}
                                 </p>
-                                <p className="text-gray-600 dark:text-neutral-400">
+                                <p className="text-neutral-700 dark:text-neutral-400">
                                   {shift.start_time} - {shift.end_time}
                                 </p>
                               </div>
                               <div className="text-right shrink-0">
-                                <p className="font-medium text-gray-900 dark:text-neutral-100">
+                                <p className="font-medium text-neutral-950 dark:text-neutral-100">
                                   {br.duration_hours.toFixed(1)}h rostered
                                 </p>
                                 {shift.shift_type === 'night-sleep' && (

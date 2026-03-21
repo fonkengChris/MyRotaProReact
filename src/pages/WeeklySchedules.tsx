@@ -72,8 +72,8 @@ const WeeklySchedules: React.FC = () => {
   if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-[#a5f3fc] mb-4">Access Denied</h2>
-        <p className="text-gray-600 dark:text-neutral-400">
+        <h2 className="text-2xl font-bold text-heading-accent mb-4">Access Denied</h2>
+        <p className="text-neutral-700 dark:text-neutral-400">
           You don't have permission to access weekly schedule management.
         </p>
       </div>
@@ -94,8 +94,8 @@ const WeeklySchedules: React.FC = () => {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#a5f3fc]">Weekly Schedules</h1>
-            <p className="text-gray-600 dark:text-neutral-400 mt-1">
+            <h1 className="text-2xl font-bold text-heading-accent">Weekly Schedules</h1>
+            <p className="text-neutral-700 dark:text-neutral-400 mt-1">
               Configure standard shift patterns for each care home
             </p>
           </div>
@@ -166,8 +166,8 @@ const WeeklySchedules: React.FC = () => {
             <div className="flex items-center justify-center mb-4">
               <LoadingSpinner size="lg" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Loading Care Homes</h3>
-            <p className="text-gray-500 dark:text-neutral-400">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Loading Care Homes</h3>
+            <p className="text-neutral-600 dark:text-neutral-400">
               Please wait while we fetch the available care homes...
             </p>
           </CardContent>
@@ -178,13 +178,13 @@ const WeeklySchedules: React.FC = () => {
       {!selectedHomeId && !homesLoading && homes && homes.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+            <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
               <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Select a Care Home</h3>
-            <p className="text-gray-500 dark:text-neutral-400">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Select a Care Home</h3>
+            <p className="text-neutral-600 dark:text-neutral-400">
               Choose a care home from the dropdown above to configure its weekly schedule.
             </p>
           </CardContent>
@@ -195,13 +195,13 @@ const WeeklySchedules: React.FC = () => {
       {!homesLoading && homes && homes.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+            <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
               <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">No Care Homes Available</h3>
-            <p className="text-gray-500 dark:text-neutral-400 mb-4">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">No Care Homes Available</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-4">
               There are no care homes set up in the system yet.
             </p>
             {permissions.canManageHomes && (
@@ -252,8 +252,8 @@ const WeeklySchedules: React.FC = () => {
             <div className="flex items-center justify-center mb-4">
               <LoadingSpinner size="lg" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Loading Services</h3>
-            <p className="text-gray-500 dark:text-neutral-400">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Loading Services</h3>
+            <p className="text-neutral-600 dark:text-neutral-400">
               Please wait while we fetch the services for this care home...
             </p>
           </CardContent>
@@ -268,29 +268,29 @@ const WeeklySchedules: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-2">📅 Daily Patterns</h4>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <h4 className="font-medium text-neutral-950 dark:text-neutral-100 mb-2">📅 Daily Patterns</h4>
+              <p className="text-sm text-neutral-700 dark:text-neutral-400">
                 Configure shift patterns for each day of the week. You can set different patterns 
                 for weekdays vs weekends, or customize each day individually.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-2">🤖 AI Solver Integration</h4>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <h4 className="font-medium text-neutral-950 dark:text-neutral-100 mb-2">🤖 AI Solver Integration</h4>
+              <p className="text-sm text-neutral-700 dark:text-neutral-400">
                 The AI solver uses these patterns to automatically generate weekly rotas with 
                 proper staff assignments based on your configured constraints.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-2">👥 Staff Requirements</h4>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <h4 className="font-medium text-neutral-950 dark:text-neutral-100 mb-2">👥 Staff Requirements</h4>
+              <p className="text-sm text-neutral-700 dark:text-neutral-400">
                 Set how many staff members are required for each shift type. The system will 
                 ensure these requirements are met when generating rotas.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-2">⏰ Flexible Timing</h4>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <h4 className="font-medium text-neutral-950 dark:text-neutral-100 mb-2">⏰ Flexible Timing</h4>
+              <p className="text-sm text-neutral-700 dark:text-neutral-400">
                 Support for overnight shifts, split shifts, and custom time ranges. 
                 Each shift can have different start/end times and durations.
               </p>

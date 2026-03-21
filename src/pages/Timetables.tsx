@@ -329,8 +329,8 @@ const Timetables: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#a5f3fc]">Timetables</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-heading-accent">Timetables</h1>
+            <p className="text-neutral-700 mt-1">
               Generate and manage immutable multi-week rotas
             </p>
           </div>
@@ -341,8 +341,8 @@ const Timetables: React.FC = () => {
             <div className="mx-auto h-16 w-16 text-red-400 mb-4">
               <ExclamationTriangleIcon className="h-16 w-16" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Error Loading Timetables</h3>
-            <p className="text-gray-500 mb-6">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Error Loading Timetables</h3>
+            <p className="text-neutral-600 mb-6">
               {timetablesError instanceof Error ? timetablesError.message : 'An unexpected error occurred'}
             </p>
             <Button
@@ -364,8 +364,8 @@ const Timetables: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">Timetables</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">Timetables</h1>
+          <p className="text-neutral-700 mt-1">
             Generate and manage immutable multi-week rotas
           </p>
         </div>
@@ -401,7 +401,7 @@ const Timetables: React.FC = () => {
               <p className="text-2xl font-bold text-primary-600">
                 {visibleTimetables.filter(t => t.status === 'published').length}
               </p>
-              <p className="text-sm text-gray-600">Published</p>
+              <p className="text-sm text-neutral-700">Published</p>
             </div>
           </CardContent>
         </Card>
@@ -412,7 +412,7 @@ const Timetables: React.FC = () => {
               <p className="text-2xl font-bold text-warning-600">
                 {visibleTimetables.filter(t => t.status === 'generating').length}
               </p>
-              <p className="text-sm text-gray-600">Generating</p>
+              <p className="text-sm text-neutral-700">Generating</p>
             </div>
           </CardContent>
         </Card>
@@ -423,7 +423,7 @@ const Timetables: React.FC = () => {
               <p className="text-2xl font-bold text-secondary-600">
                 {visibleTimetables.filter(t => t.status === 'draft').length}
               </p>
-              <p className="text-sm text-gray-600">Draft</p>
+              <p className="text-sm text-neutral-700">Draft</p>
             </div>
           </CardContent>
         </Card>
@@ -434,7 +434,7 @@ const Timetables: React.FC = () => {
               <p className="text-2xl font-bold text-success-600">
                 {visibleTimetables.reduce((total, t) => total + t.total_weeks, 0)}
               </p>
-              <p className="text-sm text-gray-600">Total Weeks</p>
+              <p className="text-sm text-neutral-700">Total Weeks</p>
             </div>
           </CardContent>
         </Card>
@@ -444,11 +444,11 @@ const Timetables: React.FC = () => {
       {timetables.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+            <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
               <CalendarIcon className="h-16 w-16" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">No Timetables</h3>
-            <p className="text-gray-500 mb-6">
+            <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">No Timetables</h3>
+            <p className="text-neutral-600 mb-6">
               Create your first timetable to generate immutable multi-week rotas.
             </p>
             {permissions.canManageRotas && (
@@ -467,7 +467,7 @@ const Timetables: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <LoadingSpinner size="lg" />
-            <p className="mt-4 text-gray-600 dark:text-neutral-300">Finishing removal…</p>
+            <p className="mt-4 text-neutral-700 dark:text-neutral-300">Finishing removal…</p>
           </CardContent>
         </Card>
       ) : (
@@ -492,7 +492,7 @@ const Timetables: React.FC = () => {
               <CardContent>
                 <div className="space-y-3">
                   {/* Date Range */}
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-neutral-700">
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     <span>
                       {format(parseISO(timetable.start_date), 'MMM d, yyyy')} - {format(parseISO(timetable.end_date), 'MMM d, yyyy')}
@@ -500,24 +500,24 @@ const Timetables: React.FC = () => {
                   </div>
                   
                   {/* Weeks */}
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-neutral-700">
                     <ClockIcon className="h-4 w-4 mr-2" />
                     <span>{timetable.total_weeks} weeks</span>
                   </div>
                   
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_shifts}</p>
-                      <p className="text-gray-600">Shifts</p>
+                    <div className="text-center p-2 bg-neutral-100 rounded">
+                      <p className="font-semibold text-neutral-950 dark:text-neutral-100">{timetable.total_shifts}</p>
+                      <p className="text-neutral-700">Shifts</p>
                     </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_hours}</p>
-                      <p className="text-gray-600">Hours</p>
+                    <div className="text-center p-2 bg-neutral-100 rounded">
+                      <p className="font-semibold text-neutral-950 dark:text-neutral-100">{timetable.total_hours}</p>
+                      <p className="text-neutral-700">Hours</p>
                     </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900 dark:text-neutral-100">{timetable.total_assignments}</p>
-                      <p className="text-gray-600">Assignments</p>
+                    <div className="text-center p-2 bg-neutral-100 rounded">
+                      <p className="font-semibold text-neutral-950 dark:text-neutral-100">{timetable.total_assignments}</p>
+                      <p className="text-neutral-700">Assignments</p>
                     </div>
                   </div>
                   

@@ -205,7 +205,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
       case 'night-sleep':
       case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
       case 'overtime': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-      case 'none': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      case 'none': return 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-neutral-300'
       default: return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
     }
   }

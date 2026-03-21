@@ -92,7 +92,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Request Time Off</CardTitle>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-600">
           Submit a request for time off, vacation, or other leave
         </p>
       </CardHeader>
@@ -101,7 +101,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
           {/* Date Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-800 mb-1">
                 Start Date
               </label>
               <input
@@ -116,7 +116,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-neutral-800 mb-1">
                 End Date
               </label>
               <input
@@ -143,7 +143,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
 
           {/* Request Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-800 mb-1">
               Request Type
             </label>
             <select
@@ -183,7 +183,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-800 mb-1">
               Reason for Request
             </label>
             <textarea
@@ -195,14 +195,14 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
             {errors.reason && (
               <p className="mt-1 text-sm text-danger-600">{errors.reason.message}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-neutral-600">
               Minimum 10 characters required
             </p>
           </div>
 
           {/* Additional Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-800 mb-1">
               Additional Notes (Optional)
             </label>
             <textarea

@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
       {/* Welcome Section */}
       <div className="card">
         <div className="card-content">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#a5f3fc] font-display mb-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading-accent font-display mb-2">
             Welcome back, {user?.name}! 👋
           </h1>
           <p className="text-neutral-600 text-sm sm:text-base lg:text-lg">
@@ -126,8 +126,8 @@ const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('overview')}
               className={`py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'overview'
-                  ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-neutral-500 hover:text-cyan-300 hover:border-cyan-400'
+                  ? 'border-primary-700 text-primary-900 dark:border-cyan-400 dark:text-cyan-300'
+                  : 'border-transparent text-neutral-600 hover:text-primary-800 hover:border-primary-500 dark:text-neutral-500 dark:hover:text-cyan-300 dark:hover:border-cyan-400'
               }`}
             >
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
@@ -137,8 +137,8 @@ const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('hours')}
               className={`py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'hours'
-                  ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-neutral-500 hover:text-cyan-300 hover:border-cyan-400'
+                  ? 'border-primary-700 text-primary-900 dark:border-cyan-400 dark:text-cyan-300'
+                  : 'border-transparent text-neutral-600 hover:text-primary-800 hover:border-primary-500 dark:text-neutral-500 dark:hover:text-cyan-300 dark:hover:border-cyan-400'
               }`}
             >
               <ChartBarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
@@ -250,7 +250,7 @@ const Dashboard: React.FC = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-[#a5f3fc]">Current Week Rota</CardTitle>
+                    <CardTitle>Current Week Rota</CardTitle>
                     <CardDescription className="dark:text-white">
                       Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
                     </CardDescription>
@@ -279,19 +279,19 @@ const Dashboard: React.FC = () => {
                 {weekRota ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-center p-4 bg-neutral-100 rounded-lg">
                         <p className="text-2xl font-bold text-primary-600">{weekRota.total_shifts}</p>
-                        <p className="text-sm text-gray-600">Total Shifts</p>
+                        <p className="text-sm text-neutral-700">Total Shifts</p>
                       </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-center p-4 bg-neutral-100 rounded-lg">
                         <p className="text-2xl font-bold text-success-600">{weekRota.total_hours}</p>
-                        <p className="text-sm text-gray-600">Total Hours</p>
+                        <p className="text-sm text-neutral-700">Total Hours</p>
                       </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-center p-4 bg-neutral-100 rounded-lg">
                         <p className="text-2xl font-bold text-secondary-600">
                           {format(new Date(weekRota.created_at), 'MMM d')}
                         </p>
-                        <p className="text-sm text-gray-600">Created</p>
+                        <p className="text-sm text-neutral-700">Created</p>
                       </div>
                     </div>
                   </div>
@@ -300,7 +300,7 @@ const Dashboard: React.FC = () => {
                     <div className="mx-auto h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
                       <CalendarIcon className="h-8 w-8 text-neutral-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-[#a5f3fc] mb-2">No rota for this week</h3>
+                    <h3 className="text-lg font-semibold text-heading-accent mb-2">No rota for this week</h3>
                     <p className="text-sm text-neutral-600 mb-6">
                       {permissions.canManageRotas 
                         ? 'Create a new rota to get started'
@@ -327,7 +327,7 @@ const Dashboard: React.FC = () => {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[#a5f3fc]">Quick Actions</CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
                 Common tasks and shortcuts
               </CardDescription>
@@ -439,14 +439,14 @@ const Dashboard: React.FC = () => {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-[#a5f3fc]">Recent Activity</CardTitle>
+              <CardTitle>Recent Activity</CardTitle>
               <CardDescription>
                 Latest updates and changes
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-xl border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-100 dark:bg-neutral-700 rounded-xl border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-200/80 dark:hover:bg-neutral-600 transition-colors">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <CalendarIcon className="h-5 w-5 text-primary-600" />
@@ -462,7 +462,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-xl border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors">
+                <div className="flex items-center space-x-4 p-4 bg-neutral-100 dark:bg-neutral-700 rounded-xl border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-200/80 dark:hover:bg-neutral-600 transition-colors">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 bg-success-100 rounded-full flex items-center justify-center">
                       <UsersIcon className="h-5 w-5 text-success-600" />

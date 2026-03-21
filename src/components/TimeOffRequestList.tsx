@@ -113,7 +113,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                 <ExclamationTriangleIcon className="h-5 w-5 text-warning-600" />
                 <span>Pending Requests</span>
               </CardTitle>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-neutral-600">
                 {pendingRequests.length} request{pendingRequests.length !== 1 ? 's' : ''} awaiting approval
               </p>
             </div>
@@ -135,7 +135,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                 const duration = calculateDuration(request.start_date, request.end_date)
                 
                 return (
-                  <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={request.id} className="border border-neutral-300 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-3">
@@ -154,14 +154,14 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                           <div className="flex items-center space-x-2">
-                            <CalendarIcon className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
+                            <CalendarIcon className="h-4 w-4 text-neutral-500" />
+                            <span className="text-sm text-neutral-700">
                               {format(parseISO(request.start_date), 'MMM d, yyyy')} - {format(parseISO(request.end_date), 'MMM d, yyyy')}
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <ClockIcon className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
+                            <ClockIcon className="h-4 w-4 text-neutral-500" />
+                            <span className="text-sm text-neutral-700">
                               {duration} day{duration > 1 ? 's' : ''}
                             </span>
                           </div>
@@ -173,14 +173,14 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         </div>
 
                         <div className="mb-3">
-                          <p className="text-sm text-gray-900 dark:text-neutral-100 font-medium">Reason:</p>
-                          <p className="text-sm text-gray-600">{request.reason}</p>
+                          <p className="text-sm text-neutral-950 dark:text-neutral-100 font-medium">Reason:</p>
+                          <p className="text-sm text-neutral-700">{request.reason}</p>
                         </div>
 
                         {request.notes && (
                           <div className="mb-3">
-                            <p className="text-sm text-gray-900 dark:text-neutral-100 font-medium">Notes:</p>
-                            <p className="text-sm text-gray-600">{request.notes}</p>
+                            <p className="text-sm text-neutral-950 dark:text-neutral-100 font-medium">Notes:</p>
+                            <p className="text-sm text-neutral-700">{request.notes}</p>
                           </div>
                         )}
 
@@ -280,7 +280,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
               <CheckIcon className="h-5 w-5 text-success-600" />
               <span>Approved Requests</span>
             </CardTitle>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-neutral-600">
               {approvedRequests.length} approved request{approvedRequests.length !== 1 ? 's' : ''}
             </p>
           </CardHeader>
@@ -321,7 +321,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                 )
               })}
               {approvedRequests.length > 5 && (
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-neutral-600 text-center">
                   +{approvedRequests.length - 5} more approved requests
                 </p>
               )}
@@ -338,7 +338,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
               <XMarkIcon className="h-5 w-5 text-danger-600" />
               <span>Denied Requests</span>
             </CardTitle>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-neutral-600">
               {deniedRequests.length} denied request{deniedRequests.length !== 1 ? 's' : ''}
             </p>
           </CardHeader>
@@ -384,7 +384,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                 )
               })}
               {deniedRequests.length > 5 && (
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-neutral-600 text-center">
                   +{deniedRequests.length - 5} more denied requests
                 </p>
               )}

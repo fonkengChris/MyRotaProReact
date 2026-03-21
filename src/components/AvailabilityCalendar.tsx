@@ -142,7 +142,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       case 'night': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
       case 'overtime': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
       case 'long_day': return 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200'
-      case 'none': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      case 'none': return 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-neutral-300'
       default: return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300'
     }
   }
@@ -180,13 +180,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
             <div className="min-w-[1000px]">
               {/* Header row with day names */}
               <div className="grid grid-cols-8 gap-1 mb-2">
-                <div className="p-2 font-medium text-gray-500 text-sm">Time</div>
+                <div className="p-2 font-medium text-neutral-600 text-sm">Time</div>
                 {weekDays.map((day) => (
                   <div key={day.toISOString()} className="p-2 text-center">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-neutral-950">
                       {format(day, 'EEE')}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-neutral-600">
                       {format(day, 'MMM d')}
                     </div>
                   </div>
@@ -197,7 +197,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
               {timeSlots.map((time) => (
                 <div key={time} className="grid grid-cols-8 gap-1 mb-1">
                   {/* Time label */}
-                  <div className="p-2 text-sm text-gray-500 font-mono bg-gray-50 border-r">
+                  <div className="p-2 text-sm text-neutral-600 font-mono bg-neutral-100 border-r">
                     {time}
                   </div>
 
@@ -250,7 +250,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                             )}
                             
                             {availability.notes && (
-                              <div className="text-xs text-gray-600 mt-1 truncate">
+                              <div className="text-xs text-neutral-700 mt-1 truncate">
                                 {availability.notes}
                               </div>
                             )}
@@ -261,10 +261,10 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-full w-full border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50"
+                              className="h-full w-full border-dashed border-neutral-400 hover:border-primary-400 hover:bg-primary-50"
                               onClick={() => handleAddAvailability(day, time)}
                             >
-                              <PlusIcon className="h-4 w-4 text-gray-400" />
+                              <PlusIcon className="h-4 w-4 text-neutral-500" />
                             </Button>
                           )
                         )}

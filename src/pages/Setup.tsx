@@ -206,11 +206,11 @@ export default function Setup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#a5f3fc]">Welcome to MyRotaPro</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-heading-accent">Welcome to MyRotaPro</h1>
+          <p className="mt-2 text-sm text-neutral-700">
             Let's set up your application with the first admin user and care home
           </p>
         </div>
@@ -226,10 +226,10 @@ export default function Setup() {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Admin User Section */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Admin User</h3>
+                <h3 className="text-lg font-medium text-neutral-950 mb-4">Admin User</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Full Name *
                     </label>
                     <Input
@@ -242,7 +242,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Email *
                     </label>
                     <Input
@@ -255,7 +255,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Phone *
                     </label>
                     <Input
@@ -268,7 +268,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Password *
                     </label>
                     <Input
@@ -281,7 +281,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Confirm Password *
                     </label>
                     <Input
@@ -297,10 +297,10 @@ export default function Setup() {
 
               {/* Care Home Section */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Care Home</h3>
+                <h3 className="text-lg font-medium text-neutral-950 mb-4">Care Home</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Home Name *
                     </label>
                     <Input
@@ -313,7 +313,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Address *
                     </label>
                     <Input
@@ -326,7 +326,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       City *
                     </label>
                     <Input
@@ -339,7 +339,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Postcode *
                     </label>
                     <Input
@@ -352,7 +352,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Capacity
                     </label>
                     <Input
@@ -365,7 +365,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Phone *
                     </label>
                     <Input
@@ -378,7 +378,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Email *
                     </label>
                     <Input
@@ -391,7 +391,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Operating Hours Start
                     </label>
                     <Input
@@ -402,7 +402,7 @@ export default function Setup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">
                       Operating Hours End
                     </label>
                     <Input

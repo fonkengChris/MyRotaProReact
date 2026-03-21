@@ -114,36 +114,36 @@ const ConflictAlert: React.FC<ConflictAlertProps> = ({
                       <Badge variant={getConflictBadgeVariant(conflict.type)} className="text-xs">
                         {getConflictBadgeText(conflict.type)}
                       </Badge>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-neutral-950">
                         {conflict.message}
                       </span>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-600">
+                        <UserIcon className="h-4 w-4 text-neutral-500" />
+                        <span className="text-neutral-700">
                           <strong>Staff:</strong> {conflict.user?.name || 'Unknown'}
                         </span>
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <CalendarIcon className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-600">
+                        <CalendarIcon className="h-4 w-4 text-neutral-500" />
+                        <span className="text-neutral-700">
                           <strong>Date:</strong> {conflict.shift?.date || 'Unknown'}
                         </span>
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-600">
+                        <ClockIcon className="h-4 w-4 text-neutral-500" />
+                        <span className="text-neutral-700">
                           <strong>Time:</strong> {conflict.shift?.start_time || 'Unknown'} - {conflict.shift?.end_time || 'Unknown'}
                         </span>
                       </div>
                       
                       {conflict.timeOffRequests && conflict.timeOffRequests.length > 0 && (
                         <div className="md:col-span-2">
-                          <span className="text-gray-600">
+                          <span className="text-neutral-700">
                             <strong>Time Off:</strong> {conflict.timeOffRequests.map(req => 
                               `${req.start_date} to ${req.end_date}`
                             ).join(', ')}

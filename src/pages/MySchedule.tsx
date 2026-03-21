@@ -157,8 +157,8 @@ const MySchedule: React.FC = () => {
       {/* Header with Week Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">My Schedule</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">My Schedule</h1>
+          <p className="text-neutral-700 mt-1">
             View your weekly work schedule and assigned shifts
           </p>
         </div>
@@ -191,10 +191,10 @@ const MySchedule: React.FC = () => {
             </Button>
 
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-[#a5f3fc]">
+              <h2 className="text-lg font-semibold text-heading-accent">
                 Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-300">
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">
                 {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
@@ -222,9 +222,9 @@ const MySchedule: React.FC = () => {
         <CardContent className="px-8 py-6">
           {myShifts.length === 0 ? (
             <div className="text-center py-12">
-              <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Shifts This Week</h3>
-              <p className="text-gray-500">
+              <CalendarIcon className="mx-auto h-12 w-12 text-neutral-500 mb-4" />
+              <h3 className="text-lg font-medium text-neutral-950 mb-2">No Shifts This Week</h3>
+              <p className="text-neutral-600">
                 You don't have any shifts assigned for this week.
               </p>
             </div>
@@ -238,7 +238,7 @@ const MySchedule: React.FC = () => {
                   return (
                     <div key={day.toISOString()} className="min-h-[300px] w-full md:min-w-[280px]">
                     <div className={`text-center p-4 rounded-t-lg border-b-2 ${
-                      isToday ? 'bg-primary-100 text-primary-900 border-primary-300' : 'bg-gray-50 text-gray-700 border-gray-200'
+                      isToday ? 'bg-primary-100 text-primary-900 border-primary-300' : 'bg-neutral-100 text-neutral-800 border-neutral-300'
                     }`}>
                       {/* Compact day + date (md+ week strip) */}
                       <div className="hidden md:block">
@@ -254,7 +254,7 @@ const MySchedule: React.FC = () => {
                         <div className="font-bold text-lg">
                           {format(day, 'EEEE')}
                         </div>
-                        <div className="text-base font-medium text-gray-600 dark:text-neutral-300">
+                        <div className="text-base font-medium text-neutral-700 dark:text-neutral-300">
                           {format(day, 'd MMMM yyyy')}
                         </div>
                       </div>
@@ -263,21 +263,21 @@ const MySchedule: React.FC = () => {
                       )}
                     </div>
                     
-                    <div className="border border-gray-200 rounded-b-lg p-3 min-h-[250px]">
+                    <div className="border border-neutral-300 rounded-b-lg p-3 min-h-[250px]">
                       {dayShifts.length === 0 ? (
-                        <div className="text-center text-gray-400 py-12">
-                          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                            <ClockIcon className="h-8 w-8 text-gray-400" />
+                        <div className="text-center text-neutral-500 py-12">
+                          <div className="mx-auto w-16 h-16 bg-neutral-200 rounded-full flex items-center justify-center mb-3">
+                            <ClockIcon className="h-8 w-8 text-neutral-500" />
                           </div>
-                          <p className="text-sm font-medium text-gray-500">No shift today</p>
-                          <p className="text-xs text-gray-400 mt-1">Enjoy your day off!</p>
+                          <p className="text-sm font-medium text-neutral-600">No shift today</p>
+                          <p className="text-xs text-neutral-500 mt-1">Enjoy your day off!</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
                                                       {dayShifts.map((shift) => (
                               <div
                                 key={shift.id}
-                                className="bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:border-primary-300 transition-all duration-300 transform hover:-translate-y-1"
+                                className="bg-gradient-to-br from-primary-100 to-primary-200 border-2 border-primary-300 rounded-xl p-4 shadow-sm hover:shadow-lg hover:border-primary-400 transition-all duration-300 transform hover:-translate-y-1 dark:from-primary-950/40 dark:to-primary-900/30 dark:border-primary-700 dark:hover:border-primary-600"
                               >
                                 {/* Time Header */}
                                 <div className="flex items-center justify-between mb-5">
@@ -369,7 +369,7 @@ const MySchedule: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary-600">{myShifts.length}</p>
-                <p className="text-sm text-gray-600">Total Shifts</p>
+                <p className="text-sm text-neutral-700">Total Shifts</p>
               </div>
             </CardContent>
           </Card>
@@ -382,8 +382,8 @@ const MySchedule: React.FC = () => {
                     .reduce((total, shift) => total + computeShiftPaidWithBreaks(shift).paidHours, 0)
                     .toFixed(1)}
                 </p>
-                <p className="text-sm text-gray-600">Paid hours</p>
-                <p className="text-xs text-gray-500 mt-1">excl. sleep-in; after breaks</p>
+                <p className="text-sm text-neutral-700">Paid hours</p>
+                <p className="text-xs text-neutral-600 mt-1">excl. sleep-in; after breaks</p>
               </div>
             </CardContent>
           </Card>
@@ -396,7 +396,7 @@ const MySchedule: React.FC = () => {
                     format(new Date(shift.date + 'T00:00:00'), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
                   ).length}
                 </p>
-                <p className="text-sm text-gray-600">Shifts Today</p>
+                <p className="text-sm text-neutral-700">Shifts Today</p>
               </div>
             </CardContent>
           </Card>

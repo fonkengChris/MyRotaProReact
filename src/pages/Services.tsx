@@ -90,7 +90,7 @@ const Services: React.FC = () => {
       high: { label: 'High', className: 'bg-orange-100 text-orange-800' },
       critical: { label: 'Critical', className: 'bg-red-100 text-red-800' }
     }
-    const config = priorityMap[priority] || { label: priority, className: 'bg-gray-100 text-gray-800' }
+    const config = priorityMap[priority] || { label: priority, className: 'bg-neutral-200 text-neutral-900' }
     
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
@@ -111,8 +111,8 @@ const Services: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">Services</h1>
-          <p className="text-gray-600">Manage care services for your homes</p>
+          <h1 className="text-2xl font-bold text-heading-accent">Services</h1>
+          <p className="text-neutral-700">Manage care services for your homes</p>
         </div>
         <Button onClick={handleCreateService}>
           <PlusIcon className="h-4 w-4 mr-2" />
@@ -146,30 +146,30 @@ const Services: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-            <thead className="bg-neutral-50 dark:bg-neutral-700">
+            <thead className="bg-neutral-100 dark:bg-neutral-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Service
                 </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Home
                 </th> */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Staff Required
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Duration
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Priority
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -200,7 +200,7 @@ const Services: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-950">
                       {getHomeNames(service.home_ids)}
                     </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">

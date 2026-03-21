@@ -172,12 +172,12 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={onClose} />
+          <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75" onClick={onClose} />
           <div className="relative bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-xl border border-neutral-200 dark:border-neutral-700">
             <div className="text-center">
               <ExclamationTriangleIcon className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Invalid Swap Request</h3>
-              <p className="text-gray-600 dark:text-neutral-400 mb-4">This swap request contains invalid shift data.</p>
+              <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Invalid Swap Request</h3>
+              <p className="text-neutral-700 dark:text-neutral-400 mb-4">This swap request contains invalid shift data.</p>
               <Button onClick={onClose}>Close</Button>
             </div>
           </div>
@@ -189,7 +189,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+        <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75 transition-opacity" onClick={onClose} />
 
         <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 text-left shadow-xl border border-neutral-200 dark:border-neutral-700 transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <Card>
@@ -208,7 +208,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   <XMarkIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="text-sm text-gray-600 dark:text-neutral-400">
+              <div className="text-sm text-neutral-700 dark:text-neutral-400">
                 Request from {getRequesterName()} • {format(new Date(swapRequest.requested_at), 'MMM d, yyyy')}
               </div>
             </CardHeader>
@@ -305,7 +305,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
 
                 {/* Response Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                     Response Message (Optional)
                   </label>
                   <textarea
@@ -318,7 +318,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   {errors.response_message && (
                     <p className="mt-1 text-sm text-danger-600">{errors.response_message.message}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">
+                  <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
                     {responseMessage?.length || 0}/500 characters
                   </p>
                 </div>

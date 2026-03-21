@@ -211,8 +211,8 @@ const AvailabilityPage: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Failed to Load Availability</h3>
-          <p className="text-gray-600 mb-4">
+          <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Failed to Load Availability</h3>
+          <p className="text-neutral-700 mb-4">
             {availabilitiesError?.message || 'There was an error loading your availability data.'}
           </p>
           <Button
@@ -240,8 +240,8 @@ const AvailabilityPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">Availability & Time Off</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">Availability & Time Off</h1>
+          <p className="text-neutral-700 mt-1">
             Manage your availability and time-off requests
           </p>
         </div>
@@ -297,7 +297,7 @@ const AvailabilityPage: React.FC = () => {
               <p className="text-2xl font-bold text-primary-600">
                 {availabilities.filter(a => a.is_available).length || 0}
               </p>
-              <p className="text-sm text-gray-600">Available Slots</p>
+              <p className="text-sm text-neutral-700">Available Slots</p>
             </div>
           </CardContent>
         </Card>
@@ -314,7 +314,7 @@ const AvailabilityPage: React.FC = () => {
                   <p className="text-2xl font-bold text-warning-600">
                     {timeOffRequests.filter(r => r.status === 'pending').length || 0}
                   </p>
-                  <p className="text-sm text-gray-600">Pending Requests</p>
+                  <p className="text-sm text-neutral-700">Pending Requests</p>
                 </>
               )}
             </div>
@@ -333,7 +333,7 @@ const AvailabilityPage: React.FC = () => {
                   <p className="text-2xl font-bold text-success-600">
                     {timeOffRequests.filter(r => r.status === 'approved').length || 0}
                   </p>
-                  <p className="text-sm text-gray-600">Approved Requests</p>
+                  <p className="text-sm text-neutral-700">Approved Requests</p>
                 </>
               )}
             </div>
@@ -352,7 +352,7 @@ const AvailabilityPage: React.FC = () => {
                   <p className="text-2xl font-bold text-danger-600">
                     {timeOffRequests.filter(r => r.status === 'denied').length || 0}
                   </p>
-                  <p className="text-sm text-gray-600">Denied Requests</p>
+                  <p className="text-sm text-neutral-700">Denied Requests</p>
                 </>
               )}
             </div>
@@ -413,7 +413,7 @@ const AvailabilityPage: React.FC = () => {
       {selectedRequest && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setSelectedRequest(null)} />
+            <div className="fixed inset-0 bg-neutral-1000 bg-opacity-75 transition-opacity" onClick={() => setSelectedRequest(null)} />
             
             <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
               <Card>
@@ -433,40 +433,40 @@ const AvailabilityPage: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Staff Member</p>
-                      <p className="text-sm text-gray-900 dark:text-neutral-100">
+                      <p className="text-sm font-medium text-neutral-800">Staff Member</p>
+                      <p className="text-sm text-neutral-950 dark:text-neutral-100">
                         {staff?.find(s => s.id === selectedRequest.user_id)?.name || 'Unknown'}
                       </p>
                     </div>
                     
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Request Type</p>
-                      <p className="text-sm text-gray-900 dark:text-neutral-100">
+                      <p className="text-sm font-medium text-neutral-800">Request Type</p>
+                      <p className="text-sm text-neutral-950 dark:text-neutral-100">
                         {selectedRequest.request_type.replace('_', ' ')}
                       </p>
                     </div>
                     
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Dates</p>
-                      <p className="text-sm text-gray-900 dark:text-neutral-100">
+                      <p className="text-sm font-medium text-neutral-800">Dates</p>
+                      <p className="text-sm text-neutral-950 dark:text-neutral-100">
                         {new Date(selectedRequest.start_date).toLocaleDateString()} - {new Date(selectedRequest.end_date).toLocaleDateString()}
                       </p>
                     </div>
                     
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Reason</p>
-                      <p className="text-sm text-gray-900 dark:text-neutral-100">{selectedRequest.reason}</p>
+                      <p className="text-sm font-medium text-neutral-800">Reason</p>
+                      <p className="text-sm text-neutral-950 dark:text-neutral-100">{selectedRequest.reason}</p>
                     </div>
                     
                     {selectedRequest.notes && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700">Notes</p>
-                        <p className="text-sm text-gray-900 dark:text-neutral-100">{selectedRequest.notes}</p>
+                        <p className="text-sm font-medium text-neutral-800">Notes</p>
+                        <p className="text-sm text-neutral-950 dark:text-neutral-100">{selectedRequest.notes}</p>
                       </div>
                     )}
                     
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Status</p>
+                      <p className="text-sm font-medium text-neutral-800">Status</p>
                       <Badge variant={selectedRequest.status === 'pending' ? 'warning' : selectedRequest.status === 'approved' ? 'success' : 'danger'}>
                         {selectedRequest.status}
                       </Badge>

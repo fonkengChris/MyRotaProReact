@@ -96,14 +96,14 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="mx-auto h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 rounded-2xl flex items-center justify-center shadow-lg mb-4">
             <img src="/logo.png" alt="MyRotaPro Logo" className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-[#a5f3fc]">Create Account</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
+          <h1 className="text-3xl font-bold text-heading-accent">Create Account</h1>
+          <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-400">
             Join MyRotaPro to manage your work schedule
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function Register() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="name" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Full Name
                 </label>
                 <Input
@@ -133,7 +133,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Email
                 </label>
                 <Input
@@ -148,7 +148,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="phone" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Phone Number
                 </label>
                 <Input
@@ -163,7 +163,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="role" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Role
                 </label>
                 <select
@@ -171,7 +171,7 @@ export default function Register() {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-neutral-400 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100"
                 >
                   <option value="support_worker">Support Worker</option>
                   <option value="senior_staff">Senior Staff</option>
@@ -181,10 +181,10 @@ export default function Register() {
               </div>
 
                       <div>
-          <label htmlFor="home_id" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+          <label htmlFor="home_id" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
             Care Home (Optional)
           </label>
-          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-2">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
             You can select a care home now or be allocated to one later by an administrator.
           </p>
           <select
@@ -192,7 +192,7 @@ export default function Register() {
             name="home_id"
             value={formData.home_id}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100"
+            className="w-full px-3 py-2 border border-neutral-400 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100"
           >
             <option value="">No home selected (will be allocated later)</option>
             {homes.map((home) => (
@@ -204,7 +204,7 @@ export default function Register() {
         </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Password
                 </label>
                 <Input
@@ -219,7 +219,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
                   Confirm Password
                 </label>
                 <Input
@@ -243,7 +243,7 @@ export default function Register() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <p className="text-sm text-neutral-700 dark:text-neutral-400">
                 Already have an account?{' '}
                 <Link
                   to="/login"

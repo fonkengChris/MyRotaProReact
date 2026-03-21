@@ -605,8 +605,8 @@ const RotaEditor: React.FC = () => {
   if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-[#a5f3fc] mb-4">Access Denied</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-heading-accent mb-4">Access Denied</h2>
+        <p className="text-neutral-700">
           You don't have permission to access the rota editor.
         </p>
       </div>
@@ -626,8 +626,8 @@ const RotaEditor: React.FC = () => {
       {/* Header with Week Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#a5f3fc]">Rota Editor</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-heading-accent">Rota Editor</h1>
+          <p className="text-neutral-700 mt-1">
             Manage weekly staff schedules and assignments
           </p>
         </div>
@@ -669,7 +669,7 @@ const RotaEditor: React.FC = () => {
                 Multi-Home AI
               </Button>
             )}
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-neutral-600 mt-1">
               Generates rota for current week
             </p>
           </div>
@@ -719,8 +719,8 @@ const RotaEditor: React.FC = () => {
             <div className="flex items-center justify-center mb-4">
               <LoadingSpinner size="lg" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Care Homes</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-neutral-950 mb-2">Loading Care Homes</h3>
+            <p className="text-neutral-600">
               Please wait while we fetch the available care homes...
             </p>
           </CardContent>
@@ -731,13 +731,13 @@ const RotaEditor: React.FC = () => {
       {!selectedHomeId && !homesLoading && homes.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+            <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
               <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Care Home</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-neutral-950 mb-2">Select a Care Home</h3>
+            <p className="text-neutral-600">
               Choose a care home from the dropdown above to view and manage its weekly schedule.
             </p>
           </CardContent>
@@ -748,13 +748,13 @@ const RotaEditor: React.FC = () => {
       {!homesLoading && homes.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
-            <div className="mx-auto h-16 w-16 text-gray-400 mb-4">
+            <div className="mx-auto h-16 w-16 text-neutral-500 mb-4">
               <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Care Homes Available</h3>
-            <p className="text-gray-500 mb-4">
+            <h3 className="text-lg font-medium text-neutral-950 mb-2">No Care Homes Available</h3>
+            <p className="text-neutral-600 mb-4">
               There are no care homes set up in the system yet.
             </p>
             {permissions.canManageHomes && (
@@ -796,10 +796,10 @@ const RotaEditor: React.FC = () => {
               </Button>
 
               <div className="text-center">
-                <h2 className="text-lg font-semibold text-[#a5f3fc]">
+                <h2 className="text-lg font-semibold text-heading-accent">
                   Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-300">
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
                   {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
                 </p>
               </div>
@@ -870,19 +870,19 @@ const RotaEditor: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-center p-4 bg-neutral-100 rounded-lg">
                 <p className="text-2xl font-bold text-primary-600">{weekRota.total_shifts}</p>
-                <p className="text-sm text-gray-600">Total Shifts</p>
+                <p className="text-sm text-neutral-700">Total Shifts</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-center p-4 bg-neutral-100 rounded-lg">
                 <p className="text-2xl font-bold text-success-600">{weekRota.total_hours}</p>
-                <p className="text-sm text-gray-600">Total Hours</p>
+                <p className="text-sm text-neutral-700">Total Hours</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-center p-4 bg-neutral-100 rounded-lg">
                 <p className="text-2xl font-bold text-secondary-600">
                   {format(new Date(weekRota.created_at), 'MMM d')}
                 </p>
-                <p className="text-sm text-gray-600">Created</p>
+                <p className="text-sm text-neutral-700">Created</p>
               </div>
             </div>
           </CardContent>
@@ -947,13 +947,13 @@ const RotaEditor: React.FC = () => {
               />
             ) : (
               <div className="text-center py-12">
-                <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
+                <div className="mx-auto h-12 w-12 text-neutral-500 mb-4">
                   <CalendarIcon className="h-12 w-12" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-neutral-950 mb-2">
                   {weekRota ? 'Loading schedule...' : 'No rota for this week'}
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-neutral-600 mb-6">
                   {weekRota 
                     ? 'Please wait while we load the schedule data'
                     : permissions.canManageRotas 
@@ -1008,7 +1008,7 @@ const RotaEditor: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary-600">0</p>
-                <p className="text-sm text-gray-600">Shifts Today</p>
+                <p className="text-sm text-neutral-700">Shifts Today</p>
               </div>
             </CardContent>
           </Card>
@@ -1017,7 +1017,7 @@ const RotaEditor: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-success-600">0</p>
-                <p className="text-sm text-gray-600">Staff Available</p>
+                <p className="text-sm text-neutral-700">Staff Available</p>
               </div>
             </CardContent>
           </Card>
@@ -1026,7 +1026,7 @@ const RotaEditor: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-warning-600">0</p>
-                <p className="text-sm text-gray-600">Pending Requests</p>
+                <p className="text-sm text-neutral-700">Pending Requests</p>
               </div>
             </CardContent>
           </Card>
@@ -1035,7 +1035,7 @@ const RotaEditor: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-secondary-600">0</p>
-                <p className="text-sm text-gray-600">Total Hours</p>
+                <p className="text-sm text-neutral-700">Total Hours</p>
               </div>
             </CardContent>
           </Card>
