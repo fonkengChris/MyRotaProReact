@@ -16,15 +16,20 @@ import {
 import { shiftsApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift } from '@/types'
+import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 
 interface PaidHoursData {
-  totalHours: number
+  rosteredHours: number
+  totalSleepInHours: number
   paidHours: number
   breakDeductions: number
-  shifts: Array<Shift & { 
+  shifts: Array<Shift & {
+    rosteredHours: number
     paidHours: number
     breakDeduction: number
     deductionReason: string
+    sleepInHours: number
+    paidWorkBeforeBreak: number
   }>
 }
 
@@ -55,46 +60,32 @@ const MyHours: React.FC = () => {
       )
     )
 
-    let totalHours = 0
+    let rosteredHours = 0
+    let totalSleepInHours = 0
     let paidHours = 0
     let totalBreakDeductions = 0
 
     const shiftsWithPaidHours = userShifts.map(shift => {
-      const shiftHours = shift.duration_hours || 0
-      totalHours += shiftHours
-
-      let breakDeduction = 0
-      let deductionReason = ''
-
-      // Apply break deduction rules
-      if (shiftHours >= 12) {
-        // Deduct 1 hour for 12+ hour shifts
-        breakDeduction = 1
-        deductionReason = '12+ hour shift break'
-      } else if (shiftHours >= 8 && shiftHours < 12) {
-        // Deduct 30 minutes for 8-10 hour shifts
-        breakDeduction = 0.5
-        deductionReason = '8-10 hour shift break'
-      } else {
-        // No deduction for shifts under 8 hours
-        breakDeduction = 0
-        deductionReason = 'No break deduction (< 8 hours)'
-      }
-
-      const shiftPaidHours = Math.max(0, shiftHours - breakDeduction)
-      paidHours += shiftPaidHours
-      totalBreakDeductions += breakDeduction
+      const c = computeShiftPaidWithBreaks(shift)
+      rosteredHours += c.rosteredHours
+      totalSleepInHours += c.sleepInHours
+      paidHours += c.paidHours
+      totalBreakDeductions += c.breakDeduction
 
       return {
         ...shift,
-        paidHours: shiftPaidHours,
-        breakDeduction,
-        deductionReason
+        rosteredHours: c.rosteredHours,
+        paidHours: c.paidHours,
+        breakDeduction: c.breakDeduction,
+        deductionReason: c.deductionReason,
+        sleepInHours: c.sleepInHours,
+        paidWorkBeforeBreak: c.paidWorkBeforeBreak,
       }
     })
 
     return {
-      totalHours,
+      rosteredHours,
+      totalSleepInHours,
       paidHours,
       breakDeductions: totalBreakDeductions,
       shifts: shiftsWithPaidHours
@@ -155,7 +146,7 @@ const MyHours: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-[#a5f3fc]">My Paid Hours</h1>
           <p className="text-gray-600 mt-1">
-            Your paid hours for the selected week (after break deductions)
+            Sleeping-night shifts: 8h sleep-in is excluded from paid work; breaks apply to paid hours only.
           </p>
         </div>
         
@@ -213,10 +204,15 @@ const MyHours: React.FC = () => {
                 <ClockIcon className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Hours</p>
+                <p className="text-sm font-medium text-gray-500">Rostered hours</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {paidHoursData.totalHours.toFixed(1)}h
+                  {paidHoursData.rosteredHours.toFixed(1)}h
                 </p>
+                {paidHoursData.totalSleepInHours > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    incl. {paidHoursData.totalSleepInHours.toFixed(1)}h sleep-in
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -327,11 +323,22 @@ const MyHours: React.FC = () => {
                     <div className="text-right">
                       <div className="flex items-center space-x-4">
                         <div>
-                          <p className="text-sm text-gray-500">Total Hours</p>
+                          <p className="text-sm text-gray-500">Rostered</p>
                           <p className="text-lg font-semibold text-gray-900">
-                            {shift.duration_hours}h
+                            {shift.rosteredHours}h
                           </p>
+                          {shift.sleepInHours > 0 && (
+                            <p className="text-xs text-gray-500">{shift.sleepInHours}h sleep-in</p>
+                          )}
                         </div>
+                        {shift.paidWorkBeforeBreak !== shift.rosteredHours && shift.paidWorkBeforeBreak >= 0 && (
+                          <div>
+                            <p className="text-sm text-gray-500">Paid work</p>
+                            <p className="text-lg font-semibold text-gray-800">
+                              {shift.paidWorkBeforeBreak}h
+                            </p>
+                          </div>
+                        )}
                         {shift.breakDeduction > 0 && (
                           <div>
                             <p className="text-sm text-orange-500">Break Deduction</p>

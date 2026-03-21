@@ -18,6 +18,7 @@ import {
 import { rotasApi, shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { extractUserDefaultHomeId } from '@/types'
+import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
 
@@ -78,7 +79,8 @@ const Dashboard: React.FC = () => {
 
   // Calculate statistics (data should now be guaranteed arrays from select option)
   const totalShifts = staff.length || 0
-  const totalHours = shifts.reduce((sum, shift) => sum + (shift.duration_hours || 0), 0) || 0
+  const totalHours =
+    shifts.reduce((sum, shift) => sum + computeShiftPaidWithBreaks(shift).paidHours, 0) || 0
   const activeStaff = staff.filter(s => s.is_active).length || 0
   const pendingRequests = 0 // TODO: Implement time off requests
 

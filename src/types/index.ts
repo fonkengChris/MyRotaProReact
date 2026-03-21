@@ -26,8 +26,9 @@ export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'socia
 
 /**
  * Must match `shift_type` enum on the Shift model (`MyRotaProNode/models/Shift.js`).
- * - `night-wake`: waking night (active / on-duty all night)
- * - `night-sleep`: sleeping night (sleep-in / on-call with sleep)
+ * - `night-wake`: waking night — full shift length counts as regular paid hours (no sleep-in deduction)
+ * - `night-sleep`: sleeping night — 8h sleep-in excluded from paid work; rest is regular paid hours
+ * - `night` (legacy): treated like waking night for hours (full span = paid work)
  */
 export type ShiftType =
   | 'morning'
@@ -175,6 +176,10 @@ export interface Shift {
   created_at: string
   updated_at: string
   duration_hours: number
+  /** Set by API for sleeping-night shifts: unpaid sleep-in portion. */
+  sleep_in_hours?: number
+  /** Paid working hours before break rules (excludes sleep-in on night-sleep). */
+  paid_work_hours?: number
   status: ShiftStatus
 }
 

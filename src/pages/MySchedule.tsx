@@ -15,6 +15,7 @@ import {
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { extractUserDefaultHomeId, Shift, extractServiceId, formatShiftTypeLabel } from '@/types'
+import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 
 const MySchedule: React.FC = () => {
   const { user } = useAuth()
@@ -377,15 +378,12 @@ const MySchedule: React.FC = () => {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-success-600">
-                  {myShifts.reduce((total, shift) => {
-                    const start = new Date(`2000-01-01T${shift.start_time}`)
-                    const end = new Date(`2000-01-01T${shift.end_time}`)
-                    const diffMs = end.getTime() - start.getTime()
-                    const diffHours = diffMs / (1000 * 60 * 60)
-                    return total + diffHours
-                  }, 0).toFixed(1)}
+                  {myShifts
+                    .reduce((total, shift) => total + computeShiftPaidWithBreaks(shift).paidHours, 0)
+                    .toFixed(1)}
                 </p>
-                <p className="text-sm text-gray-600">Total Hours</p>
+                <p className="text-sm text-gray-600">Paid hours</p>
+                <p className="text-xs text-gray-500 mt-1">excl. sleep-in; after breaks</p>
               </div>
             </CardContent>
           </Card>

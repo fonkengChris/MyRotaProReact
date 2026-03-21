@@ -14,6 +14,22 @@ import {
 import { shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, User } from '@/types'
+import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
+
+function aggregateUserShiftHours(userShifts: Shift[]) {
+  const totalHours = userShifts.reduce(
+    (sum, shift) => sum + getShiftHourBreakdown(shift).duration_hours,
+    0
+  )
+  let paidHours = 0
+  let totalBreakDeductions = 0
+  userShifts.forEach((shift) => {
+    const c = computeShiftPaidWithBreaks(shift)
+    paidHours += c.paidHours
+    totalBreakDeductions += c.breakDeduction
+  })
+  return { totalHours, paidHours, breakDeductions: totalBreakDeductions }
+}
 
 interface HoursSummaryProps {
   homeId?: string
@@ -88,35 +104,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const totalHours = userShifts.reduce((sum, shift) => 
-          sum + (shift.duration_hours || 0), 0
-        )
-        
-        // Calculate paid hours with break deductions
-        let paidHours = 0
-        let totalBreakDeductions = 0
-        
-        userShifts.forEach(shift => {
-          const shiftHours = shift.duration_hours || 0
-          let breakDeduction = 0
-          
-          // Apply break deduction rules
-          if (shiftHours >= 12) {
-            breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
-          } else if (shiftHours >= 8 && shiftHours < 12) {
-            breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
-          }
-          // No deduction for shifts under 8 hours
-          
-          paidHours += Math.max(0, shiftHours - breakDeduction)
-          totalBreakDeductions += breakDeduction
-        })
+        const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return {
           user: staffMember,
           totalHours,
           paidHours,
-          breakDeductions: totalBreakDeductions,
+          breakDeductions,
           totalShifts: userShifts.length,
           shifts: userShifts
         }
@@ -133,35 +127,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const totalHours = userShifts.reduce((sum, shift) => 
-          sum + (shift.duration_hours || 0), 0
-        )
-        
-        // Calculate paid hours with break deductions
-        let paidHours = 0
-        let totalBreakDeductions = 0
-        
-        userShifts.forEach(shift => {
-          const shiftHours = shift.duration_hours || 0
-          let breakDeduction = 0
-          
-          // Apply break deduction rules
-          if (shiftHours >= 12) {
-            breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
-          } else if (shiftHours >= 8 && shiftHours < 12) {
-            breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
-          }
-          // No deduction for shifts under 8 hours
-          
-          paidHours += Math.max(0, shiftHours - breakDeduction)
-          totalBreakDeductions += breakDeduction
-        })
+        const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return [{
           user: userData || { id: userId, name: 'Unknown User', role: userRole },
           totalHours,
           paidHours,
-          breakDeductions: totalBreakDeductions,
+          breakDeductions,
           totalShifts: userShifts.length,
           shifts: userShifts
         }]
@@ -173,35 +145,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         )
       )
       
-      const totalHours = userShifts.reduce((sum, shift) => 
-        sum + (shift.duration_hours || 0), 0
-      )
-      
-      // Calculate paid hours with break deductions
-      let paidHours = 0
-      let totalBreakDeductions = 0
-      
-      userShifts.forEach(shift => {
-        const shiftHours = shift.duration_hours || 0
-        let breakDeduction = 0
-        
-        // Apply break deduction rules
-        if (shiftHours >= 12) {
-          breakDeduction = 1 // 1 hour deduction for 12+ hour shifts
-        } else if (shiftHours >= 8 && shiftHours < 12) {
-          breakDeduction = 0.5 // 30 minutes deduction for 8-10 hour shifts
-        }
-        // No deduction for shifts under 8 hours
-        
-        paidHours += Math.max(0, shiftHours - breakDeduction)
-        totalBreakDeductions += breakDeduction
-      })
+      const { totalHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
       
       return [{
         user: userData || { id: userId, name: 'Unknown User', role: userRole },
         totalHours,
         paidHours,
-        breakDeductions: totalBreakDeductions,
+        breakDeductions,
         totalShifts: userShifts.length,
         shifts: userShifts
       }]
@@ -430,7 +380,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">
-                  {isAdminView ? 'Assigned Hours' : 'My Assigned Hours'}
+                  {isAdminView ? 'Rostered hours' : 'My rostered hours'}
                 </p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                   {totalHours.toFixed(1)}h
