@@ -562,7 +562,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                           return (
                           <div
                             key={shift.id}
-                            className="bg-gray-50 dark:bg-neutral-800/80 rounded p-2 text-sm"
+                            className="rounded p-2 text-sm bg-primary-50 border border-primary-200 dark:bg-primary-900/25 dark:border-primary-800"
                           >
                             <div className="flex items-center justify-between gap-2">
                               <div className="min-w-0">
