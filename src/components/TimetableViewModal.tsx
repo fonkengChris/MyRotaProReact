@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { format, parseISO, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import { XMarkIcon, CalendarIcon, ClockIcon, UsersIcon, ExclamationTriangleIcon, CheckCircleIcon, ViewColumnsIcon, ListBulletIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, CalendarIcon, ClockIcon, UsersIcon, ExclamationTriangleIcon, CheckCircleIcon, ViewColumnsIcon, ListBulletIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
 import { Timetable } from '@/types'
-import { homesApi } from '@/lib/api'
+import { homesApi, timetablesApi } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
+import toast from 'react-hot-toast'
 
 interface TimetableViewModalProps {
   isOpen: boolean
@@ -68,6 +69,40 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
     const home = homes.find(h => h.id === homeId)
     if (!home) return `Home ${homeId}`
     return home.location ? `${home.name} (${home.location.city})` : home.name
+  }
+
+  const getTimetableHomePdfEntries = (): { id: string; name: string }[] => {
+    const raw = Array.isArray(timetable.home_ids) ? timetable.home_ids : []
+    return raw
+      .map((home: any) => {
+        const id =
+          typeof home === 'string'
+            ? home
+            : home && typeof home === 'object'
+              ? String(home.id || home._id || '')
+              : ''
+        if (!id) return null
+        const name =
+          home && typeof home === 'object' && home.name
+            ? String(home.name)
+            : getHomeName(id)
+        return { id, name }
+      })
+      .filter((e): e is { id: string; name: string } => e != null)
+  }
+
+  const canDownloadPdf = ['generated', 'published', 'archived'].includes(timetable.status)
+
+  const handleDownloadHomePdf = async (homeId: string, homeLabel: string) => {
+    try {
+      toast.loading(`Preparing PDF (${homeLabel})…`)
+      await timetablesApi.downloadHomePdf(timetable.id, homeId)
+      toast.dismiss()
+      toast.success('PDF downloaded')
+    } catch (error: any) {
+      toast.dismiss()
+      toast.error(error?.message || 'Failed to download PDF')
+    }
   }
 
   if (!isOpen) return null
@@ -388,6 +423,30 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
             </div>
           </div>
 
+          {canDownloadPdf && getTimetableHomePdfEntries().length > 0 && (
+            <div className="border border-neutral-300 dark:border-neutral-700 rounded-lg p-4 bg-neutral-50 dark:bg-neutral-900/40">
+              <h5 className="text-sm font-medium text-neutral-950 dark:text-neutral-100 mb-2">
+                Download schedule (PDF)
+              </h5>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
+                One PDF per home, covering every week in this timetable snapshot.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {getTimetableHomePdfEntries().map(({ id, name }) => (
+                  <Button
+                    key={id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownloadHomePdf(id, name)}
+                  >
+                    <DocumentArrowDownIcon className="h-4 w-4 mr-1" />
+                    {name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Conflicts and Errors */}
           {(timetable.conflicts_detected > 0 || (timetable.generation_errors?.length ?? 0) > 0) && (
             <div className="space-y-3">
@@ -619,7 +678,8 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-neutral-300 dark:border-neutral-700">
-          {onDeleteRotas && (timetable.status === 'generated' || timetable.status === 'published' || timetable.status === 'archived') && (
+          {onDeleteRotas &&
+            (timetable.status === 'generated' || timetable.status === 'archived') && (
             <Button
               variant="danger"
               onClick={() => onDeleteRotas(timetable)}

@@ -191,6 +191,35 @@ const Timetables: React.FC = () => {
       .filter(Boolean)
   }
 
+  const getTimetableHomePdfEntries = (timetable: Timetable): { id: string; name: string }[] => {
+    const raw = Array.isArray(timetable.home_ids) ? timetable.home_ids : []
+    return raw
+      .map((home: any) => {
+        const id =
+          typeof home === 'string'
+            ? home
+            : home && typeof home === 'object'
+              ? String(home.id || home._id || '')
+              : ''
+        const name =
+          home && typeof home === 'object' && home.name ? String(home.name) : id ? `Home ${id}` : ''
+        return id ? { id, name: name || `Home ${id}` } : null
+      })
+      .filter((e): e is { id: string; name: string } => e != null)
+  }
+
+  const handleDownloadHomePdf = async (timetableId: string, homeId: string, homeLabel: string) => {
+    try {
+      toast.loading(`Preparing PDF (${homeLabel})…`)
+      await timetablesApi.downloadHomePdf(timetableId, homeId)
+      toast.dismiss()
+      toast.success('PDF downloaded')
+    } catch (error: any) {
+      toast.dismiss()
+      toast.error(error?.message || error?.response?.data?.error || 'Failed to download PDF')
+    }
+  }
+
   const collectRotaIdsForTimetable = async (
     timetable: Timetable,
     homeIds: string[]
@@ -366,7 +395,7 @@ const Timetables: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-heading-accent">Timetables</h1>
           <p className="text-neutral-700 mt-1">
-            Generate and manage immutable multi-week rotas
+            Generate multi-week rotas; published timetables are locked and can be exported per home as PDF.
           </p>
         </div>
         
@@ -538,74 +567,97 @@ const Timetables: React.FC = () => {
                   )}
                   
                   {/* Actions */}
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedTimetable(timetable)
-                        setIsViewModalOpen(true)
-                      }}
-                    >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    
-                    {permissions.canManageRotas && (
-                      <>
-                        {timetable.status === 'draft' && (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleGenerateTimetable(timetable)}
-                          >
-                            <ArrowPathIcon className="h-4 w-4 mr-1" />
-                            Generate
-                          </Button>
-                        )}
-                        
-                        {timetable.status === 'generated' && (
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={() => handlePublishTimetable(timetable)}
-                          >
-                            <CheckCircleIcon className="h-4 w-4 mr-1" />
-                            Publish
-                          </Button>
-                        )}
-                        
-                        {timetable.status === 'published' && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleArchiveTimetable(timetable)}
-                          >
-                            Archive
-                          </Button>
-                        )}
-                        
-                        {timetable.status === 'draft' && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeleteTimetable(timetable)}
-                          >
-                            Delete
-                          </Button>
-                        )}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTimetable(timetable)
+                          setIsViewModalOpen(true)
+                        }}
+                      >
+                        <EyeIcon className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
 
-                        {(timetable.status === 'generated' || timetable.status === 'published' || timetable.status === 'archived') && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeleteGeneratedRotas(timetable)}
-                          >
-                            Delete Rotas
-                          </Button>
-                        )}
-                      </>
-                    )}
+                      {permissions.canManageRotas && (
+                        <>
+                          {timetable.status === 'draft' && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleGenerateTimetable(timetable)}
+                            >
+                              <ArrowPathIcon className="h-4 w-4 mr-1" />
+                              Generate
+                            </Button>
+                          )}
+
+                          {timetable.status === 'generated' && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => handlePublishTimetable(timetable)}
+                            >
+                              <CheckCircleIcon className="h-4 w-4 mr-1" />
+                              Publish
+                            </Button>
+                          )}
+
+                          {timetable.status === 'published' && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleArchiveTimetable(timetable)}
+                            >
+                              Archive
+                            </Button>
+                          )}
+
+                          {timetable.status === 'draft' && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => handleDeleteTimetable(timetable)}
+                            >
+                              Delete
+                            </Button>
+                          )}
+
+                          {(timetable.status === 'generated' || timetable.status === 'archived') && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => handleDeleteGeneratedRotas(timetable)}
+                            >
+                              Delete Rotas
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {['generated', 'published', 'archived'].includes(timetable.status) &&
+                      getTimetableHomePdfEntries(timetable).length > 0 && (
+                        <div className="flex flex-wrap gap-1 border-t border-neutral-200 dark:border-neutral-600 pt-2">
+                          <span className="text-xs text-neutral-600 dark:text-neutral-400 self-center mr-1">
+                            PDF
+                          </span>
+                          {getTimetableHomePdfEntries(timetable).map(({ id, name }) => (
+                            <Button
+                              key={id}
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                              onClick={() => handleDownloadHomePdf(timetable.id, id, name)}
+                            >
+                              <DocumentArrowDownIcon className="h-3.5 w-3.5 mr-1" />
+                              {name.length > 18 ? `${name.slice(0, 16)}…` : name}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 </div>
               </CardContent>

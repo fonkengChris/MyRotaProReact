@@ -567,6 +567,8 @@ export interface Timetable {
   generation_duration_ms?: number
   conflicts_detected: number
   generation_errors: GenerationError[]
+  /** Set when the timetable is published (locked) */
+  published_at?: string
   is_public: boolean
   accessible_by_roles: UserRole[]
   accessible_by_users: string[]

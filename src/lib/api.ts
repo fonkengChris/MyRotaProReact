@@ -685,7 +685,65 @@ export const timetablesApi = {
   getWeeklyBreakdown: async (id: string): Promise<any[]> => {
     const response = await api.get(`/timetables/${id}/weekly-breakdown`);
     return response.data;
-  }
+  },
+
+  /** Download PDF schedule for one home (blob save). */
+  downloadHomePdf: async (timetableId: string, homeId: string): Promise<void> => {
+    try {
+      const response = await api.get(`/timetables/${timetableId}/homes/${homeId}/pdf`, {
+        responseType: 'blob',
+        timeout: 120000,
+      });
+      const blob = response.data as Blob;
+      const contentType = String(response.headers['content-type'] || '');
+      if (!contentType.includes('pdf')) {
+        const text = await blob.text();
+        let msg = 'Failed to download PDF';
+        try {
+          const j = JSON.parse(text) as { error?: string };
+          if (j?.error) msg = j.error;
+        } catch {
+          /* ignore */
+        }
+        throw new Error(msg);
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dispo = response.headers['content-disposition'];
+      let fname = 'timetable.pdf';
+      if (dispo) {
+        const star = /filename\*=UTF-8''([^;\n]+)/i.exec(dispo);
+        if (star) {
+          fname = decodeURIComponent(star[1].trim());
+        } else {
+          const plain = /filename="([^"]+)"/i.exec(dispo) || /filename=([^;\n]+)/i.exec(dispo);
+          if (plain) fname = plain[1].trim().replace(/^"|"$/g, '');
+        }
+      }
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      const ax = err as { response?: { data?: Blob } };
+      const blobErr = ax.response?.data;
+      if (blobErr instanceof Blob) {
+        const text = await blobErr.text();
+        if (text.trimStart().startsWith('{')) {
+          try {
+            const j = JSON.parse(text) as { error?: string };
+            if (typeof j?.error === 'string') throw new Error(j.error);
+          } catch (e) {
+            if (!(e instanceof SyntaxError)) throw e;
+          }
+        }
+      }
+      if (err instanceof Error) throw err;
+      throw new Error('Failed to download PDF');
+    }
+  },
 };
 
 export default api
