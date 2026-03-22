@@ -16,7 +16,8 @@ import {
   WrenchScrewdriverIcon,
   ChartBarIcon,
   BellIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -45,6 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },
     { name: 'Shift Selection', href: '/shift-selection', icon: BellIcon, current: location.pathname === '/shift-selection' },
     { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowPathIcon, current: location.pathname === '/shift-swaps' },
+    { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
     { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),

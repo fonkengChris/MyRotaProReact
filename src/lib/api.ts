@@ -22,6 +22,9 @@ import {
   Timetable,
   TimetableCreateRequest,
   TimetableGenerationStatus,
+  Message,
+  MessageConversationSummary,
+  MessageThreadResponse,
 } from '@/types'
 import toast from 'react-hot-toast';
 import { getAppConfig, isDebugMode } from './env';
@@ -207,7 +210,7 @@ export const shiftsApi = {
     return response.data
   },
 
-                                                                                                                                                                                                                                                                                                        create: async (data: Omit<Shift, 'id' | 'created_at' | 'updated_at'>): Promise<Shift> => {
+  create: async (data: Omit<Shift, 'id' | 'created_at' | 'updated_at'>): Promise<Shift> => {
     const response = await api.post<Shift>('/shifts', data)
     return response.data
   },
@@ -486,6 +489,24 @@ export const usersApi = {
 
   setDefaultHome: async (userId: string, data: { home_id: string }): Promise<User> => {
     const response = await api.post<User>(`/users/${userId}/set-default-home`, data)
+    return response.data
+  },
+}
+
+// Direct messages (1:1)
+export const messagesApi = {
+  getConversations: async (): Promise<MessageConversationSummary[]> => {
+    const response = await api.get<MessageConversationSummary[]>('/messages/conversations')
+    return response.data
+  },
+
+  getThread: async (otherUserId: string): Promise<MessageThreadResponse> => {
+    const response = await api.get<MessageThreadResponse>(`/messages/thread/${otherUserId}`)
+    return response.data
+  },
+
+  send: async (to_user_id: string, body: string): Promise<Message> => {
+    const response = await api.post<Message>('/messages', { to_user_id, body })
     return response.data
   },
 }

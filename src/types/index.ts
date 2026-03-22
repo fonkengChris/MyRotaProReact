@@ -103,6 +103,36 @@ export interface UserPermissions {
   can_allocate_homes: boolean
 }
 
+// Direct messages (1:1)
+export interface Message {
+  id: string
+  from_user_id: string
+  to_user_id: string
+  body: string
+  read_at: string | null
+  created_at: string | null
+}
+
+export interface MessageUserBrief {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface MessageConversationSummary {
+  other_user: MessageUserBrief
+  last_body: string
+  last_at: string
+  last_from_me: boolean
+  unread_count: number
+}
+
+export interface MessageThreadResponse {
+  other_user: MessageUserBrief
+  messages: Message[]
+}
+
 // Home types
 export interface Home {
   id: string
