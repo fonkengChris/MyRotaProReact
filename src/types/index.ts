@@ -653,3 +653,30 @@ export interface TimetableGenerationStatus {
   conflicts_detected: number
   generation_errors: GenerationError[]
 }
+
+export interface PayrollRecord {
+  id?: string
+  user_id?: string
+  name: string
+  role?: UserRole | string
+  rostered_hours?: number
+  sleep_in_hours?: number
+  paid_hours: number
+  break_deductions?: number
+  hourly_rate?: number
+  gross_pay?: number
+  home_name?: string
+}
+
+export interface PayrollReportResponse {
+  start_date: string
+  end_date: string
+  records: PayrollRecord[]
+  totals?: {
+    total_rostered_hours?: number
+    total_sleep_in_hours?: number
+    total_paid_hours?: number
+    total_break_deductions?: number
+    total_gross_pay?: number
+  }
+}

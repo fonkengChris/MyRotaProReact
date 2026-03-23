@@ -22,11 +22,12 @@ import { extractUserDefaultHomeId } from '@/types'
 import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
 import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
+import PayrollManagement from '@/components/PayrollManagement'
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const permissions = usePermissions()
-  const [activeTab, setActiveTab] = useState<'overview' | 'hours'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'hours' | 'payroll'>('overview')
 
   // Safety check - don't render if user is not loaded
   if (!user) {
@@ -100,6 +101,7 @@ const Dashboard: React.FC = () => {
 
   // Check if user can view hours summary (admin, home_manager, senior_staff)
   const canViewHoursSummary = ['admin', 'home_manager', 'senior_staff'].includes(user.role)
+  const canManagePayroll = ['admin', 'home_manager'].includes(user.role)
 
   return (
     <div className="space-y-6">
@@ -144,6 +146,19 @@ const Dashboard: React.FC = () => {
               <ChartBarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
               Hours Summary
             </button>
+            {canManagePayroll && (
+              <button
+                onClick={() => setActiveTab('payroll')}
+                className={`py-2 sm:py-3 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                  activeTab === 'payroll'
+                    ? 'border-primary-700 text-primary-900 dark:border-cyan-400 dark:text-cyan-300'
+                    : 'border-transparent text-neutral-600 hover:text-primary-800 hover:border-primary-500 dark:text-neutral-500 dark:hover:text-cyan-300 dark:hover:border-cyan-400'
+                }`}
+              >
+                <ClockIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
+                Payroll Management
+              </button>
+            )}
           </nav>
         </div>
       )}
@@ -481,14 +496,17 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         </>
-      ) : (
+      ) : activeTab === 'hours' ? (
         // Hours Summary Tab
         <HoursSummary 
           homeId={userHomeId}
           isAdminView={true}
           userRole={user.role}
         />
-      )}
+      ) : canManagePayroll ? (
+        <PayrollManagement homeId={userHomeId} />
+      ) : null
+      }
     </div>
   )
 }
