@@ -504,7 +504,7 @@ const Dashboard: React.FC = () => {
           userRole={user.role}
         />
       ) : canManagePayroll ? (
-        <PayrollManagement homeId={userHomeId} />
+        <PayrollManagement homeId={userHomeId} userRole={user.role} />
       ) : null
       }
     </div>

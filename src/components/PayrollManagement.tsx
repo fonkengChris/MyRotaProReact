@@ -8,6 +8,7 @@ import { PayrollRecord, PayrollReportResponse } from '@/types'
 
 interface PayrollManagementProps {
   homeId?: string
+  userRole?: string
 }
 
 const getDefaultDateRange = () => {
@@ -51,14 +52,17 @@ const normalizeResponse = (
   }
 }
 
-const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
+const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole = 'support_worker' }) => {
   const defaults = getDefaultDateRange()
   const [startDate, setStartDate] = useState(defaults.start)
   const [endDate, setEndDate] = useState(defaults.end)
+  const [hourlyRate, setHourlyRate] = useState<number>(12.71)
+  const [sleepNightPay, setSleepNightPay] = useState<number>(50)
   const [report, setReport] = useState<PayrollReportResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const canEditRates = userRole === 'admin'
 
   const rows = useMemo(() => report?.records ?? [], [report])
 
@@ -92,6 +96,8 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
+        hourly_rate: hourlyRate,
+        sleep_night_pay: sleepNightPay,
       })
       setReport(normalizeResponse(data, startDate, endDate))
     } catch (err) {
@@ -112,6 +118,8 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
+        hourly_rate: hourlyRate,
+        sleep_night_pay: sleepNightPay,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate payroll PDF')
@@ -130,7 +138,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">Start Date</label>
               <input
@@ -149,6 +157,34 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
                 onChange={(e) => setEndDate(e.target.value)}
                 className="input w-full"
                 min={startDate || undefined}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Hourly Rate (GBP)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(Math.max(0, Number(e.target.value) || 0))}
+                className="input w-full"
+                disabled={!canEditRates}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Sleep-night Pay (GBP)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={sleepNightPay}
+                onChange={(e) => setSleepNightPay(Math.max(0, Number(e.target.value) || 0))}
+                className="input w-full"
+                disabled={!canEditRates}
               />
             </div>
             <Button
@@ -175,6 +211,11 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId }) => {
           {!canSearch && (
             <p className="text-sm text-warning-600 mt-3">
               Start date must be before or equal to end date.
+            </p>
+          )}
+          {!canEditRates && (
+            <p className="text-sm text-neutral-600 mt-3">
+              Only admins can modify payroll rates.
             </p>
           )}
           {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
