@@ -753,7 +753,14 @@ export const payrollApi = {
     end_date: string
     home_id?: string
   }): Promise<PayrollReportResponse | any[]> => {
-    const response = await api.get('/payroll', { params })
+    const cleanedParams = {
+      start_date: params.start_date,
+      end_date: params.end_date,
+      ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
+        ? { home_id: params.home_id }
+        : {}),
+    }
+    const response = await api.get('/payroll', { params: cleanedParams })
     return response.data
   },
 
@@ -763,8 +770,15 @@ export const payrollApi = {
     home_id?: string
   }): Promise<void> => {
     try {
+      const cleanedParams = {
+        start_date: params.start_date,
+        end_date: params.end_date,
+        ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
+          ? { home_id: params.home_id }
+          : {}),
+      }
       const response = await api.get('/payroll/pdf', {
-        params,
+        params: cleanedParams,
         responseType: 'blob',
         timeout: 120000,
       })
