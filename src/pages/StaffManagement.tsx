@@ -1095,7 +1095,7 @@ const StaffManagement: React.FC = () => {
               <div>
                 <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">Preferred Shift Types</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {['morning', 'day', 'afternoon', 'evening', 'night-wake', 'night-sleep', 'overtime', 'long_day', 'split'].map((shiftType) => (
+                  {['morning', 'day', 'afternoon', 'evening', 'night-wake', 'night-sleep', 'overtime', 'long_day', 'split', 'special'].map((shiftType) => (
                     <label key={shiftType} className="flex items-center space-x-2">
                       <input
                         type="checkbox"

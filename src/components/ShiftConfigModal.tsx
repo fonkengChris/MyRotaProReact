@@ -220,6 +220,7 @@ const ShiftConfigModal: React.FC<ShiftConfigModalProps> = ({
                   <option value="overtime">Overtime</option>
                   <option value="long_day">Long Day</option>
                   <option value="split">Split</option>
+                  <option value="special">Special (1:1 support)</option>
                 </select>
               </div>
 

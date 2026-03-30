@@ -2,7 +2,7 @@ import type { Shift } from '@/types'
 
 /**
  * Hours treated as sleep-in on a sleeping-night shift (matches server `utils/shiftHours.js`).
- * `night-wake` and legacy `night` are not split — full rostered time counts as paid work (before breaks).
+ * `night-wake`, `special`, and legacy `night` are not split — full rostered time counts as paid work (before breaks).
  */
 export const NIGHT_SLEEP_IN_HOURS = 8
 
@@ -36,7 +36,7 @@ export function getShiftHourBreakdown(shift: {
     return { duration_hours: duration, sleep_in_hours, paid_work_hours }
   }
 
-  // night-wake, night (legacy), and everything else: 100% of duration is paid work
+  // night-wake, special, night (legacy), and everything else: 100% of duration is paid work
   return {
     duration_hours: duration,
     sleep_in_hours: 0,

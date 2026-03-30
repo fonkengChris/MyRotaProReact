@@ -40,6 +40,7 @@ export type ShiftType =
   | 'night' // legacy; use night-wake or night-sleep for new shifts
   | 'overtime'
   | 'long_day'
+  | 'special'
   | 'none'
   | 'split'
 
@@ -54,6 +55,7 @@ export const SHIFT_TYPE_LABELS: Record<ShiftType, string> = {
   night: 'Night',
   overtime: 'Overtime',
   long_day: 'Long day',
+  special: 'Special (1:1 support)',
   none: 'None',
   split: 'Split',
 }
