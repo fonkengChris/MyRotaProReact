@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { messagesApi, usersApi } from '@/lib/api'
-import { extractUserDefaultHomeId, MessageConversationSummary } from '@/types'
+import { MessageConversationSummary } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -27,7 +27,6 @@ function formatMessageTime(iso: string | null): string {
 const Messages: React.FC = () => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const userHomeId = user ? extractUserDefaultHomeId(user) : undefined
   const [selectedOtherId, setSelectedOtherId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<'list' | 'thread'>('list')
   const [draft, setDraft] = useState('')
@@ -36,15 +35,10 @@ const Messages: React.FC = () => {
   const [newFirstMessage, setNewFirstMessage] = useState('')
   const threadEndRef = useRef<HTMLDivElement>(null)
 
-  const canUseMessaging = !!user && (user.role === 'admin' || !!userHomeId)
-
   const { data: recipients = [], isLoading: recipientsLoading } = useQuery({
-    queryKey: ['users', 'messages-recipients', user?.id, userHomeId],
-    queryFn: () =>
-      user!.role === 'admin'
-        ? usersApi.getAll({ is_active: true })
-        : usersApi.getAll({ home_id: userHomeId!, is_active: true }),
-    enabled: canUseMessaging,
+    queryKey: ['users', 'messages-recipients', user?.id],
+    queryFn: () => usersApi.getAll({ is_active: true }),
+    enabled: !!user,
     select: (data) =>
       (Array.isArray(data) ? data : [])
         .filter((u) => u.is_active && u.id !== user?.id)
@@ -54,7 +48,7 @@ const Messages: React.FC = () => {
   const { data: conversations = [], isLoading: convLoading } = useQuery({
     queryKey: ['messages', 'conversations'],
     queryFn: () => messagesApi.getConversations(),
-    enabled: !!user && canUseMessaging,
+    enabled: !!user,
     refetchInterval: 20_000,
     select: (data) => (Array.isArray(data) ? data : []),
   })
@@ -62,7 +56,7 @@ const Messages: React.FC = () => {
   const { data: thread, isLoading: threadLoading } = useQuery({
     queryKey: ['messages', 'thread', selectedOtherId],
     queryFn: () => messagesApi.getThread(selectedOtherId!),
-    enabled: !!selectedOtherId && canUseMessaging,
+    enabled: !!user && !!selectedOtherId,
     refetchInterval: 15_000,
   })
 
@@ -164,25 +158,6 @@ const Messages: React.FC = () => {
       <div className="flex justify-center py-24">
         <LoadingSpinner size="lg" />
       </div>
-    )
-  }
-
-  if (!canUseMessaging) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ChatBubbleLeftRightIcon className="h-6 w-6" />
-            Messages
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-neutral-600 dark:text-neutral-400">
-            You need a home assignment to exchange messages with colleagues. Ask an administrator to add you to a
-            home, or use an admin account.
-          </p>
-        </CardContent>
-      </Card>
     )
   }
 
@@ -383,8 +358,7 @@ const Messages: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Messages</h1>
         <p className="text-neutral-600 dark:text-neutral-400 mt-1 text-sm">
-          Chat with colleagues in your organisation. You can message people who share a home with you; administrators
-          can message any active user.
+          Send and receive direct messages with any active colleague in your organisation.
         </p>
       </div>
 
