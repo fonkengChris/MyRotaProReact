@@ -8,9 +8,9 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   CalendarIcon, 
   ClockIcon,
-  UserIcon,
   PlusIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline'
 import { availabilityApi, timeOffApi, usersApi } from '@/lib/api'
 import { Availability, TimeOffRequest, extractUserDefaultHomeId } from '@/types'
@@ -305,38 +305,40 @@ const AvailabilityPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-warning-200/80 bg-warning-50/40 dark:border-warning-800/50 dark:bg-warning-950/20">
           <CardContent className="p-4">
-            <div className="text-center">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning-100 ring-1 ring-warning-300/50 dark:bg-warning-900/50 dark:ring-warning-600/40">
+                <ClockIcon className="h-5 w-5 text-warning-700 dark:text-warning-300" />
+              </div>
               {requestsLoading ? (
-                <div className="flex items-center justify-center">
-                  <LoadingSpinner size="sm" />
-                </div>
+                <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <p className="text-2xl font-bold text-warning-600 dark:text-warning-400">
+                  <p className="text-2xl font-bold text-warning-700 dark:text-warning-300">
                     {timeOffRequests.filter(r => r.status === 'pending').length || 0}
                   </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Pending Requests</p>
+                  <p className="text-sm font-medium text-warning-900 dark:text-warning-100">Pending Requests</p>
                 </>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-success-200/80 bg-success-50/40 dark:border-success-800/50 dark:bg-success-950/20">
           <CardContent className="p-4">
-            <div className="text-center">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success-100 ring-1 ring-success-300/50 dark:bg-success-900/50 dark:ring-success-600/40">
+                <CheckCircleIcon className="h-5 w-5 text-success-700 dark:text-success-300" />
+              </div>
               {requestsLoading ? (
-                <div className="flex items-center justify-center">
-                  <LoadingSpinner size="sm" />
-                </div>
+                <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <p className="text-2xl font-bold text-success-600 dark:text-success-400">
+                  <p className="text-2xl font-bold text-success-700 dark:text-success-300">
                     {timeOffRequests.filter(r => r.status === 'approved').length || 0}
                   </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Approved Requests</p>
+                  <p className="text-sm font-medium text-success-900 dark:text-success-100">Approved Requests</p>
                 </>
               )}
             </div>
