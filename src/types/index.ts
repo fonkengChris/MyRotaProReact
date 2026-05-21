@@ -661,10 +661,14 @@ export interface PayrollRecord {
   user_id?: string
   name: string
   role?: UserRole | string
-  rostered_hours?: number
-  sleep_in_hours?: number
+  day_hours: number
+  night_hours: number
   paid_hours: number
   break_deductions?: number
+  sleep_night_shifts?: number
+  sleep_in_pay: number
+  leave_days?: number
+  leave_pay: number
   hourly_rate?: number
   gross_pay?: number
   home_name?: string
@@ -675,10 +679,11 @@ export interface PayrollReportResponse {
   end_date: string
   records: PayrollRecord[]
   totals?: {
-    total_rostered_hours?: number
-    total_sleep_in_hours?: number
+    total_day_hours?: number
+    total_night_hours?: number
     total_paid_hours?: number
-    total_break_deductions?: number
+    total_sleep_in_pay?: number
+    total_leave_pay?: number
     total_gross_pay?: number
   }
 }

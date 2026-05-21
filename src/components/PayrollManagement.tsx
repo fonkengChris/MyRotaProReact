@@ -67,18 +67,22 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
   const rows = useMemo(() => report?.records ?? [], [report])
 
   const computedTotals = useMemo(() => {
-    const totalRostered = rows.reduce((sum, row) => sum + asNumber(row.rostered_hours), 0)
-    const totalSleepIn = rows.reduce((sum, row) => sum + asNumber(row.sleep_in_hours), 0)
+    const totalDay = rows.reduce((sum, row) => sum + asNumber(row.day_hours), 0)
+    const totalNight = rows.reduce((sum, row) => sum + asNumber(row.night_hours), 0)
     const totalPaid = rows.reduce((sum, row) => sum + asNumber(row.paid_hours), 0)
+    const totalSleepInPay = rows.reduce((sum, row) => sum + asNumber(row.sleep_in_pay), 0)
+    const totalLeavePay = rows.reduce((sum, row) => sum + asNumber(row.leave_pay), 0)
     const totalGross = rows.reduce((sum, row) => sum + asNumber(row.gross_pay), 0)
-    return { totalRostered, totalSleepIn, totalPaid, totalGross }
+    return { totalDay, totalNight, totalPaid, totalSleepInPay, totalLeavePay, totalGross }
   }, [rows])
 
   const totals = report?.totals
     ? {
-        totalRostered: asNumber(report.totals.total_rostered_hours),
-        totalSleepIn: asNumber(report.totals.total_sleep_in_hours),
+        totalDay: asNumber(report.totals.total_day_hours),
+        totalNight: asNumber(report.totals.total_night_hours),
         totalPaid: asNumber(report.totals.total_paid_hours),
+        totalSleepInPay: asNumber(report.totals.total_sleep_in_pay),
+        totalLeavePay: asNumber(report.totals.total_leave_pay),
         totalGross: asNumber(report.totals.total_gross_pay),
       }
     : computedTotals
@@ -134,7 +138,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         <CardHeader>
           <CardTitle>Payroll Management</CardTitle>
           <CardDescription>
-            Select a payroll date range, review staff payroll details, and export a PDF for accountants.
+            Paid hours only (after breaks). Leave pay is 7.5 paid hours per approved leave day at the hourly rate.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -244,10 +248,10 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wide">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wide">Role</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Hrs</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Sleep-in</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Paid Hrs</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Rate</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Day Hrs</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Night Hrs</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Sleep-in Pay</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Leave Pay</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Gross</th>
                     </tr>
                   </thead>
@@ -256,10 +260,17 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                       <tr key={row.id ?? row.user_id ?? `${row.name}-${idx}`}>
                         <td className="px-4 py-3 text-sm text-neutral-900">{row.name || 'Unknown'}</td>
                         <td className="px-4 py-3 text-sm text-neutral-700">{row.role || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.rostered_hours).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.sleep_in_hours).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.paid_hours).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{money(asNumber(row.hourly_rate))}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{money(asNumber(row.sleep_in_pay))}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">
+                          {money(asNumber(row.leave_pay))}
+                          {asNumber(row.leave_days) > 0 && (
+                            <span className="block text-xs text-neutral-500">
+                              {asNumber(row.leave_days)} day{asNumber(row.leave_days) === 1 ? '' : 's'}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-sm font-semibold text-neutral-900 text-right">
                           {money(asNumber(row.gross_pay))}
                         </td>
@@ -269,18 +280,26 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                 </table>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                 <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Rostered Hrs</p>
-                  <p className="text-lg font-semibold text-neutral-900">{totals.totalRostered.toFixed(2)}</p>
+                  <p className="text-xs text-neutral-600">Total Day Hrs (paid)</p>
+                  <p className="text-lg font-semibold text-neutral-900">{totals.totalDay.toFixed(2)}</p>
                 </div>
                 <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Sleep-in Hrs</p>
-                  <p className="text-lg font-semibold text-neutral-900">{totals.totalSleepIn.toFixed(2)}</p>
+                  <p className="text-xs text-neutral-600">Total Night Hrs (paid)</p>
+                  <p className="text-lg font-semibold text-neutral-900">{totals.totalNight.toFixed(2)}</p>
                 </div>
                 <div className="rounded-lg border border-neutral-200 p-3">
                   <p className="text-xs text-neutral-600">Total Paid Hrs</p>
                   <p className="text-lg font-semibold text-neutral-900">{totals.totalPaid.toFixed(2)}</p>
+                </div>
+                <div className="rounded-lg border border-neutral-200 p-3">
+                  <p className="text-xs text-neutral-600">Total Sleep-in Pay</p>
+                  <p className="text-lg font-semibold text-neutral-900">{money(totals.totalSleepInPay)}</p>
+                </div>
+                <div className="rounded-lg border border-neutral-200 p-3">
+                  <p className="text-xs text-neutral-600">Total Leave Pay</p>
+                  <p className="text-lg font-semibold text-neutral-900">{money(totals.totalLeavePay)}</p>
                 </div>
                 <div className="rounded-lg border border-neutral-200 p-3">
                   <p className="text-xs text-neutral-600">Total Gross Pay</p>
