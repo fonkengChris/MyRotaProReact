@@ -8,14 +8,17 @@ import {
   ChevronRightIcon,
   CheckIcon,
   XMarkIcon,
-  ClockIcon
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType, formatShiftTypeLabel } from '@/types'
+import { Availability, ShiftType, TimeOffRequest, formatShiftTypeLabel } from '@/types'
+import { getApprovedLeaveForDate, getTimeOffTypeLabel } from '@/utils/timeOff'
+import { approvedLeaveBadgeClass, approvedLeaveDayCardClass } from '@/utils/timeOffDisplay'
 import toast from 'react-hot-toast'
 
 interface WeeklyAvailabilitySelectorProps {
   userId: string
   availabilities: Availability[]
+  approvedLeaveRequests?: TimeOffRequest[]
   onSaveAvailability: (availability: Partial<Availability>) => Promise<void>
   onDeleteAvailability: (availabilityId: string) => Promise<void>
   canEdit: boolean
@@ -33,6 +36,7 @@ interface DayAvailability {
 const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
   userId,
   availabilities,
+  approvedLeaveRequests = [],
   onSaveAvailability,
   onDeleteAvailability,
   canEdit
@@ -89,7 +93,11 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
   // Handle day selection
   const handleDayToggle = (date: string) => {
     if (!canEdit) return
-    
+    if (getApprovedLeaveForDate(date, approvedLeaveRequests)) {
+      toast.error('This day is approved leave and cannot be edited here')
+      return
+    }
+
     const newSelectedDays = new Set(selectedDays)
     if (newSelectedDays.has(date)) {
       newSelectedDays.delete(date)
@@ -261,17 +269,20 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
             {weekDays.map((day) => {
               const dateStr = format(day, 'yyyy-MM-dd')
               const dayAvailability = weekAvailability[dateStr]
+              const approvedLeave = getApprovedLeaveForDate(dateStr, approvedLeaveRequests)
               const isSelected = selectedDays.has(dateStr)
               const isToday = isSameDay(day, new Date())
               
               return (
                 <div
                   key={dateStr}
-                  className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
-                  } ${!canEdit ? 'cursor-not-allowed opacity-50' : ''}`}
+                  className={`relative p-4 border-2 rounded-lg transition-all ${
+                    approvedLeave
+                      ? `${approvedLeaveDayCardClass} ${canEdit ? 'cursor-default' : 'opacity-90'}`
+                      : isSelected
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 cursor-pointer'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 cursor-pointer'
+                  } ${!canEdit && !approvedLeave ? 'cursor-not-allowed opacity-50' : ''}`}
                   onClick={() => handleDayToggle(dateStr)}
                 >
                   {/* Day Header */}
@@ -291,8 +302,26 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                     </div>
                   )}
 
+                  {/* Approved leave */}
+                  {approvedLeave && (
+                    <div className="space-y-2">
+                      <span className={`badge w-full justify-center gap-1 ${approvedLeaveBadgeClass}`}>
+                        <CalendarDaysIcon className="h-3.5 w-3.5 shrink-0" />
+                        On leave
+                      </span>
+                      <p className="text-xs font-medium text-center text-violet-800 dark:text-violet-200">
+                        {getTimeOffTypeLabel(approvedLeave.request_type)}
+                      </p>
+                      {dayAvailability?.notes?.startsWith('Approved leave') && (
+                        <p className="text-xs text-center text-violet-700/90 dark:text-violet-300/90 line-clamp-2">
+                          {dayAvailability.notes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Availability Status */}
-                  {dayAvailability && (
+                  {!approvedLeave && dayAvailability && (
                     <div className="space-y-2">
                       <Badge 
                         variant={dayAvailability.isAvailable ? 'success' : 'danger'}
@@ -331,7 +360,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                   )}
 
                   {/* Empty State */}
-                  {!dayAvailability && (
+                  {!approvedLeave && !dayAvailability && (
                     <div className="text-center text-neutral-400 dark:text-neutral-500 text-sm">
                       No availability set
                     </div>

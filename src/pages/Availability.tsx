@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -19,6 +19,7 @@ import WeeklyAvailabilitySelector from '@/components/WeeklyAvailabilitySelector'
 import TimeOffRequestForm from '@/components/TimeOffRequestForm'
 import TimeOffRequestList from '@/components/TimeOffRequestList'
 import toast from 'react-hot-toast'
+import { filterApprovedLeave } from '@/utils/timeOff'
 
 const AvailabilityPage: React.FC = () => {
   const { user } = useAuth()
@@ -66,6 +67,11 @@ const AvailabilityPage: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
+  const approvedLeaveRequests = useMemo(
+    () => filterApprovedLeave(timeOffRequests),
+    [timeOffRequests]
+  )
+
   // Fetch staff members (for managers)
   const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery({
     queryKey: ['staff', userHomeId],
@@ -111,9 +117,17 @@ const AvailabilityPage: React.FC = () => {
   // Submit time-off request mutation
   const submitTimeOffMutation = useMutation({
     mutationFn: (data: any) => timeOffApi.create(data),
-    onSuccess: () => {
+    onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
-      toast.success('Time-off request submitted successfully')
+      if (response?.auto_rejected || response?.status === 'denied') {
+        toast.error(
+          response?.message ||
+            response?.denial_reason ||
+            'Request was automatically rejected because you are scheduled on an existing timetable'
+        )
+      } else {
+        toast.success('Time-off request submitted successfully')
+      }
       setActiveTab('requests')
     },
     onError: (error: any) => {
@@ -125,9 +139,9 @@ const AvailabilityPage: React.FC = () => {
   const approveTimeOffMutation = useMutation({
     mutationFn: (requestId: string) => timeOffApi.approve(requestId),
     onSuccess: () => {
-      // Invalidate all time-off request queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
-      toast.success('Time-off request approved')
+      queryClient.invalidateQueries({ queryKey: ['availabilities'] })
+      toast.success('Time-off request approved — availability grid updated')
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to approve request'
@@ -370,6 +384,7 @@ const AvailabilityPage: React.FC = () => {
         <AvailabilityCalendar
           userId={user?.id || ''}
           availabilities={availabilities || []}
+          approvedLeaveRequests={approvedLeaveRequests}
           onSaveAvailability={handleSaveAvailability}
           onDeleteAvailability={handleDeleteAvailability}
           canEdit={true}
@@ -380,6 +395,7 @@ const AvailabilityPage: React.FC = () => {
         <WeeklyAvailabilitySelector
           userId={user?.id || ''}
           availabilities={availabilities || []}
+          approvedLeaveRequests={approvedLeaveRequests}
           onSaveAvailability={handleSaveAvailability}
           onDeleteAvailability={handleDeleteAvailability}
           canEdit={true}

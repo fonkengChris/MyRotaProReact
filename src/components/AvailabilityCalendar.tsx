@@ -4,18 +4,20 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { 
-  CalendarIcon, 
-  ClockIcon,
-  CheckIcon,
+  CalendarIcon,
   XMarkIcon,
-  PlusIcon
+  PlusIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType, formatShiftTypeLabel } from '@/types'
+import { Availability, ShiftType, TimeOffRequest, formatShiftTypeLabel } from '@/types'
+import { getApprovedLeaveForDate, getTimeOffTypeLabel } from '@/utils/timeOff'
+import { approvedLeaveBadgeClass, approvedLeaveSlotClass } from '@/utils/timeOffDisplay'
 import AvailabilityFormModal from './AvailabilityFormModal'
 
 interface AvailabilityCalendarProps {
   userId: string
   availabilities: Availability[]
+  approvedLeaveRequests?: TimeOffRequest[]
   onSaveAvailability: (availability: Partial<Availability>) => Promise<void>
   onDeleteAvailability: (availabilityId: string) => Promise<void>
   canEdit: boolean
@@ -24,6 +26,7 @@ interface AvailabilityCalendarProps {
 const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   userId,
   availabilities,
+  approvedLeaveRequests = [],
   onSaveAvailability,
   onDeleteAvailability,
   canEdit
@@ -84,6 +87,9 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   // Handle adding new availability
   const handleAddAvailability = (date: Date, time: string) => {
+    const dateStr = format(date, 'yyyy-MM-dd')
+    if (getApprovedLeaveForDate(dateStr, approvedLeaveRequests)) return
+
     setSelectedDate(date)
     setIsAddingAvailability(true)
     setEditingAvailability(null)
@@ -181,35 +187,71 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
               {/* Header row with day names */}
               <div className="grid grid-cols-8 gap-1 mb-2">
                 <div className="p-2 font-medium text-neutral-600 text-sm">Time</div>
-                {weekDays.map((day) => (
-                  <div key={day.toISOString()} className="p-2 text-center">
-                    <div className="font-medium text-neutral-950">
-                      {format(day, 'EEE')}
+                {weekDays.map((day) => {
+                  const dateStr = format(day, 'yyyy-MM-dd')
+                  const approvedLeave = getApprovedLeaveForDate(dateStr, approvedLeaveRequests)
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`p-2 text-center rounded-t-md ${
+                        approvedLeave ? 'bg-violet-100 dark:bg-violet-950/50' : ''
+                      }`}
+                    >
+                      <div className={`font-medium ${approvedLeave ? 'text-violet-900 dark:text-violet-100' : 'text-neutral-950 dark:text-neutral-100'}`}>
+                        {format(day, 'EEE')}
+                      </div>
+                      <div className={`text-sm ${approvedLeave ? 'text-violet-700 dark:text-violet-300' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                        {format(day, 'MMM d')}
+                      </div>
+                      {approvedLeave && (
+                        <div className={`mt-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${approvedLeaveBadgeClass}`}>
+                          <CalendarDaysIcon className="h-3 w-3" />
+                          Leave
+                        </div>
+                      )}
                     </div>
-                    <div className="text-sm text-neutral-600">
-                      {format(day, 'MMM d')}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Time slots and availability */}
               {timeSlots.map((time) => (
                 <div key={time} className="grid grid-cols-8 gap-1 mb-1">
                   {/* Time label */}
-                  <div className="p-2 text-sm text-neutral-600 font-mono bg-neutral-100 border-r">
+                  <div className="p-2 text-sm text-neutral-600 dark:text-neutral-400 font-mono bg-neutral-100 dark:bg-neutral-800 border-r dark:border-neutral-700">
                     {time}
                   </div>
 
                   {/* Day columns */}
                   {weekDays.map((day) => {
+                    const dateStr = format(day, 'yyyy-MM-dd')
+                    const approvedLeave = getApprovedLeaveForDate(dateStr, approvedLeaveRequests)
                     const availability = getAvailabilityForSlot(day, time)
                     const isAvailable = isTimeSlotAvailable(day, time)
                     const preferredShiftType = getPreferredShiftType(day, time)
+                    const isLeaveDay = !!approvedLeave
+                    const showLeaveInSlot = isLeaveDay && time === '09:00'
                     
                     return (
-                      <div key={`${day.toISOString()}-${time}`} className="min-h-[60px] border-b border-r relative">
-                        {availability ? (
+                      <div
+                        key={`${day.toISOString()}-${time}`}
+                        className={`min-h-[60px] border-b border-r relative ${
+                          isLeaveDay ? approvedLeaveSlotClass : ''
+                        }`}
+                      >
+                        {showLeaveInSlot ? (
+                          <div className="flex h-full flex-col items-center justify-center gap-1 p-1 text-center">
+                            <span className={`badge text-[10px] px-1.5 py-0.5 ${approvedLeaveBadgeClass}`}>
+                              <CalendarDaysIcon className="h-3 w-3 inline mr-0.5" />
+                              On leave
+                            </span>
+                            <span className="text-[10px] font-medium text-violet-800 dark:text-violet-200 leading-tight">
+                              {getTimeOffTypeLabel(approvedLeave!.request_type)}
+                            </span>
+                          </div>
+                        ) : isLeaveDay ? (
+                          <div className="h-full min-h-[60px]" aria-hidden />
+                        ) : availability ? (
                           // Show existing availability
                           <div className="p-2">
                             <div className="flex items-center justify-between mb-1">
