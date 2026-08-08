@@ -6,6 +6,7 @@ import { Service, Home } from '@/types'
 import { servicesApi, homesApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import PageHeader from '@/components/common/PageHeader'
 
 const Services: React.FC = () => {
   const [services, setServices] = useState<Service[]>([])
@@ -85,10 +86,10 @@ const Services: React.FC = () => {
 
   const getPriorityBadge = (priority: string) => {
     const priorityMap: Record<string, { label: string; className: string }> = {
-      low: { label: 'Low', className: 'bg-green-100 text-green-800' },
-      medium: { label: 'Medium', className: 'bg-yellow-100 text-yellow-800' },
-      high: { label: 'High', className: 'bg-orange-100 text-orange-800' },
-      critical: { label: 'Critical', className: 'bg-red-100 text-red-800' }
+      low: { label: 'Low', className: 'bg-success-100 text-success-800' },
+      medium: { label: 'Medium', className: 'bg-warning-100 text-warning-800' },
+      high: { label: 'High', className: 'bg-accent-100 text-accent-800' },
+      critical: { label: 'Critical', className: 'bg-danger-100 text-danger-800' }
     }
     const config = priorityMap[priority] || { label: priority, className: 'bg-neutral-200 text-neutral-900' }
     
@@ -109,16 +110,16 @@ const Services: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-heading-accent">Services</h1>
-          <p className="text-neutral-700">Manage care services for your homes</p>
-        </div>
-        <Button onClick={handleCreateService}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
-      </div>
+      <PageHeader
+        title="Services"
+        subtitle="Manage care services for your homes"
+        actions={
+          <Button onClick={handleCreateService}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Service
+          </Button>
+        }
+      />
 
       <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-neutral-200 dark:border-neutral-700">
         <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
@@ -212,7 +213,7 @@ const Services: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">
                       {service.duration_hours}h
                       {service.is_24_hour && (
-                        <span className="ml-1 text-xs text-blue-600">(24h)</span>
+                        <span className="ml-1 text-xs text-primary-600">(24h)</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -220,9 +221,9 @@ const Services: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        service.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                        service.is_active
+                          ? 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300'
+                          : 'bg-danger-100 text-danger-800 dark:bg-danger-900/20 dark:text-danger-300'
                       }`}>
                         {service.is_active ? 'Active' : 'Inactive'}
                       </span>

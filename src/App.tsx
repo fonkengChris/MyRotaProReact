@@ -20,6 +20,7 @@ import ShiftSwaps from '@/pages/ShiftSwaps'
 import Timetables from '@/pages/Timetables'
 import UserTimetables from '@/pages/UserTimetables'
 import Messages from '@/pages/Messages'
+import ThemeShowcase from '@/pages/ThemeShowcase'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Route path="/setup" element={<Setup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/theme" element={<ThemeShowcase />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ThemeProvider>
@@ -66,6 +68,7 @@ function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/theme" element={<ThemeShowcase />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>

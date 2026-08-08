@@ -14,6 +14,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { shiftsApi, homesApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
+import PageHeader from '@/components/common/PageHeader'
+import WeekNavigator from '@/components/common/WeekNavigator'
 import ShiftSelectionModal from '@/components/ShiftSelectionModal'
 import { Shift } from '@/types'
 import toast from 'react-hot-toast'
@@ -160,22 +162,10 @@ const ShiftSelection: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-heading-accent">Shift Selection</h1>
-          <p className="text-neutral-700 dark:text-neutral-400 mt-1">
-            Select additional shifts that fit your schedule
-          </p>
-        </div>
-        
-        <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToCurrentWeek}
-          >
-            Current Week
-          </Button>
+      <PageHeader
+        title="Shift Selection"
+        subtitle="Select additional shifts that fit your schedule"
+        actions={
           <Button
             variant="outline"
             size="sm"
@@ -185,46 +175,24 @@ const ShiftSelection: React.FC = () => {
             <ArrowPathIcon className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Week Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousWeek}
-            >
-              ← Previous Week
-            </Button>
-
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-heading-accent">
-                Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-              </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextWeek}
-            >
-              Next Week →
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <WeekNavigator
+        weekStart={currentWeekStart}
+        weekEnd={currentWeekEnd}
+        onPrev={goToPreviousWeek}
+        onNext={goToNextWeek}
+        onToday={goToCurrentWeek}
+        subLabel={`${format(currentWeekStart, 'EEEE, MMMM d')} to ${format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}`}
+      />
 
       {/* Current Shifts Summary */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <CheckCircleIcon className="h-5 w-5 text-green-600" />
+            <CheckCircleIcon className="h-5 w-5 text-success-600" />
             <span>Your Current Shifts</span>
           </CardTitle>
           <CardDescription>
@@ -247,16 +215,16 @@ const ShiftSelection: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">{userShifts.length}</p>
+                <div className="text-center p-4 bg-success-50 dark:bg-success-900/20 rounded-lg">
+                  <p className="text-2xl font-bold text-success-600">{userShifts.length}</p>
                   <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Shifts</p>
                 </div>
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{totalHours.toFixed(1)}h</p>
+                <div className="text-center p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                  <p className="text-2xl font-bold text-primary-600">{totalHours.toFixed(1)}h</p>
                   <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Hours</p>
                 </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-purple-600">
+                <div className="text-center p-4 bg-secondary-100 dark:bg-secondary-900/20 rounded-lg">
+                  <p className="text-2xl font-bold text-secondary-600 dark:text-secondary-300">
                     {(totalHours / userShifts.length).toFixed(1)}h
                   </p>
                   <p className="text-sm text-neutral-700 dark:text-neutral-400">Avg per Shift</p>
@@ -295,7 +263,7 @@ const ShiftSelection: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <BellIcon className="h-5 w-5 text-blue-600" />
+            <BellIcon className="h-5 w-5 text-primary-600" />
             <span>Available Shifts</span>
           </CardTitle>
           <CardDescription>

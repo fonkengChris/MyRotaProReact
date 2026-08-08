@@ -266,7 +266,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
     <div className="space-y-4">
       {/* Action buttons for week management */}
       {canEdit && shifts.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-neutral-100 rounded-lg border">
+        <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-border/70">
           <div className="flex items-center space-x-2">
             <h3 className="text-lg font-medium text-neutral-950">Week Actions</h3>
             <Badge variant="primary" className="text-xs">
@@ -315,25 +315,28 @@ const RotaGrid: React.FC<RotaGridProps> = ({
       <div className="overflow-x-auto">
         <div className="min-w-[1200px]">
           {/* Header row with day names */}
-          <div className="grid grid-cols-8 gap-1 mb-2">
+          <div className="grid grid-cols-8 gap-1 mb-2 rounded-lg bg-muted border border-border/70">
             <div className="p-2 font-medium text-neutral-600 text-sm">Time</div>
-            {weekDays.map((day) => (
-              <div key={day.toISOString()} className="p-2 text-center">
-                <div className="font-medium text-neutral-950">
-                  {format(day, 'EEE')}
+            {weekDays.map((day) => {
+              const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+              return (
+                <div key={day.toISOString()} className="p-2 text-center">
+                  <div className={`font-medium ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-950 dark:text-neutral-100'}`}>
+                    {format(day, 'EEE')}
+                  </div>
+                  <div className={`text-sm ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                    {format(day, 'MMM d')}
+                  </div>
                 </div>
-                <div className="text-sm text-neutral-600">
-                  {format(day, 'MMM d')}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Time slots and shifts */}
           {timeSlots.map((time) => (
             <div key={time} className="grid grid-cols-8 gap-1 mb-1">
               {/* Time label */}
-              <div className="p-2 text-sm text-neutral-600 font-mono bg-neutral-100 border-r">
+              <div className="p-2 text-sm text-neutral-600 dark:text-neutral-400 font-mono bg-muted border-r border-border/70">
                 {time}
               </div>
 
@@ -391,17 +394,17 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                           return (
                             <div
                               key={shift.id}
-                              className={`rounded p-2 text-xs ${
+                              className={`rounded-lg p-2 text-xs shadow-sm ${
                                 hasShiftConflicts(shift.id)
-                                  ? 'bg-red-50 border-2 border-red-300'
-                                  : 'bg-primary-50 border border-primary-200'
+                                  ? 'bg-danger-50 border border-danger-300 border-l-4 border-l-danger-500 dark:bg-danger-950/30'
+                                  : 'bg-primary-50 border border-primary-200 border-l-4 border-l-primary-500 dark:bg-primary-950/30 dark:border-primary-900'
                               }`}
                             >
                               {/* Shift header */}
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center space-x-1">
                                   <ClockIcon className="h-3 w-3 text-primary-600" />
-                                  <span className="font-medium text-primary-900">
+                                  <span className="font-mono tabular-nums font-medium text-primary-900 dark:text-primary-200">
                                     {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                   </span>
                                   {hasShiftConflicts(shift.id) && (

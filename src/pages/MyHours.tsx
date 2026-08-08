@@ -3,14 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import { 
-  ClockIcon, 
+import {
+  ClockIcon,
   CurrencyDollarIcon,
   CalendarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ExclamationTriangleIcon,
   MoonIcon,
 } from '@heroicons/react/24/outline'
@@ -18,6 +15,9 @@ import { shiftsApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
+import PageHeader from '@/components/common/PageHeader'
+import WeekNavigator from '@/components/common/WeekNavigator'
+import KpiTile from '@/components/common/KpiTile'
 
 interface PaidHoursData {
   rosteredHours: number
@@ -120,8 +120,8 @@ const MyHours: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Hours</h3>
-          <p className="text-sm text-red-600 mb-4">
+          <h3 className="text-lg font-medium text-danger-900 dark:text-danger-300 mb-2">Error Loading Hours</h3>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">
             There was an error loading your hours data.
           </p>
           <p className="text-sm text-neutral-600">
@@ -143,133 +143,50 @@ const MyHours: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-heading-accent">My Paid Hours</h1>
-          <p className="text-neutral-700 mt-1">
-            Sleeping-night shifts: 8h sleep-in is excluded from paid work; breaks apply to paid hours only.
-          </p>
-        </div>
-        
-        <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToCurrentWeek}
-          >
-            Current Week
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="My Paid Hours"
+        subtitle="Sleeping-night shifts: 8h sleep-in is excluded from paid work; breaks apply to paid hours only."
+      />
 
       {/* Week Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousWeek}
-            >
-              <ChevronLeftIcon className="h-4 w-4 mr-1" />
-              Previous Week
-            </Button>
-
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-heading-accent">
-                Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-              </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                {format(weekStart, 'EEEE, MMMM d')} to {format(weekEnd, 'EEEE, MMMM d, yyyy')}
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextWeek}
-            >
-              Next Week
-              <ChevronRightIcon className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <WeekNavigator
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+        onPrev={goToPreviousWeek}
+        onNext={goToNextWeek}
+        onToday={goToCurrentWeek}
+        subLabel={`${format(weekStart, 'EEEE, MMMM d')} to ${format(weekEnd, 'EEEE, MMMM d, yyyy')}`}
+      />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ClockIcon className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Rostered hours</p>
-                <p className="text-2xl font-semibold text-neutral-950 dark:text-neutral-100">
-                  {paidHoursData.rosteredHours.toFixed(1)}h
-                </p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-1">
-                  Total time on shift (incl. sleep-in)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <MoonIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Sleep-in hours</p>
-                <p className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
-                  {paidHoursData.totalSleepInHours.toFixed(1)}h
-                </p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-1">
-                  From sleeping-night shifts (not paid as work)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Paid hours</p>
-                <p className="text-2xl font-semibold text-green-600">
-                  {paidHoursData.paidHours.toFixed(1)}h
-                </p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-1">
-                  After sleep-in split &amp; breaks
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-8 w-8 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Break deductions</p>
-                <p className="text-2xl font-semibold text-orange-600">
-                  -{paidHoursData.breakDeductions.toFixed(1)}h
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+        <KpiTile
+          icon={ClockIcon}
+          tone="primary"
+          label="Rostered hours"
+          value={`${paidHoursData.rosteredHours.toFixed(1)}h`}
+          caption="Total time on shift (incl. sleep-in)"
+        />
+        <KpiTile
+          icon={MoonIcon}
+          tone="secondary"
+          label="Sleep-in hours"
+          value={`${paidHoursData.totalSleepInHours.toFixed(1)}h`}
+          caption="From sleeping-night shifts (not paid as work)"
+        />
+        <KpiTile
+          icon={CurrencyDollarIcon}
+          tone="success"
+          label="Paid hours"
+          value={`${paidHoursData.paidHours.toFixed(1)}h`}
+          caption="After sleep-in split & breaks"
+        />
+        <KpiTile
+          icon={ExclamationTriangleIcon}
+          tone="warning"
+          label="Break deductions"
+          value={`-${paidHoursData.breakDeductions.toFixed(1)}h`}
+        />
       </div>
 
       {/* Break Deduction Rules Info */}
@@ -326,8 +243,8 @@ const MyHours: React.FC = () => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <CalendarIcon className="h-5 w-5 text-blue-600" />
+                      <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
+                        <CalendarIcon className="h-5 w-5 text-primary-600" />
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-neutral-950">
@@ -351,7 +268,7 @@ const MyHours: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep-in</p>
-                          <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
+                          <p className="text-lg font-semibold text-secondary-700 dark:text-secondary-300">
                             {shift.sleepInHours.toFixed(1)}h
                           </p>
                         </div>
@@ -365,15 +282,15 @@ const MyHours: React.FC = () => {
                         )}
                         {shift.breakDeduction > 0 && (
                           <div>
-                            <p className="text-sm text-orange-500">Break Deduction</p>
-                            <p className="text-lg font-semibold text-orange-600">
+                            <p className="text-sm text-warning-500">Break Deduction</p>
+                            <p className="text-lg font-semibold text-warning-600">
                               -{shift.breakDeduction}h
                             </p>
                           </div>
                         )}
                         <div>
-                          <p className="text-sm text-green-500">Paid Hours</p>
-                          <p className="text-xl font-bold text-green-600">
+                          <p className="text-sm text-success-500">Paid Hours</p>
+                          <p className="text-xl font-bold text-success-600">
                             {shift.paidHours}h
                           </p>
                         </div>
@@ -382,8 +299,8 @@ const MyHours: React.FC = () => {
                   </div>
                   
                   {shift.breakDeduction > 0 && (
-                    <div className="bg-orange-50 border border-orange-200 rounded p-3">
-                      <p className="text-sm text-orange-800">
+                    <div className="bg-warning-50 border border-warning-200 dark:bg-warning-900/20 dark:border-warning-800 rounded p-3">
+                      <p className="text-sm text-warning-800 dark:text-warning-300">
                         <ExclamationTriangleIcon className="h-4 w-4 inline mr-1" />
                         {shift.deductionReason}
                       </p>

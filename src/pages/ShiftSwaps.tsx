@@ -335,8 +335,8 @@ const ShiftSwaps: React.FC = () => {
                     </div>
                     
                     {swap.requester_message && (
-                      <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
-                        <p className="text-sm text-blue-800">{swap.requester_message}</p>
+                      <div className="mb-3 p-3 bg-primary-50 rounded border border-primary-200">
+                        <p className="text-sm text-primary-800">{swap.requester_message}</p>
                       </div>
                     )}
                     
@@ -423,8 +423,8 @@ const ShiftSwaps: React.FC = () => {
                     </div>
                     
                     {swap.requester_message && (
-                      <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
-                        <p className="text-sm text-blue-800">{swap.requester_message}</p>
+                      <div className="mb-3 p-3 bg-primary-50 rounded border border-primary-200">
+                        <p className="text-sm text-primary-800">{swap.requester_message}</p>
                       </div>
                     )}
                     
@@ -472,7 +472,7 @@ const ShiftSwaps: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <UserIcon className="h-5 w-5 text-blue-600" />
+              <UserIcon className="h-5 w-5 text-primary-600" />
               <span>Received Requests</span>
             </CardTitle>
             <CardDescription>
@@ -508,8 +508,8 @@ const ShiftSwaps: React.FC = () => {
                     </div>
                     
                     {swap.requester_message && (
-                      <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
-                        <p className="text-sm text-blue-800">{swap.requester_message}</p>
+                      <div className="mb-3 p-3 bg-primary-50 rounded border border-primary-200">
+                        <p className="text-sm text-primary-800">{swap.requester_message}</p>
                       </div>
                     )}
                     
@@ -595,8 +595,8 @@ const ShiftSwaps: React.FC = () => {
                     </div>
                     
                     {swap.requester_message && (
-                      <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
-                        <p className="text-sm text-blue-800">{swap.requester_message}</p>
+                      <div className="mb-3 p-3 bg-primary-50 rounded border border-primary-200">
+                        <p className="text-sm text-primary-800">{swap.requester_message}</p>
                       </div>
                     )}
                     

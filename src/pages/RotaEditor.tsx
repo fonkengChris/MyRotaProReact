@@ -13,7 +13,8 @@ import {
   CogIcon,
   EyeIcon,
   DocumentArrowUpIcon,
-  CalendarIcon
+  CalendarIcon,
+  BuildingOffice2Icon
 } from '@heroicons/react/24/outline'
 import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi, weeklySchedulesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
@@ -633,22 +634,13 @@ const RotaEditor: React.FC = () => {
         </div>
         
         {permissions.canManageRotas && (
-          <div className="mt-4 sm:mt-0 flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToCurrentWeek}
-            >
-              Current Week
-            </Button>
+          <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate('/weekly-schedules')}
             >
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <CalendarIcon className="h-4 w-4 mr-2" />
               Weekly Schedules
             </Button>
             <Button
@@ -656,6 +648,7 @@ const RotaEditor: React.FC = () => {
               size="sm"
               onClick={handleAIGenerate}
               disabled={!permissions.canUseAISolver}
+              title="Generates a rota for the selected week"
             >
               <CogIcon className="h-4 w-4 mr-2" />
               AI Generate
@@ -669,29 +662,22 @@ const RotaEditor: React.FC = () => {
                 Multi-Home AI
               </Button>
             )}
-            <p className="text-xs text-neutral-600 mt-1">
-              Generates rota for current week
-            </p>
           </div>
         )}
       </div>
 
-      {/* Home Selector - Only show when homes are loaded */}
+      {/* Toolbar: home selector + week navigation (sticky, stays visible over the grid) */}
       {!homesLoading && homes && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Care Home</CardTitle>
-            <CardDescription>
-              Choose a care home to view and manage its weekly schedule
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
+        <Card className="sticky top-16 z-30 bg-card/95 backdrop-blur-sm">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              {/* Home selector */}
+              <div className="flex items-center gap-2 lg:min-w-[18rem] lg:max-w-sm lg:flex-1">
+                <BuildingOffice2Icon className="h-5 w-5 shrink-0 text-neutral-500" />
                 <select
                   value={selectedHomeId}
                   onChange={(e) => setSelectedHomeId(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900 transition-colors dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-primary-400"
                   disabled={homes.length === 0}
                 >
                   <option value="">Select a care home...</option>
@@ -702,9 +688,24 @@ const RotaEditor: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Week navigation - only when a valid home is selected */}
               {isValidHomeId && (
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  {homes.find(h => h.id === selectedHomeId)?.name}
+                <div className="flex items-center justify-between gap-2 lg:justify-end">
+                  <Button variant="outline" size="sm" onClick={goToPreviousWeek} aria-label="Previous week">
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-[8.5rem] text-center">
+                    <p className="text-sm font-semibold text-heading-accent">
+                      {format(currentWeekStart, 'MMM d')} – {format(currentWeekEnd, 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={goToNextWeek} aria-label="Next week">
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={goToCurrentWeek}>
+                    This week
+                  </Button>
                 </div>
               )}
             </div>
@@ -781,42 +782,6 @@ const RotaEditor: React.FC = () => {
         />
       )}
 
-      {/* Week Navigation - Only show when home is selected */}
-      {isValidHomeId && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPreviousWeek}
-              >
-                <ChevronLeftIcon className="h-4 w-4 mr-1" />
-                Previous Week
-              </Button>
-
-              <div className="text-center">
-                <h2 className="text-lg font-semibold text-heading-accent">
-                  Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-                </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
-                </p>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextWeek}
-              >
-                Next Week
-                <ChevronRightIcon className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      )}
-
       {/* Scheduling Conflicts Alert - Only show when home is selected */}
       {isValidHomeId && conflicts && conflicts.totalConflicts > 0 && (
         <ConflictAlert
@@ -870,19 +835,19 @@ const RotaEditor: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-neutral-100 rounded-lg">
-                <p className="text-2xl font-bold text-primary-600">{weekRota.total_shifts}</p>
-                <p className="text-sm text-neutral-700">Total Shifts</p>
+              <div className="p-4 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl border-l-4 border-l-primary-500">
+                <p className="text-2xl font-bold font-mono tabular-nums text-primary-600 dark:text-primary-400">{weekRota.total_shifts}</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Shifts</p>
               </div>
-              <div className="text-center p-4 bg-neutral-100 rounded-lg">
-                <p className="text-2xl font-bold text-success-600">{weekRota.total_hours}</p>
-                <p className="text-sm text-neutral-700">Total Hours</p>
+              <div className="p-4 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl border-l-4 border-l-success-500">
+                <p className="text-2xl font-bold font-mono tabular-nums text-success-600 dark:text-success-400">{weekRota.total_hours}</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Hours</p>
               </div>
-              <div className="text-center p-4 bg-neutral-100 rounded-lg">
-                <p className="text-2xl font-bold text-secondary-600">
+              <div className="p-4 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl border-l-4 border-l-secondary-400">
+                <p className="text-2xl font-bold font-mono tabular-nums text-secondary-600 dark:text-secondary-300">
                   {format(new Date(weekRota.created_at), 'MMM d')}
                 </p>
-                <p className="text-sm text-neutral-700">Created</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Created</p>
               </div>
             </div>
           </CardContent>
@@ -1006,36 +971,36 @@ const RotaEditor: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary-600">0</p>
-                <p className="text-sm text-neutral-700">Shifts Today</p>
+              <div className="border-l-4 border-l-primary-500 pl-3">
+                <p className="text-2xl font-bold font-mono tabular-nums text-primary-600 dark:text-primary-400">0</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Shifts Today</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-success-600">0</p>
-                <p className="text-sm text-neutral-700">Staff Available</p>
+              <div className="border-l-4 border-l-success-500 pl-3">
+                <p className="text-2xl font-bold font-mono tabular-nums text-success-600 dark:text-success-400">0</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Staff Available</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-warning-600">0</p>
-                <p className="text-sm text-neutral-700">Pending Requests</p>
+              <div className="border-l-4 border-l-warning-500 pl-3">
+                <p className="text-2xl font-bold font-mono tabular-nums text-warning-600 dark:text-warning-400">0</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Pending Requests</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-secondary-600">0</p>
-                <p className="text-sm text-neutral-700">Total Hours</p>
+              <div className="border-l-4 border-l-secondary-400 pl-3">
+                <p className="text-2xl font-bold font-mono tabular-nums text-secondary-600 dark:text-secondary-300">0</p>
+                <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Hours</p>
               </div>
             </CardContent>
           </Card>

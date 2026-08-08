@@ -205,8 +205,8 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
   // Get shift type color
   const getShiftTypeColor = (shiftType: ShiftType) => {
     switch (shiftType) {
-      case 'morning': return 'bg-blue-100 text-blue-800 dark:bg-cyan-900/30 dark:text-white'
-      case 'day': return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200'
+      case 'morning': return 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-white'
+      case 'day': return 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200'
       case 'afternoon': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'evening': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
       case 'night-wake':

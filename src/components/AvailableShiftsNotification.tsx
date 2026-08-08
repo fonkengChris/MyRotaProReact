@@ -79,17 +79,17 @@ const AvailableShiftsNotification: React.FC = () => {
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
-            <BellIcon className="h-5 w-5 text-blue-600" />
+            <BellIcon className="h-5 w-5 text-primary-600" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-blue-900">
+            <h3 className="text-sm font-medium text-primary-900">
               New Shifts Available!
             </h3>
-            <p className="text-sm text-blue-700 mt-1">
+            <p className="text-sm text-primary-700 mt-1">
               {availableShifts.length} shift{availableShifts.length !== 1 ? 's' : ''} are available for selection this week.
             </p>
             <div className="mt-2 flex space-x-2">
@@ -112,7 +112,7 @@ const AvailableShiftsNotification: React.FC = () => {
         </div>
         <button
           onClick={() => setIsDismissed(true)}
-          className="flex-shrink-0 text-blue-400 hover:text-blue-600"
+          className="flex-shrink-0 text-primary-400 hover:text-primary-600"
         >
           <XMarkIcon className="h-4 w-4" />
         </button>

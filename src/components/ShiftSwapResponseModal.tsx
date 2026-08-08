@@ -217,9 +217,9 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
               <div className="space-y-6">
                 {/* Requester Message */}
                 {swapRequest.requester_message && (
-                  <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
-                    <h3 className="font-medium text-blue-900 dark:text-white mb-2">Message from {getRequesterName()}</h3>
-                    <p className="text-blue-800 dark:text-white text-sm">{swapRequest.requester_message}</p>
+                  <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+                    <h3 className="font-medium text-primary-900 dark:text-white mb-2">Message from {getRequesterName()}</h3>
+                    <p className="text-primary-800 dark:text-white text-sm">{swapRequest.requester_message}</p>
                   </div>
                 )}
 
@@ -256,28 +256,28 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   </div>
 
                   {/* Requester's Shift */}
-                <div className="p-4 bg-blue-50 dark:bg-cyan-900/20 rounded-lg border border-blue-200 dark:border-cyan-800">
-                    <h3 className="font-medium text-blue-900 mb-3 flex items-center">
+                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+                    <h3 className="font-medium text-primary-900 mb-3 flex items-center">
                       <ArrowPathIcon className="h-4 w-4 mr-2" />
                       {getRequesterName()}'s Shift
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-blue-600" />
+                        <ClockIcon className="h-4 w-4 text-primary-600" />
                         <span className="font-medium">{formatShiftDate(requesterShift.date)}</span>
                       </div>
-                      <div className="text-blue-800 dark:text-white font-semibold">
+                      <div className="text-primary-800 dark:text-white font-semibold">
                         {formatShiftTime(requesterShift.start_time, requesterShift.end_time)}
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="primary" className="text-xs">
                           {requesterShift.shift_type}
                         </Badge>
-                        <span className="text-blue-600 dark:text-white">
+                        <span className="text-primary-600 dark:text-white">
                           {getShiftDuration(requesterShift.start_time, requesterShift.end_time).toFixed(1)}h
                         </span>
                       </div>
-                      <div className="text-blue-600 dark:text-white">
+                      <div className="text-primary-600 dark:text-white">
                         {typeof requesterShift.home_id === 'string' 
                           ? requesterShift.home_id
                           : requesterShift.home_id.name}

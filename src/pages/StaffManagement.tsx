@@ -20,6 +20,7 @@ import {
 import { usersApi, homesApi } from '@/lib/api'
 import { User, UserRole, Home, extractHomeId, formatShiftTypeLabel } from '@/types'
 import toast from 'react-hot-toast'
+import PageHeader from '@/components/common/PageHeader'
 
 const StaffManagement: React.FC = () => {
   const { user: currentUser } = useAuth()
@@ -321,14 +322,10 @@ const StaffManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading-accent font-display">Staff Management</h1>
-          <p className="text-neutral-600 mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
-            Manage staff members, roles, and permissions
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Staff Management"
+        subtitle="Manage staff members, roles, and permissions"
+      />
 
       {/* Filters and Search */}
       <Card>
@@ -551,13 +548,13 @@ const StaffManagement: React.FC = () => {
                           {getUserHomes(member).map((userHome) => (
                             <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-3 rounded-md border-l-4 ${
                               userHome.is_default 
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400' 
                                 : 'bg-green-50 dark:bg-green-900/20 border-green-400'
                             }`}>
                               <div className="flex items-center space-x-2">
                                 <HomeIcon className={`h-4 w-4 ${
                                   userHome.is_default 
-                                    ? 'text-blue-500 dark:text-white' 
+                                    ? 'text-primary-500 dark:text-white' 
                                     : 'text-green-500 dark:text-green-400'
                                 }`} />
                                 <span className="text-sm text-neutral-950 dark:text-neutral-100">
@@ -722,13 +719,13 @@ const StaffManagement: React.FC = () => {
                       {getUserHomes(member).map((userHome) => (
                         <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-2 rounded-md border-l-4 ${
                           userHome.is_default 
-                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                            ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400' 
                             : 'bg-green-50 dark:bg-green-900/20 border-green-400'
                         }`}>
                           <div className="flex items-center space-x-2">
                             <HomeIcon className={`h-3 w-3 ${
                               userHome.is_default 
-                                ? 'text-blue-500 dark:text-white' 
+                                ? 'text-primary-500 dark:text-white' 
                                 : 'text-green-500 dark:text-green-400'
                             }`} />
                             <span className="text-xs text-neutral-950 dark:text-neutral-100">
@@ -818,13 +815,13 @@ const StaffManagement: React.FC = () => {
                 {getUserHomes(selectedUserForHomeAllocation).map((userHome) => (
                   <div key={typeof userHome.home_id === 'string' ? userHome.home_id : String(userHome.home_id)} className={`flex items-center justify-between p-3 rounded-md border-l-4 ${
                     userHome.is_default 
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400' 
+                      ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400' 
                       : 'bg-green-50 dark:bg-green-900/20 border-green-400'
                   }`}>
                     <div className="flex items-center space-x-2">
                       <HomeIcon className={`h-4 w-4 ${
                         userHome.is_default 
-                          ? 'text-blue-500 dark:text-white' 
+                          ? 'text-primary-500 dark:text-white' 
                           : 'text-green-500 dark:text-green-400'
                       }`} />
                       <span className="text-sm text-neutral-950 dark:text-neutral-100">{userHome.name}</span>

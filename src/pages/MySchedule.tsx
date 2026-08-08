@@ -2,16 +2,15 @@ import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon,
+import {
   CalendarIcon,
   ClockIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline'
+import PageHeader from '@/components/common/PageHeader'
+import WeekNavigator from '@/components/common/WeekNavigator'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { extractUserDefaultHomeId, Shift, extractServiceId, formatShiftTypeLabel } from '@/types'
@@ -154,62 +153,21 @@ const MySchedule: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Week Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-heading-accent">My Schedule</h1>
-          <p className="text-neutral-700 mt-1">
-            View your weekly work schedule and assigned shifts
-          </p>
-        </div>
-        
-        <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToCurrentWeek}
-          >
-            Current Week
-          </Button>
-        </div>
-      </div>
-
-      {/* Home Info */}
-      {/* Home Info */}
+      {/* Header */}
+      <PageHeader
+        title="My Schedule"
+        subtitle="View your weekly work schedule and assigned shifts"
+      />
 
       {/* Week Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousWeek}
-            >
-              <ChevronLeftIcon className="h-4 w-4 mr-1" />
-              Previous Week
-            </Button>
-
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-heading-accent">
-                Week of {format(currentWeekStart, 'MMM d')} - {format(currentWeekEnd, 'MMM d, yyyy')}
-              </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                {format(currentWeekStart, 'EEEE, MMMM d')} to {format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextWeek}
-            >
-              Next Week
-              <ChevronRightIcon className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <WeekNavigator
+        weekStart={currentWeekStart}
+        weekEnd={currentWeekEnd}
+        onPrev={goToPreviousWeek}
+        onNext={goToNextWeek}
+        onToday={goToCurrentWeek}
+        subLabel={`${format(currentWeekStart, 'EEEE, MMMM d')} to ${format(currentWeekEnd, 'EEEE, MMMM d, yyyy')}`}
+      />
 
       {/* Weekly Schedule Grid */}
       <Card className="overflow-hidden">

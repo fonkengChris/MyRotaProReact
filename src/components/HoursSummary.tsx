@@ -192,8 +192,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Hours</h3>
-          <p className="text-sm text-red-600 mb-4">
+          <h3 className="text-lg font-medium text-danger-900 dark:text-danger-300 mb-2">Error Loading Hours</h3>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">
             There was an error loading your hours data.
           </p>
           <p className="text-sm text-neutral-600">
@@ -386,7 +386,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ClockIcon className="h-8 w-8 text-blue-600" />
+                <ClockIcon className="h-8 w-8 text-primary-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-neutral-600">
@@ -404,13 +404,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <MoonIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                <MoonIcon className="h-8 w-8 text-secondary-600 dark:text-secondary-400" />
               </div>
               <div className="ml-4 min-w-0">
                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                   {isAdminView ? 'Sleep-in hours' : 'My sleep-in hours'}
                 </p>
-                <p className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
+                <p className="text-2xl font-semibold text-secondary-700 dark:text-secondary-300">
                   {totalSleepInHours.toFixed(1)}h
                 </p>
                 <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-0.5">
@@ -425,13 +425,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ClockIcon className="h-8 w-8 text-green-600" />
+                <ClockIcon className="h-8 w-8 text-success-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Paid Hours' : 'My Paid Hours'}
                 </p>
-                <p className="text-2xl font-semibold text-green-600">
+                <p className="text-2xl font-semibold text-success-600">
                   {totalPaidHours.toFixed(1)}h
                 </p>
               </div>
@@ -443,13 +443,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <CalendarIcon className="h-8 w-8 text-orange-600" />
+                <CalendarIcon className="h-8 w-8 text-warning-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-neutral-600">
                   {isAdminView ? 'Break Deductions' : 'My Break Deductions'}
                 </p>
-                <p className="text-2xl font-semibold text-orange-600">
+                <p className="text-2xl font-semibold text-warning-600">
                   -{totalBreakDeductions.toFixed(1)}h
                 </p>
               </div>
@@ -524,21 +524,21 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                         </div>
                         <div>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep-in</p>
-                          <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
+                          <p className="text-lg font-semibold text-secondary-700 dark:text-secondary-300">
                             {userHour.sleepInHours.toFixed(1)}h
                           </p>
                         </div>
                         {userHour.breakDeductions > 0 && (
                           <div>
-                            <p className="text-sm text-orange-500">Break</p>
-                            <p className="text-lg font-semibold text-orange-600">
+                            <p className="text-sm text-warning-500">Break</p>
+                            <p className="text-lg font-semibold text-warning-600">
                               -{userHour.breakDeductions.toFixed(1)}h
                             </p>
                           </div>
                         )}
                         <div>
-                          <p className="text-sm text-green-500">Paid</p>
-                          <p className="text-xl font-bold text-green-600">
+                          <p className="text-sm text-success-500">Paid</p>
+                          <p className="text-xl font-bold text-success-600">
                             {userHour.paidHours.toFixed(1)}h
                           </p>
                         </div>
@@ -578,7 +578,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                   {br.duration_hours.toFixed(1)}h rostered
                                 </p>
                                 {shift.shift_type === 'night-sleep' && (
-                                  <p className="text-indigo-700 dark:text-indigo-300 text-xs">
+                                  <p className="text-secondary-700 dark:text-secondary-300 text-xs">
                                     {br.sleep_in_hours.toFixed(1)}h sleep-in
                                   </p>
                                 )}

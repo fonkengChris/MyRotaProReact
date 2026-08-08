@@ -8,6 +8,7 @@ import { homesApi, servicesApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
+import PageHeader from '@/components/common/PageHeader'
 
 const Homes: React.FC = () => {
   const { user: currentUser } = useAuth()
@@ -128,16 +129,16 @@ const Homes: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-heading-accent">Homes</h1>
-          <p className="text-neutral-700 dark:text-neutral-400">Manage care homes and their settings</p>
-        </div>
-        <Button onClick={handleCreateHome}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add Home
-        </Button>
-      </div>
+      <PageHeader
+        title="Homes"
+        subtitle="Manage care homes and their settings"
+        actions={
+          <Button onClick={handleCreateHome}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Home
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {homes.length === 0 ? (
@@ -160,7 +161,7 @@ const Homes: React.FC = () => {
           homes.map((home) => (
             <div key={home.id} className="bg-gradient-to-br from-white to-neutral-100 dark:from-neutral-800 dark:to-neutral-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-neutral-300 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 group">
               {/* Colored header bar */}
-              <div className={`h-1 w-full ${home.is_active ? 'bg-gradient-to-r from-green-400 to-blue-500' : 'bg-gradient-to-r from-red-400 to-orange-500'}`}></div>
+              <div className={`h-1 w-full ${home.is_active ? 'bg-gradient-to-r from-success-400 to-primary-500' : 'bg-gradient-to-r from-danger-400 to-warning-500'}`}></div>
               <div className="p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                   <div className="flex-1 min-w-0">
@@ -176,11 +177,11 @@ const Homes: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="p-2 min-w-0 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20 dark:hover:border-blue-700 transition-colors"
+                      className="p-2 min-w-0 hover:bg-primary-50 hover:border-primary-300 dark:hover:bg-primary-900/20 dark:hover:border-primary-700 transition-colors"
                       onClick={() => handleWeeklySchedule(home)}
                       title="Weekly Schedule"
                     >
-                      <CalendarIcon className="h-4 w-4 text-blue-600 dark:text-white" />
+                      <CalendarIcon className="h-4 w-4 text-primary-600 dark:text-white" />
                     </Button>
                     <Button
                       variant="outline"
@@ -205,7 +206,7 @@ const Homes: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="flex items-center text-sm text-neutral-700 dark:text-neutral-400">
-                    <UsersIcon className="h-4 w-4 mr-2 text-blue-500 dark:text-white" />
+                    <UsersIcon className="h-4 w-4 mr-2 text-primary-500 dark:text-white" />
                     <span>Capacity: {home.capacity} residents</span>
                   </div>
 
@@ -233,8 +234,8 @@ const Homes: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       home.is_active 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' 
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                        ? 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300'
+                        : 'bg-danger-100 text-danger-800 dark:bg-danger-900/20 dark:text-danger-300'
                     }`}>
                       {home.is_active ? 'Active' : 'Inactive'}
                     </span>
