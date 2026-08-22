@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
+import {
+  isPushSupported,
+  notificationPermission,
+  isPushSubscribed,
+  enablePushNotifications,
+  disablePushNotifications,
+} from '@/lib/push'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -42,6 +49,40 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile')
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+
+  // Web Push notification state for this device.
+  const [pushSupported] = useState(() => isPushSupported())
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushDenied, setPushDenied] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+
+  useEffect(() => {
+    if (!pushSupported) return
+    setPushDenied(notificationPermission() === 'denied')
+    isPushSubscribed().then(setPushEnabled)
+  }, [pushSupported])
+
+  const handleTogglePush = async () => {
+    setPushBusy(true)
+    try {
+      if (pushEnabled) {
+        await disablePushNotifications()
+        setPushEnabled(false)
+        toast.success('Notifications turned off for this device')
+      } else {
+        const ok = await enablePushNotifications()
+        setPushEnabled(ok)
+        if (ok) {
+          toast.success('Notifications enabled')
+        } else {
+          setPushDenied(notificationPermission() === 'denied')
+          toast.error('Could not enable notifications')
+        }
+      }
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const {
     register: registerProfile,
@@ -363,24 +404,34 @@ const Settings: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Email Notifications</p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Receive notifications about rota changes</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Push Notifications</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                        Get clock-in reminders and alerts on this device (phone or computer)
+                      </p>
+                      {!pushSupported && (
+                        <p className="text-xs text-neutral-400 mt-1">
+                          Not supported in this browser. On iPhone, add the app to your Home Screen first.
+                        </p>
+                      )}
+                      {pushDenied && (
+                        <p className="text-xs text-danger-600 mt-1">
+                          Blocked. Enable notifications for this site in your browser settings.
+                        </p>
+                      )}
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-neutral-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">SMS Notifications</p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Receive urgent notifications via SMS</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-neutral-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                    </label>
+                    <button
+                      type="button"
+                      onClick={handleTogglePush}
+                      disabled={!pushSupported || pushDenied || pushBusy}
+                      aria-pressed={pushEnabled}
+                      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-neutral-800"
+                      style={{ backgroundColor: pushEnabled ? '#0ea5e9' : '#9ca3af' }}
+                    >
+                      <span
+                        className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        style={{ transform: pushEnabled ? 'translateX(1.5rem)' : 'translateX(0.25rem)' }}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>

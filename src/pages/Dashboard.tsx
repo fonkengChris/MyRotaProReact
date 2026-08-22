@@ -35,6 +35,8 @@ import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHo
 import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
 import PayrollManagement from '@/components/PayrollManagement'
+import ClockInOutCard from '@/components/ClockInOutCard'
+import OvertimeApprovals from '@/components/OvertimeApprovals'
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
@@ -137,6 +139,12 @@ const Dashboard: React.FC = () => {
         title={<>Welcome back, {user?.name}! 👋</>}
         subtitle={`Here's what's happening this week at ${userHomeId ? 'your care home' : 'MyRotaPro'}`}
       />
+
+      {/* Clock in / out for the current shift (renders only when a shift is active) */}
+      <ClockInOutCard />
+
+      {/* Overtime approvals for managers/admins (renders only when requests are pending) */}
+      {permissions.canManageUsers && <OvertimeApprovals />}
 
       {/* Tabs - Only show for users who can view hours summary */}
       {canViewHoursSummary && (

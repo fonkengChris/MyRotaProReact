@@ -15,18 +15,36 @@ function durationFromTimes(startTime: string, endTime: string): number {
   return (endTotal - startTotal) / 60
 }
 
-export function getShiftHourBreakdown(shift: {
-  shift_type?: string
-  duration_hours?: number
-  start_time?: string
-  end_time?: string
-}): {
+/** Actual worked hours from clock times, or null when the pair is incomplete/invalid. */
+export function actualDurationHours(assignment?: {
+  clock_in_time?: string | null
+  clock_out_time?: string | null
+}): number | null {
+  if (!assignment?.clock_in_time || !assignment?.clock_out_time) return null
+  const inMs = new Date(assignment.clock_in_time).getTime()
+  const outMs = new Date(assignment.clock_out_time).getTime()
+  if (Number.isNaN(inMs) || Number.isNaN(outMs) || outMs <= inMs) return null
+  return (outMs - inMs) / 3_600_000
+}
+
+export function getShiftHourBreakdown(
+  shift: {
+    shift_type?: string
+    duration_hours?: number
+    start_time?: string
+    end_time?: string
+  },
+  overrideDurationHours?: number
+): {
   duration_hours: number
   sleep_in_hours: number
   paid_work_hours: number
 } {
-  const duration =
-    typeof shift.duration_hours === 'number' && !Number.isNaN(shift.duration_hours)
+  const hasOverride =
+    typeof overrideDurationHours === 'number' && !Number.isNaN(overrideDurationHours)
+  const duration = hasOverride
+    ? (overrideDurationHours as number)
+    : typeof shift.duration_hours === 'number' && !Number.isNaN(shift.duration_hours)
       ? shift.duration_hours
       : durationFromTimes(shift.start_time ?? '00:00', shift.end_time ?? '00:00')
 

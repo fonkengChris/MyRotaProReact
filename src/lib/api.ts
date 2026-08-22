@@ -26,6 +26,8 @@ import {
   MessageConversationSummary,
   MessageThreadResponse,
   PayrollReportResponse,
+  OvertimeRequest,
+  ClockOutResponse,
 } from '@/types'
 import toast from 'react-hot-toast';
 import { getAppConfig, isDebugMode } from './env';
@@ -233,6 +235,16 @@ export const shiftsApi = {
 
   removeStaff: async (shiftId: string, userId: string): Promise<Shift> => {
     const response = await api.delete<Shift>(`/shifts/${shiftId}/assign/${userId}`)
+    return response.data
+  },
+
+  clockIn: async (shiftId: string): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/clock-in`)
+    return response.data
+  },
+
+  clockOut: async (shiftId: string): Promise<ClockOutResponse> => {
+    const response = await api.post<ClockOutResponse>(`/shifts/${shiftId}/clock-out`)
     return response.data
   },
 
@@ -841,6 +853,52 @@ export const payrollApi = {
       if (err instanceof Error) throw err
       throw new Error('Failed to download payroll PDF')
     }
+  },
+}
+
+export const overtimeApi = {
+  list: async (params?: { status?: string; home_id?: string }): Promise<OvertimeRequest[]> => {
+    const response = await api.get<OvertimeRequest[]>('/overtime', { params })
+    return response.data
+  },
+
+  create: async (data: {
+    shift_id: string
+    requested_minutes: number
+    reason?: string
+  }): Promise<OvertimeRequest> => {
+    const response = await api.post<OvertimeRequest>('/overtime', data)
+    return response.data
+  },
+
+  approve: async (id: string): Promise<OvertimeRequest> => {
+    const response = await api.post<OvertimeRequest>(`/overtime/${id}/approve`)
+    return response.data
+  },
+
+  deny: async (id: string, denial_reason?: string): Promise<OvertimeRequest> => {
+    const response = await api.post<OvertimeRequest>(`/overtime/${id}/deny`, { denial_reason })
+    return response.data
+  },
+}
+
+export const pushApi = {
+  getVapidKey: async (): Promise<{ publicKey: string }> => {
+    const response = await api.get<{ publicKey: string }>('/push/vapid-public-key')
+    return response.data
+  },
+
+  subscribe: async (subscription: {
+    endpoint: string
+    keys: { p256dh: string; auth: string }
+  }): Promise<{ success: boolean }> => {
+    const response = await api.post<{ success: boolean }>('/push/subscribe', subscription)
+    return response.data
+  },
+
+  unsubscribe: async (endpoint: string): Promise<{ success: boolean }> => {
+    const response = await api.post<{ success: boolean }>('/push/unsubscribe', { endpoint })
+    return response.data
   },
 }
 

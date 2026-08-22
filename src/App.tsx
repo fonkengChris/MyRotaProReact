@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import Layout from '@/components/Layout'
+import PushNotificationSetup from '@/components/PushNotificationSetup'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Setup from '@/pages/Setup'
@@ -51,6 +52,7 @@ function App() {
   return (
     <ThemeProvider>
       <Layout>
+        <PushNotificationSetup />
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />

@@ -220,11 +220,41 @@ export interface StaffAssignment {
   status: AssignmentStatus
   assigned_at: string
   note?: string
+  clock_in_time?: string | null
+  clock_out_time?: string | null
+  attendance_status?: AttendanceStatus
 }
 
 export type AssignmentStatus = 'assigned' | 'pending' | 'swapped' | 'declined'
 
+export type AttendanceStatus = 'not_started' | 'clocked_in' | 'clocked_out' | 'missed'
+
 export type ShiftStatus = 'unassigned' | 'understaffed' | 'fully_staffed' | 'overstaffed'
+
+// Overtime request types
+export interface OvertimeRequest {
+  id: string
+  _id?: string
+  shift_id: string | Shift
+  user_id: string | { id: string; name: string; email?: string; role?: string }
+  home_id: string
+  scheduled_end: string
+  actual_clock_out: string
+  requested_minutes: number
+  reason?: string
+  status: 'pending' | 'approved' | 'denied'
+  approved_by?: string | { id: string; name: string }
+  approved_at?: string
+  denial_reason?: string
+  submitted_at: string
+}
+
+export interface ClockOutResponse {
+  shift: Shift
+  overtime_eligible: boolean
+  extra_minutes: number
+  scheduled_end: string
+}
 
 // Shift Swap types
 export interface ShiftSwap {

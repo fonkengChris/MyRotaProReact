@@ -5,7 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import App from './App.tsx'
 import { AuthProvider } from './hooks/useAuth'
+import { registerServiceWorker } from './lib/push'
 import './index.css'
+
+// Register the service worker so Web Push notifications can be delivered.
+registerServiceWorker()
 
 // Create a client
 const queryClient = new QueryClient({
