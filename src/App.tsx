@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import Layout from '@/components/Layout'
 import PushNotificationSetup from '@/components/PushNotificationSetup'
@@ -24,8 +24,22 @@ import Messages from '@/pages/Messages'
 import ThemeShowcase from '@/pages/ThemeShowcase'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
+// Restricts management-only pages (dashboard, staff, rota, etc.) to admins and
+// home managers. Regular users are redirected to their personal schedule.
+function RequireManagement({ children }: { children: React.ReactElement }) {
+  const { isManagement } = usePermissions()
+  return isManagement ? children : <Navigate to="/my-schedule" replace />
+}
+
+// Restricts admin-only pages (managing the list of homes) to admins.
+function RequireAdmin({ children }: { children: React.ReactElement }) {
+  const { isAdmin } = usePermissions()
+  return isAdmin ? children : <Navigate to="/my-schedule" replace />
+}
+
 function App() {
   const { user, isLoading } = useAuth()
+  const permissions = usePermissions()
 
   if (isLoading) {
     return (
@@ -54,24 +68,30 @@ function App() {
       <Layout>
         <PushNotificationSetup />
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/rota/:weekStart?" element={<RotaEditor />} />
-          <Route path="/weekly-schedules" element={<WeeklySchedules />} />
+          <Route path="/" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/my-schedule'} replace />} />
+
+          {/* Management-only pages */}
+          <Route path="/dashboard" element={<RequireManagement><Dashboard /></RequireManagement>} />
+          <Route path="/rota/:weekStart?" element={<RequireManagement><RotaEditor /></RequireManagement>} />
+          <Route path="/weekly-schedules" element={<RequireManagement><WeeklySchedules /></RequireManagement>} />
+          <Route path="/timetables" element={<RequireManagement><Timetables /></RequireManagement>} />
+          <Route path="/staff" element={<RequireManagement><StaffManagement /></RequireManagement>} />
+          <Route path="/services" element={<RequireManagement><Services /></RequireManagement>} />
+
+          {/* Admin-only pages */}
+          <Route path="/homes" element={<RequireAdmin><Homes /></RequireAdmin>} />
+
+          {/* Personal pages (available to all authenticated users) */}
           <Route path="/shift-selection" element={<ShiftSelection />} />
           <Route path="/shift-swaps" element={<ShiftSwaps />} />
-          <Route path="/timetables" element={<Timetables />} />
           <Route path="/my-timetables" element={<UserTimetables />} />
           <Route path="/my-schedule" element={<MySchedule />} />
           <Route path="/my-hours" element={<MyHours />} />
           <Route path="/availability" element={<Availability />} />
-          <Route path="/staff" element={<StaffManagement />} />
-          <Route path="/homes" element={<Homes />} />
-          <Route path="/services" element={<Services />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/theme" element={<ThemeShowcase />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/my-schedule'} replace />} />
         </Routes>
       </Layout>
     </ThemeProvider>

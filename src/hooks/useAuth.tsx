@@ -122,16 +122,23 @@ export function usePermissions() {
   const { user } = useAuth()
   
   if (!user) return {}
-  
+
+  // Management roles reach dashboard/staff/rota/etc.; home managers are scoped
+  // to their own home(s). senior_staff and support_worker are regular users
+  // limited to their own data.
+  const isManagement = ['admin', 'home_manager'].includes(user.role)
+
   return {
-    canManageUsers: ['admin', 'home_manager'].includes(user.role),
-    canManageRotas: ['admin', 'home_manager', 'senior_staff'].includes(user.role),
-    canApproveRequests: ['admin', 'home_manager', 'senior_staff'].includes(user.role),
-    canManageTimeOff: ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    isManagement,
+    canManageUsers: isManagement,
+    canManageRotas: isManagement,
+    canApproveRequests: isManagement,
+    canManageTimeOff: isManagement,
     canViewAllHomes: user.role === 'admin',
     canManageHomes: user.role === 'admin',
-    canAllocateHomes: ['admin', 'home_manager'].includes(user.role),
-    canUseAISolver: ['admin', 'home_manager'].includes(user.role),
+    canManageServices: isManagement,
+    canAllocateHomes: isManagement,
+    canUseAISolver: isManagement,
     isAdmin: user.role === 'admin',
     isHomeManager: user.role === 'home_manager',
     isSeniorStaff: user.role === 'senior_staff',

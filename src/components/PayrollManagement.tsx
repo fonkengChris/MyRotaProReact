@@ -281,29 +281,29 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Day Hrs (paid)</p>
-                  <p className="text-lg font-semibold text-neutral-900">{totals.totalDay.toFixed(2)}</p>
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-primary">Total Day Hrs (paid)</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalDay.toFixed(2)}</p>
                 </div>
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Night Hrs (paid)</p>
-                  <p className="text-lg font-semibold text-neutral-900">{totals.totalNight.toFixed(2)}</p>
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-primary">Total Night Hrs (paid)</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalNight.toFixed(2)}</p>
                 </div>
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Paid Hrs</p>
-                  <p className="text-lg font-semibold text-neutral-900">{totals.totalPaid.toFixed(2)}</p>
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-primary">Total Paid Hrs</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalPaid.toFixed(2)}</p>
                 </div>
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Sleep-in Pay</p>
-                  <p className="text-lg font-semibold text-neutral-900">{money(totals.totalSleepInPay)}</p>
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-primary">Total Sleep-in Pay</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{money(totals.totalSleepInPay)}</p>
                 </div>
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Leave Pay</p>
-                  <p className="text-lg font-semibold text-neutral-900">{money(totals.totalLeavePay)}</p>
+                <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
+                  <p className="text-xs font-medium text-primary">Total Leave Pay</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{money(totals.totalLeavePay)}</p>
                 </div>
-                <div className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-xs text-neutral-600">Total Gross Pay</p>
-                  <p className="text-lg font-semibold text-neutral-900">{money(totals.totalGross)}</p>
+                <div className="rounded-lg border border-primary/40 bg-primary p-3 shadow-sm">
+                  <p className="text-xs font-medium text-primary-foreground/80">Total Gross Pay</p>
+                  <p className="text-lg font-semibold text-cyan-300">{money(totals.totalGross)}</p>
                 </div>
               </div>
             </div>

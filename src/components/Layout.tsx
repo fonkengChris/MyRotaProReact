@@ -32,8 +32,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate()
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' },
-    ...(permissions.canManageRotas 
+    ...(permissions.isManagement
+      ? [{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' }]
+      : []
+    ),
+    ...(permissions.canManageRotas
       ? [
           { name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') },
           { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' },
@@ -51,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
-    ...(permissions.canManageHomes ? [{ name: 'Services', href: '/services', icon: WrenchScrewdriverIcon, current: location.pathname === '/services' }] : []),
+    ...(permissions.canManageServices ? [{ name: 'Services', href: '/services', icon: WrenchScrewdriverIcon, current: location.pathname === '/services' }] : []),
     { name: 'Settings', href: '/settings', icon: CogIcon, current: location.pathname === '/settings' },
   ]
 
