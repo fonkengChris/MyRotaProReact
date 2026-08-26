@@ -15,7 +15,7 @@ import {
 import { shiftsApi, overtimeApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, OvertimeRequest, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, clampedWorkedDurationHours, getShiftHourBreakdown } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, workedHourBreakdown } from '@/lib/shiftHours'
 import PageHeader from '@/components/common/PageHeader'
 import WeekNavigator from '@/components/common/WeekNavigator'
 import KpiTile from '@/components/common/KpiTile'
@@ -102,9 +102,10 @@ const MyHours: React.FC = () => {
 
     const shiftsWithPaidHours = userShifts.map(shift => {
       const assignment = shift.assigned_staff?.find(a => a.user_id === user?.id)
-      // Paid hours use actual clamped clock time once a shift is fully clocked
-      // (late arrival / early leaving reduce pay); otherwise the rostered estimate.
-      const c = computeShiftPaidWithBreaks(shift, assignment)
+      // Paid hours use actual clamped clock time once a shift is clocked into
+      // (late arrival / early leaving reduce pay; `now` values an in-progress
+      // shift by elapsed time); otherwise the rostered estimate.
+      const c = computeShiftPaidWithBreaks(shift, assignment, now)
 
       // Only approved overtime counts toward paid hours (matches the payroll backend).
       const ot = overtimeByShiftId.get(shift.id)
@@ -121,9 +122,8 @@ const MyHours: React.FC = () => {
       // so far on a shift the user is currently clocked into. Split into regular
       // work vs the sleep-in portion of sleeping-night shifts.
       if (assignment?.clock_in_time) {
-        const workedDuration = clampedWorkedDurationHours(shift, assignment, now)
-        if (workedDuration != null && workedDuration > 0) {
-          const wb = getShiftHourBreakdown(shift, workedDuration)
+        const wb = workedHourBreakdown(shift, assignment, now)
+        if (wb != null && wb.duration_hours > 0) {
           workedRegularHours += wb.paid_work_hours + shiftOvertimeHours
           workedSleepInHours += wb.sleep_in_hours
           if (shift.shift_type === 'night-sleep') sleepNightsWorked += 1
