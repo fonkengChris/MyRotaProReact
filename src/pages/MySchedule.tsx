@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import {
   CalendarIcon,
@@ -11,14 +12,46 @@ import {
 } from '@heroicons/react/24/outline'
 import PageHeader from '@/components/common/PageHeader'
 import WeekNavigator from '@/components/common/WeekNavigator'
+import ClockInOutCard from '@/components/ClockInOutCard'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
-import { extractUserDefaultHomeId, Shift, extractServiceId, formatShiftTypeLabel } from '@/types'
+import { extractUserDefaultHomeId, Shift, StaffAssignment, extractServiceId, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
+
+// How early (minutes) staff may clock in — mirrors ClockInOutCard / server EARLY_CLOCK_IN_MINUTES.
+const EARLY_CLOCK_IN_MINUTES = 15
+
+/** Build a Date from a shift's YYYY-MM-DD date + HH:MM time in the browser's local zone. */
+function shiftDateTime(dateStr: string, timeStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const [hh, mm] = timeStr.split(':').map(Number)
+  return new Date(y, m - 1, d, hh, mm, 0, 0)
+}
+
+function shiftStartDate(shift: Shift): Date {
+  return shiftDateTime(shift.date, shift.start_time)
+}
+
+function shiftEndDate(shift: Shift): Date {
+  const start = shiftStartDate(shift)
+  const end = shiftDateTime(shift.date, shift.end_time)
+  if (end <= start) end.setDate(end.getDate() + 1) // overnight shift
+  return end
+}
 
 const MySchedule: React.FC = () => {
   const { user } = useAuth()
-  
+
+  // Which shift's clock-in/out card is currently open (null = card hidden).
+  const [openCardShiftId, setOpenCardShiftId] = useState<string | null>(null)
+
+  // Tick so clock-in buttons enable/disable as their windows open and close.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   // Parse week start date from URL or use current week
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     return startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday start
@@ -135,6 +168,14 @@ const MySchedule: React.FC = () => {
     return myShifts.filter(shift => shift.date === dateStr)
   }
 
+  // The current user's (non-declined) assignment on a shift.
+  const getMyAssignment = (shift: Shift): StaffAssignment | undefined =>
+    shift.assigned_staff?.find(a => a.user_id === user?.id && a.status !== 'declined')
+
+  // Toggle the clock-in/out card for a shift: show it, or hide it if already open.
+  const toggleClockCard = (shiftId: string) =>
+    setOpenCardShiftId(prev => (prev === shiftId ? null : shiftId))
+
   if (!user) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -158,6 +199,14 @@ const MySchedule: React.FC = () => {
         title="My Schedule"
         subtitle="View your weekly work schedule and assigned shifts"
       />
+
+      {/* Clock in / out card — hidden until staff tap a shift's Clock in/out button. */}
+      {openCardShiftId && (
+        <ClockInOutCard
+          shiftId={openCardShiftId}
+          onClockInSuccess={() => setOpenCardShiftId(null)}
+        />
+      )}
 
       {/* Week Navigation */}
       <WeekNavigator
@@ -232,7 +281,15 @@ const MySchedule: React.FC = () => {
                         </div>
                       ) : (
                         <div className="space-y-4">
-                                                      {dayShifts.map((shift) => (
+                                                      {dayShifts.map((shift) => {
+                              const assignment = getMyAssignment(shift)
+                              const attendance = assignment?.attendance_status || 'not_started'
+                              const clockWindowOpen = new Date(
+                                shiftStartDate(shift).getTime() - EARLY_CLOCK_IN_MINUTES * 60000
+                              )
+                              const shiftHasEnded = now > shiftEndDate(shift)
+                              const canClockIn = now >= clockWindowOpen && !shiftHasEnded
+                              return (
                               <div
                                 key={shift.id}
                                 className="bg-gradient-to-br from-primary-100 to-primary-200 border-2 border-primary-300 rounded-xl p-4 shadow-sm hover:shadow-lg hover:border-primary-400 transition-all duration-300 transform hover:-translate-y-1 dark:from-primary-950/40 dark:to-primary-900/30 dark:border-primary-700 dark:hover:border-primary-600"
@@ -299,15 +356,48 @@ const MySchedule: React.FC = () => {
                                 
                                 {/* Shift Type Badge */}
                                 <div className="flex justify-end pt-2">
-                                  <Badge 
-                                    variant="secondary" 
+                                  <Badge
+                                    variant="secondary"
                                     className="text-xs px-3 py-1.5 bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border border-primary-300 font-medium"
                                   >
                                     {formatShiftTypeLabel(shift.shift_type)}
                                   </Badge>
                                 </div>
+
+                                {/* Clock in / out — reveals the ClockInOutCard for this shift */}
+                                <div className="pt-4">
+                                  {attendance === 'clocked_in' ? (
+                                    <Button
+                                      variant="danger"
+                                      className="w-full"
+                                      onClick={() => toggleClockCard(shift.id)}
+                                    >
+                                      {openCardShiftId === shift.id ? 'Hide clock out' : 'Clock out'}
+                                    </Button>
+                                  ) : attendance === 'clocked_out' ? (
+                                    <Button variant="outline" className="w-full" disabled>
+                                      Completed
+                                    </Button>
+                                  ) : attendance === 'missed' || shiftHasEnded ? (
+                                    <Button variant="outline" className="w-full" disabled>
+                                      {attendance === 'missed' ? 'Missed' : 'Shift ended'}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      className="w-full"
+                                      disabled={!canClockIn}
+                                      onClick={() => toggleClockCard(shift.id)}
+                                    >
+                                      {!canClockIn
+                                        ? `Clock-in opens ${format(clockWindowOpen, 'HH:mm')}`
+                                        : openCardShiftId === shift.id
+                                        ? 'Hide clock in'
+                                        : 'Clock in'}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                            ))}
+                            )})}
                         </div>
                       )}
                     </div>

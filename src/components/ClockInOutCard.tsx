@@ -45,7 +45,14 @@ function formatElapsed(ms: number): string {
   return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':')
 }
 
-const ClockInOutCard: React.FC = () => {
+interface ClockInOutCardProps {
+  /** When set, show this specific shift instead of auto-selecting the most relevant one. */
+  shiftId?: string
+  /** Called after a successful clock-in so a parent can hide the card again. */
+  onClockInSuccess?: () => void
+}
+
+const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSuccess }) => {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [now, setNow] = useState(() => new Date())
@@ -74,6 +81,13 @@ const ClockInOutCard: React.FC = () => {
 
   // Pick the most relevant shift: one within [start - grace, end], preferring not-yet-clocked-out.
   const activeShift = useMemo(() => {
+    // When a specific shift is requested (parent already gated the window), show that one.
+    if (shiftId) {
+      const shift = shifts.find((s) => s.id === shiftId)
+      const assignment = shift ? myAssignment(shift, user?.id) : undefined
+      return shift && assignment ? { shift, assignment } : null
+    }
+
     const candidates = shifts
       .map((shift) => ({ shift, assignment: myAssignment(shift, user?.id) }))
       .filter((c) => !!c.assignment)
@@ -92,7 +106,7 @@ const ClockInOutCard: React.FC = () => {
       candidates[0] ||
       null
     )
-  }, [shifts, user?.id, now])
+  }, [shifts, user?.id, now, shiftId])
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['attendanceShifts'] })
@@ -104,6 +118,7 @@ const ClockInOutCard: React.FC = () => {
     onSuccess: () => {
       toast.success('Clocked in')
       invalidate()
+      onClockInSuccess?.()
     },
     onError: (err: any) => toast.error(err?.response?.data?.error || 'Failed to clock in'),
   })
