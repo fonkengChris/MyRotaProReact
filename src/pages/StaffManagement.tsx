@@ -49,8 +49,8 @@ const StaffManagement: React.FC = () => {
   const { data: staff = [], isLoading } = useQuery({
     queryKey: ['staff', currentUser?.role, currentUser?.default_home_id],
     queryFn: () => {
-      // Admin and home_manager can see all users
-      if (['admin', 'home_manager'].includes(currentUser?.role || '')) {
+      // Admin and key_worker can see all users
+      if (['admin', 'key_worker'].includes(currentUser?.role || '')) {
         return usersApi.getAll()
       }
       // Senior staff and support workers see users from their default home
@@ -241,7 +241,7 @@ const StaffManagement: React.FC = () => {
   const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
       case 'admin': return 'danger'
-      case 'home_manager': return 'primary'
+      case 'key_worker': return 'primary'
       case 'senior_staff': return 'secondary'
       case 'support_worker': return 'success'
       default: return 'secondary'
@@ -251,7 +251,7 @@ const StaffManagement: React.FC = () => {
   const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
       case 'admin': return 'Admin'
-      case 'home_manager': return 'Home Manager'
+      case 'key_worker': return 'Key Worker'
       case 'senior_staff': return 'Senior Staff'
       case 'support_worker': return 'Support Worker'
       default: return role
@@ -355,7 +355,7 @@ const StaffManagement: React.FC = () => {
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
-                <option value="home_manager">Home Manager</option>
+                <option value="key_worker">Key Worker</option>
                 <option value="senior_staff">Senior Staff</option>
                 <option value="support_worker">Support Worker</option>
               </select>
@@ -1005,7 +1005,7 @@ const StaffManagement: React.FC = () => {
                       required
                     >
                       <option value="admin">Admin</option>
-                      <option value="home_manager">Home Manager</option>
+                      <option value="key_worker">Key Worker</option>
                       <option value="senior_staff">Senior Staff</option>
                       <option value="support_worker">Support Worker</option>
                     </select>

@@ -53,7 +53,7 @@ const AvailabilityPage: React.FC = () => {
       if (user?.role === 'admin') {
         // Admins see all requests
         return await timeOffApi.getAll()
-      } else if (['home_manager', 'senior_staff'].includes(user?.role || '')) {
+      } else if (['key_worker', 'senior_staff'].includes(user?.role || '')) {
         // Managers see all requests for their home (if they have one)
         return await timeOffApi.getAll(userHomeId ? { home_id: userHomeId } : {})
       } else {
@@ -78,7 +78,7 @@ const AvailabilityPage: React.FC = () => {
     queryFn: () => usersApi.getAll({ 
       home_id: userHomeId // Only filter by home if user has one
     }),
-    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
+    enabled: !!user && (!!userHomeId || ['admin', 'key_worker', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
     retry: 1,
     retryDelay: 1000,
     select: (data) => Array.isArray(data) ? data : []

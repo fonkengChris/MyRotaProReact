@@ -116,7 +116,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
     switch (currentUser.role) {
       case 'admin':
-      case 'home_manager':
+      case 'key_worker':
         // Admins and managers see all shifts for the selected home
         return shifts.filter(shift => {
           const shiftHomeId = typeof shift.home_id === 'string' ? shift.home_id : shift.home_id.id

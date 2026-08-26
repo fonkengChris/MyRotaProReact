@@ -26,7 +26,7 @@ import ThemeShowcase from '@/pages/ThemeShowcase'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 // Restricts management-only pages (dashboard, staff, rota, etc.) to admins and
-// home managers. Regular users are redirected to their personal schedule.
+// key workers. Regular users are redirected to their personal schedule.
 function RequireManagement({ children }: { children: React.ReactElement }) {
   const { isManagement } = usePermissions()
   return isManagement ? children : <Navigate to="/my-schedule" replace />
@@ -75,10 +75,10 @@ function App() {
           <Route path="/dashboard" element={<RequireManagement><Dashboard /></RequireManagement>} />
           <Route path="/rota/:weekStart?" element={<RequireManagement><RotaEditor /></RequireManagement>} />
           <Route path="/weekly-schedules" element={<RequireManagement><WeeklySchedules /></RequireManagement>} />
-          <Route path="/timetables" element={<RequireManagement><Timetables /></RequireManagement>} />
+          <Route path="/timetables" element={<RequireAdmin><Timetables /></RequireAdmin>} />
           <Route path="/staff" element={<RequireManagement><StaffManagement /></RequireManagement>} />
           <Route path="/services" element={<RequireManagement><Services /></RequireManagement>} />
-          <Route path="/clock-in-analysis" element={<RequireManagement><ClockInAnalysis /></RequireManagement>} />
+          <Route path="/clock-in-analysis" element={<RequireAdmin><ClockInAnalysis /></RequireAdmin>} />
 
           {/* Admin-only pages */}
           <Route path="/homes" element={<RequireAdmin><Homes /></RequireAdmin>} />

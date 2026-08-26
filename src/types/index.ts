@@ -20,7 +20,7 @@ export interface User {
   updated_at: string
 }
 
-export type UserRole = 'admin' | 'home_manager' | 'senior_staff' | 'support_worker'
+export type UserRole = 'admin' | 'key_worker' | 'senior_staff' | 'support_worker'
 
 export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'social_support' | 'specialist_care'
 

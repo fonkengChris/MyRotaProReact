@@ -123,10 +123,10 @@ export function usePermissions() {
   
   if (!user) return {}
 
-  // Management roles reach dashboard/staff/rota/etc.; home managers are scoped
+  // Management roles reach dashboard/staff/rota/etc.; key workers are scoped
   // to their own home(s). senior_staff and support_worker are regular users
   // limited to their own data.
-  const isManagement = ['admin', 'home_manager'].includes(user.role)
+  const isManagement = ['admin', 'key_worker'].includes(user.role)
 
   return {
     isManagement,
@@ -140,7 +140,7 @@ export function usePermissions() {
     canAllocateHomes: isManagement,
     canUseAISolver: isManagement,
     isAdmin: user.role === 'admin',
-    isHomeManager: user.role === 'home_manager',
+    isKeyWorker: user.role === 'key_worker',
     isSeniorStaff: user.role === 'senior_staff',
     isSupportWorker: user.role === 'support_worker',
   }

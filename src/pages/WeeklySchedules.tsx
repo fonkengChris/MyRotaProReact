@@ -37,7 +37,7 @@ const WeeklySchedules: React.FC = () => {
   const { data: homes, isLoading: homesLoading } = useQuery({
     queryKey: ['homes'],
     queryFn: () => homesApi.getAll(),
-    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -45,7 +45,7 @@ const WeeklySchedules: React.FC = () => {
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ['services', selectedHomeId],
     queryFn: () => servicesApi.getAll(selectedHomeId),
-    enabled: !!selectedHomeId && ['admin', 'home_manager', 'senior_staff'].includes(user?.role || ''),
+    enabled: !!selectedHomeId && ['admin', 'key_worker', 'senior_staff'].includes(user?.role || ''),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -69,7 +69,7 @@ const WeeklySchedules: React.FC = () => {
     )
   }
 
-  if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
+  if (!['admin', 'key_worker', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-heading-accent mb-4">Access Denied</h2>

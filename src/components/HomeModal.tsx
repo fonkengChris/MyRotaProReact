@@ -91,7 +91,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
   const fetchManagers = async () => {
     try {
-      const managersData = await usersApi.getAll({ role: 'home_manager' })
+      const managersData = await usersApi.getAll({ role: 'key_worker' })
       setManagers(managersData)
     } catch (error: any) {
       toast.error('Failed to fetch managers')

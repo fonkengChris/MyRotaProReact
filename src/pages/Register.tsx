@@ -175,7 +175,7 @@ export default function Register() {
                 >
                   <option value="support_worker">Support Worker</option>
                   <option value="senior_staff">Senior Staff</option>
-                  <option value="home_manager">Home Manager</option>
+                  <option value="key_worker">Key Worker</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

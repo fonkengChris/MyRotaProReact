@@ -39,20 +39,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ...(permissions.canManageRotas
       ? [
           { name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') },
-          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' },
-          { name: 'Timetables', href: '/timetables', icon: CalendarIcon, current: location.pathname === '/timetables' }
+          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' }
         ]
       : [
           { name: 'My Timetables', href: '/my-timetables', icon: CalendarIcon, current: location.pathname === '/my-timetables' }
         ]
     ),
+    ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: CalendarIcon, current: location.pathname === '/timetables' }] : []),
     { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },
     { name: 'Shift Selection', href: '/shift-selection', icon: BellIcon, current: location.pathname === '/shift-selection' },
     { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowPathIcon, current: location.pathname === '/shift-swaps' },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
     { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
-    ...(permissions.isManagement ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
+    ...(permissions.isAdmin ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
     ...(permissions.canManageServices ? [{ name: 'Services', href: '/services', icon: WrenchScrewdriverIcon, current: location.pathname === '/services' }] : []),

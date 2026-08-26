@@ -521,7 +521,7 @@ const ThemeShowcase: React.FC = () => {
               </Avatar>
               <div>
                 <p className="text-sm font-medium">Jordan Mensah</p>
-                <p className="text-xs capitalize text-muted-foreground">Home manager</p>
+                <p className="text-xs capitalize text-muted-foreground">Key Worker</p>
               </div>
             </div>
             <DropdownMenu>

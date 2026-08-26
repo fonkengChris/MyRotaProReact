@@ -79,7 +79,7 @@ const RotaEditor: React.FC = () => {
   const { data: homes = [], isLoading: homesLoading } = useQuery({
     queryKey: ['homes'],
     queryFn: () => homesApi.getAll(),
-    enabled: !!user && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -94,7 +94,7 @@ const RotaEditor: React.FC = () => {
         week_end_date: format(currentWeekEnd, 'yyyy-MM-dd')
       })
     },
-    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -106,7 +106,7 @@ const RotaEditor: React.FC = () => {
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -116,7 +116,7 @@ const RotaEditor: React.FC = () => {
     queryFn: () => usersApi.getAll({ 
       home_id: ensureStringHomeId(selectedHomeId)
     }),
-    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -124,7 +124,7 @@ const RotaEditor: React.FC = () => {
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: ['services', selectedHomeId],
     queryFn: () => servicesApi.getAll(ensureStringHomeId(selectedHomeId)), // Fetch services for selected home
-    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -136,7 +136,7 @@ const RotaEditor: React.FC = () => {
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
-    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'home_manager', 'senior_staff'].includes(user.role),
+    enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     refetchInterval: 30000 // Refresh every 30 seconds
   })
 
@@ -603,7 +603,7 @@ const RotaEditor: React.FC = () => {
     )
   }
 
-  if (!['admin', 'home_manager', 'senior_staff'].includes(user.role)) {
+  if (!['admin', 'key_worker', 'senior_staff'].includes(user.role)) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-heading-accent mb-4">Access Denied</h2>

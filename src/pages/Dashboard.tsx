@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
       week_start_date: weekStart.toISOString(),
       week_end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'key_worker', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
       start_date: weekStart.toISOString(),
       end_date: weekEnd.toISOString()
     }),
-    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'key_worker', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
     queryFn: () => usersApi.getAll({
       home_id: userHomeId // Only filter by home if user has one
     }),
-    enabled: !!user && (!!userHomeId || ['admin', 'home_manager', 'senior_staff'].includes(user.role)),
+    enabled: !!user && (!!userHomeId || ['admin', 'key_worker', 'senior_staff'].includes(user.role)),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -112,9 +112,9 @@ const Dashboard: React.FC = () => {
     )
   }
 
-  // Check if user can view hours summary (admin, home_manager, senior_staff)
-  const canViewHoursSummary = ['admin', 'home_manager', 'senior_staff'].includes(user.role)
-  const canManagePayroll = ['admin', 'home_manager'].includes(user.role)
+  // Check if user can view hours summary (admin, key_worker, senior_staff)
+  const canViewHoursSummary = ['admin', 'key_worker', 'senior_staff'].includes(user.role)
+  const canManagePayroll = user.role === 'admin'
 
   // Build the "Needs attention" rail items from real state (no fabricated data).
   const attentionItems: Array<{ label: string; to: string; cta: string; count?: number }> = []
