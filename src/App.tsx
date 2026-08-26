@@ -10,6 +10,7 @@ import Dashboard from '@/pages/Dashboard'
 import RotaEditor from '@/pages/RotaEditor'
 import MySchedule from '@/pages/MySchedule'
 import MyHours from '@/pages/MyHours'
+import ClockInAnalysis from '@/pages/ClockInAnalysis'
 import StaffManagement from '@/pages/StaffManagement'
 import Settings from '@/pages/Settings'
 import Availability from '@/pages/Availability'
@@ -77,6 +78,7 @@ function App() {
           <Route path="/timetables" element={<RequireManagement><Timetables /></RequireManagement>} />
           <Route path="/staff" element={<RequireManagement><StaffManagement /></RequireManagement>} />
           <Route path="/services" element={<RequireManagement><Services /></RequireManagement>} />
+          <Route path="/clock-in-analysis" element={<RequireManagement><ClockInAnalysis /></RequireManagement>} />
 
           {/* Admin-only pages */}
           <Route path="/homes" element={<RequireAdmin><Homes /></RequireAdmin>} />

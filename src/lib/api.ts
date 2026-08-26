@@ -28,6 +28,7 @@ import {
   PayrollReportResponse,
   OvertimeRequest,
   ClockOutResponse,
+  AttendanceLogsResponse,
 } from '@/types'
 import toast from 'react-hot-toast';
 import { getAppConfig, isDebugMode } from './env';
@@ -245,6 +246,17 @@ export const shiftsApi = {
 
   clockOut: async (shiftId: string): Promise<ClockOutResponse> => {
     const response = await api.post<ClockOutResponse>(`/shifts/${shiftId}/clock-out`)
+    return response.data
+  },
+
+  // Clock-in / clock-out logs across all staff (admin analysis page).
+  attendanceLogs: async (params?: {
+    home_id?: string
+    start_date?: string
+    end_date?: string
+    status?: string
+  }): Promise<AttendanceLogsResponse> => {
+    const response = await api.get<AttendanceLogsResponse>('/shifts/attendance/logs', { params })
     return response.data
   },
 

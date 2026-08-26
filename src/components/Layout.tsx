@@ -52,6 +52,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
     { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
     { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
+    ...(permissions.isManagement ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
     ...(permissions.canManageServices ? [{ name: 'Services', href: '/services', icon: WrenchScrewdriverIcon, current: location.pathname === '/services' }] : []),

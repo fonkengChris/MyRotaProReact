@@ -256,6 +256,45 @@ export interface ClockOutResponse {
   scheduled_end: string
 }
 
+// Attendance / clock-in analysis types
+export interface AttendanceLog {
+  shift_id: string
+  user_id: string
+  user_name: string
+  user_email: string | null
+  user_role: string | null
+  home_name: string | null
+  service_name: string | null
+  date: string
+  start_time: string
+  end_time: string
+  shift_type: string
+  scheduled_start: string
+  scheduled_end: string
+  scheduled_minutes: number
+  attendance_status: AttendanceStatus
+  clock_in_time: string | null
+  clock_out_time: string | null
+  worked_minutes: number | null
+  minutes_late: number
+  minutes_over: number
+  is_late: boolean
+}
+
+export interface AttendanceSummary {
+  total: number
+  clocked_in: number
+  clocked_out: number
+  not_started: number
+  missed: number
+  late: number
+}
+
+export interface AttendanceLogsResponse {
+  logs: AttendanceLog[]
+  summary: AttendanceSummary
+}
+
 // Shift Swap types
 export interface ShiftSwap {
   _id: string
