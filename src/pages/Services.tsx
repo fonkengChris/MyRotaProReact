@@ -211,7 +211,7 @@ const Services: React.FC = () => {
                       {service.min_staff_count} - {service.max_staff_count}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-100">
-                      {service.duration_hours}h
+                      {(Number(service.duration_hours) || 0).toFixed(1)}h
                       {service.is_24_hour && (
                         <span className="ml-1 text-xs text-primary-600">(24h)</span>
                       )}

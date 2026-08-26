@@ -12,7 +12,7 @@ function staffName(req: OvertimeRequest): string {
   return 'Staff member'
 }
 
-/** Pending overtime requests for managers/admins to approve or deny. */
+/** Pending overtime requests for admins to approve or deny. */
 const OvertimeApprovals: React.FC = () => {
   const queryClient = useQueryClient()
 

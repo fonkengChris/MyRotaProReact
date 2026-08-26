@@ -766,6 +766,7 @@ export const payrollApi = {
     home_id?: string
     hourly_rate?: number
     sleep_night_pay?: number
+    mode?: 'draft' | 'final'
   }): Promise<PayrollReportResponse | any[]> => {
     const cleanedParams = {
       start_date: params.start_date,
@@ -775,6 +776,7 @@ export const payrollApi = {
         : {}),
       ...(typeof params.hourly_rate === 'number' ? { hourly_rate: params.hourly_rate } : {}),
       ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
+      ...(params.mode ? { mode: params.mode } : {}),
     }
     const response = await api.get('/payroll', { params: cleanedParams })
     return response.data
@@ -786,6 +788,7 @@ export const payrollApi = {
     home_id?: string
     hourly_rate?: number
     sleep_night_pay?: number
+    mode?: 'draft' | 'final'
   }): Promise<void> => {
     try {
       const cleanedParams = {
@@ -796,6 +799,7 @@ export const payrollApi = {
           : {}),
         ...(typeof params.hourly_rate === 'number' ? { hourly_rate: params.hourly_rate } : {}),
         ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
+        ...(params.mode ? { mode: params.mode } : {}),
       }
       const response = await api.get('/payroll/pdf', {
         params: cleanedParams,

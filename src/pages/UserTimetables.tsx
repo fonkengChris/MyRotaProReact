@@ -150,7 +150,7 @@ const UserTimetables: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-neutral-700">Total Hours:</span>
-                      <span className="font-medium">{timetable.total_hours}h</span>
+                      <span className="font-medium">{(Number(timetable.total_hours) || 0).toFixed(1)}h</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-700">Assignments:</span>
@@ -158,7 +158,7 @@ const UserTimetables: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-700">Avg Weekly Hours:</span>
-                      <span className="font-medium">{timetable.average_weekly_hours}h</span>
+                      <span className="font-medium">{(Number(timetable.average_weekly_hours) || 0).toFixed(1)}h</span>
                     </div>
                   </div>
 

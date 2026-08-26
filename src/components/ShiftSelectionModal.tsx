@@ -256,7 +256,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                 </div>
                                 
                                 <Badge variant="outline" className="text-xs">
-                                  {duration}h duration
+                                  {duration.toFixed(1)}h duration
                                 </Badge>
                                 
                                 <Badge 

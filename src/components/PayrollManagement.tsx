@@ -58,6 +58,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
   const [endDate, setEndDate] = useState(defaults.end)
   const [hourlyRate, setHourlyRate] = useState<number>(12.71)
   const [sleepNightPay, setSleepNightPay] = useState<number>(50)
+  const [mode, setMode] = useState<'draft' | 'final'>('final')
   const [report, setReport] = useState<PayrollReportResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -65,6 +66,14 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
   const canEditRates = userRole === 'admin'
 
   const rows = useMemo(() => report?.records ?? [], [report])
+
+  // The mode the currently displayed report was generated with (echoed by the API),
+  // which may differ from the pending toggle until the user regenerates.
+  const reportMode = report?.mode ?? 'final'
+  const needsReviewCount = useMemo(
+    () => rows.reduce((sum, row) => sum + asNumber(row.needs_review), 0),
+    [rows]
+  )
 
   const computedTotals = useMemo(() => {
     const totalDay = rows.reduce((sum, row) => sum + asNumber(row.day_hours), 0)
@@ -102,6 +111,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         home_id: homeId,
         hourly_rate: hourlyRate,
         sleep_night_pay: sleepNightPay,
+        mode,
       })
       setReport(normalizeResponse(data, startDate, endDate))
     } catch (err) {
@@ -124,6 +134,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         home_id: homeId,
         hourly_rate: hourlyRate,
         sleep_night_pay: sleepNightPay,
+        mode,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate payroll PDF')
@@ -142,6 +153,39 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-neutral-700 mb-1">Payroll Type</label>
+            <div className="inline-flex rounded-lg border border-neutral-200 p-0.5">
+              <button
+                type="button"
+                onClick={() => setMode('draft')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  mode === 'draft'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Draft (estimate)
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('final')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  mode === 'final'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Final (payable)
+              </button>
+            </div>
+            <p className="text-sm text-neutral-600 mt-2">
+              {mode === 'draft'
+                ? 'Estimated cost from rostered hours + approved leave. Overtime and actual clocked time are ignored.'
+                : 'Payable hours from clocked-in shifts + approved overtime. Shifts never clocked into are not paid; those clocked in but not out are counted on rostered time and flagged for review.'}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">Start Date</label>
@@ -198,7 +242,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
               disabled={!canSearch}
               className="w-full md:w-auto"
             >
-              Generate Payroll Table
+              {mode === 'draft' ? 'Generate Draft Table' : 'Generate Final Table'}
             </Button>
             <Button
               variant="outline"
@@ -231,7 +275,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
           <CardTitle>Payroll Table</CardTitle>
           <CardDescription>
             {report
-              ? `From ${report.start_date} to ${report.end_date}`
+              ? `${reportMode === 'draft' ? 'Draft (estimate)' : 'Final (payable)'} — from ${report.start_date} to ${report.end_date}`
               : 'Generate a payroll report to view payroll rows.'}
           </CardDescription>
         </CardHeader>
@@ -242,6 +286,13 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
             <p className="text-sm text-neutral-600">No payroll rows found for the selected dates.</p>
           ) : (
             <div className="space-y-4">
+              {reportMode === 'final' && needsReviewCount > 0 && (
+                <div className="rounded-lg border border-warning-300 bg-warning-50 px-4 py-3 text-sm text-warning-700">
+                  <span className="font-semibold">Review needed:</span>{' '}
+                  {needsReviewCount} shift{needsReviewCount === 1 ? '' : 's'} paid on rostered time — no clock-out recorded. Rows marked with{' '}
+                  <span className="font-semibold">*</span> below. Review before sign-off.
+                </div>
+              )}
               <div className="overflow-x-auto border border-neutral-200 rounded-lg">
                 <table className="min-w-full divide-y divide-neutral-200">
                   <thead className="bg-neutral-50">
@@ -258,10 +309,20 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                   <tbody className="bg-white divide-y divide-neutral-200">
                     {rows.map((row, idx) => (
                       <tr key={row.id ?? row.user_id ?? `${row.name}-${idx}`}>
-                        <td className="px-4 py-3 text-sm text-neutral-900">{row.name || 'Unknown'}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900">
+                          {row.name || 'Unknown'}
+                          {reportMode === 'final' && asNumber(row.needs_review) > 0 && (
+                            <span
+                              className="ml-1 font-semibold text-warning-600"
+                              title={`${asNumber(row.needs_review)} shift(s) paid on rostered time — no clock-out recorded`}
+                            >
+                              *
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-sm text-neutral-700">{row.role || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{money(asNumber(row.sleep_in_pay))}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">
                           {money(asNumber(row.leave_pay))}
@@ -283,15 +344,15 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Day Hrs (paid)</p>
-                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalDay.toFixed(2)}</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalDay.toFixed(1)}</p>
                 </div>
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Night Hrs (paid)</p>
-                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalNight.toFixed(2)}</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalNight.toFixed(1)}</p>
                 </div>
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Paid Hrs</p>
-                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalPaid.toFixed(2)}</p>
+                  <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{totals.totalPaid.toFixed(1)}</p>
                 </div>
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Sleep-in Pay</p>

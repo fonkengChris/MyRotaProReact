@@ -541,7 +541,7 @@ const Timetables: React.FC = () => {
                       <p className="text-neutral-700">Shifts</p>
                     </div>
                     <div className="text-center p-2 bg-neutral-100 rounded">
-                      <p className="font-semibold text-neutral-950 dark:text-neutral-100">{timetable.total_hours}</p>
+                      <p className="font-semibold text-neutral-950 dark:text-neutral-100">{(Number(timetable.total_hours) || 0).toFixed(1)}</p>
                       <p className="text-neutral-700">Hours</p>
                     </div>
                     <div className="text-center p-2 bg-neutral-100 rounded">

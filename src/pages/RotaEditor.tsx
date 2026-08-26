@@ -840,7 +840,7 @@ const RotaEditor: React.FC = () => {
                 <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Shifts</p>
               </div>
               <div className="p-4 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl border-l-4 border-l-success-500">
-                <p className="text-2xl font-bold font-mono tabular-nums text-success-600 dark:text-success-400">{weekRota.total_hours}</p>
+                <p className="text-2xl font-bold font-mono tabular-nums text-success-600 dark:text-success-400">{(Number(weekRota.total_hours) || 0).toFixed(1)}</p>
                 <p className="text-sm text-neutral-700 dark:text-neutral-400">Total Hours</p>
               </div>
               <div className="p-4 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl border-l-4 border-l-secondary-400">

@@ -252,7 +252,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                 <div className="flex items-center space-x-4 text-sm text-neutral-700 dark:text-neutral-400">
                   <span>{shifts.length} shifts</span>
                   <span>{shifts.reduce((total, shift) => total + shift.assigned_staff.length, 0)} assignments</span>
-                  <span>{shifts.reduce((total, shift) => total + shift.duration_hours * shift.assigned_staff.length, 0)}h total</span>
+                  <span>{shifts.reduce((total, shift) => total + shift.duration_hours * shift.assigned_staff.length, 0).toFixed(1)}h total</span>
                 </div>
               </div>
             </div>
@@ -407,7 +407,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                 <UsersIcon className="h-5 w-5 text-neutral-500 mr-2" />
                 <div>
                   <p className="text-sm font-medium text-neutral-700 dark:text-neutral-400">Total Hours</p>
-                  <p className="text-2xl font-bold text-neutral-950 dark:text-neutral-100">{timetable.total_hours}</p>
+                  <p className="text-2xl font-bold text-neutral-950 dark:text-neutral-100">{(Number(timetable.total_hours) || 0).toFixed(1)}</p>
                 </div>
               </div>
             </div>
@@ -568,7 +568,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-neutral-700 dark:text-neutral-400">
                       <span>{filteredStats.total_shifts} shifts</span>
-                      <span>{filteredStats.total_hours} hours</span>
+                      <span>{(Number(filteredStats.total_hours) || 0).toFixed(1)} hours</span>
                       <span>{filteredStats.total_assignments} assignments</span>
                     </div>
                   </div>
@@ -580,17 +580,17 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                       <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg">
                         <p className="text-sm font-medium text-primary-900 dark:text-white">Full-time</p>
                         <p className="text-lg font-bold text-primary-900 dark:text-white">{currentWeek.employment_distribution.fulltime.staff_count}</p>
-                        <p className="text-xs text-primary-700 dark:text-white">{currentWeek.employment_distribution.fulltime.total_hours}h total</p>
+                        <p className="text-xs text-primary-700 dark:text-white">{(Number(currentWeek.employment_distribution.fulltime.total_hours) || 0).toFixed(1)}h total</p>
                       </div>
                       <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
                         <p className="text-sm font-medium text-green-900 dark:text-green-100">Part-time</p>
                         <p className="text-lg font-bold text-green-900 dark:text-green-100">{currentWeek.employment_distribution.parttime.staff_count}</p>
-                        <p className="text-xs text-green-700 dark:text-green-300">{currentWeek.employment_distribution.parttime.total_hours}h total</p>
+                        <p className="text-xs text-green-700 dark:text-green-300">{(Number(currentWeek.employment_distribution.parttime.total_hours) || 0).toFixed(1)}h total</p>
                       </div>
                       <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
                         <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Bank</p>
                         <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{currentWeek.employment_distribution.bank.staff_count}</p>
-                        <p className="text-xs text-purple-700 dark:text-purple-300">{currentWeek.employment_distribution.bank.total_hours}h total</p>
+                        <p className="text-xs text-purple-700 dark:text-purple-300">{(Number(currentWeek.employment_distribution.bank.total_hours) || 0).toFixed(1)}h total</p>
                       </div>
                     </div>
                   </div>
@@ -624,7 +624,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                                     {format(parseISO(shift.date), 'MMM d')} - {shift.start_time} to {shift.end_time}
                                   </p>
                                   <p className="text-xs text-neutral-700 dark:text-neutral-400">
-                                    {shift.shift_type} • {shift.required_staff_count} staff needed • {shift.duration_hours}h
+                                    {shift.shift_type} • {shift.required_staff_count} staff needed • {(Number(shift.duration_hours) || 0).toFixed(1)}h
                                   </p>
                                 </div>
                                 <Badge variant={shift.assigned_staff.length >= shift.required_staff_count ? 'success' : 'warning'}>

@@ -702,11 +702,15 @@ export interface PayrollRecord {
   hourly_rate?: number
   gross_pay?: number
   home_name?: string
+  // Final mode only: count of this staff member's shifts paid on rostered time
+  // because no clock-out was recorded. Always 0 in draft mode.
+  needs_review?: number
 }
 
 export interface PayrollReportResponse {
   start_date: string
   end_date: string
+  mode?: 'draft' | 'final'
   records: PayrollRecord[]
   totals?: {
     total_day_hours?: number
@@ -715,5 +719,6 @@ export interface PayrollReportResponse {
     total_sleep_in_pay?: number
     total_leave_pay?: number
     total_gross_pay?: number
+    total_needs_review?: number
   }
 }

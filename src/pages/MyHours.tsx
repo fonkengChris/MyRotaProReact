@@ -10,11 +10,12 @@ import {
   CalendarIcon,
   ExclamationTriangleIcon,
   MoonIcon,
+  CheckBadgeIcon,
 } from '@heroicons/react/24/outline'
-import { shiftsApi } from '@/lib/api'
+import { shiftsApi, overtimeApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { Shift, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
+import { Shift, OvertimeRequest, formatShiftTypeLabel } from '@/types'
+import { computeShiftPaidWithBreaks, clampedWorkedDurationHours, getShiftHourBreakdown } from '@/lib/shiftHours'
 import PageHeader from '@/components/common/PageHeader'
 import WeekNavigator from '@/components/common/WeekNavigator'
 import KpiTile from '@/components/common/KpiTile'
@@ -24,6 +25,12 @@ interface PaidHoursData {
   totalSleepInHours: number
   paidHours: number
   breakDeductions: number
+  // Approved overtime hours this week (added on top of paid hours).
+  overtimeHours: number
+  // Actual clocked time this week, split into regular work vs sleep-night sleep-in.
+  workedRegularHours: number
+  workedSleepInHours: number
+  sleepNightsWorked: number
   shifts: Array<Shift & {
     rosteredHours: number
     paidHours: number
@@ -31,6 +38,7 @@ interface PaidHoursData {
     deductionReason: string
     sleepInHours: number
     paidWorkBeforeBreak: number
+    overtimeHours: number
   }>
 }
 
@@ -53,6 +61,26 @@ const MyHours: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
+  // The caller's own overtime requests (the API auto-scopes staff to themselves),
+  // used to flag shifts that have overtime and show its approval status.
+  const { data: overtimeRequests = [] } = useQuery({
+    queryKey: ['overtime', 'mine', user?.id],
+    queryFn: () => overtimeApi.list(),
+    enabled: !!user?.id,
+    select: (data) => Array.isArray(data) ? data : [],
+  })
+
+  const overtimeByShiftId = useMemo(() => {
+    const map = new Map<string, OvertimeRequest>()
+    for (const ot of overtimeRequests) {
+      const raw = ot.shift_id as unknown
+      const sid =
+        typeof raw === 'string' ? raw : (raw as { id?: string; _id?: string })?.id ?? (raw as { _id?: string })?._id
+      if (sid) map.set(String(sid), ot)
+    }
+    return map
+  }, [overtimeRequests])
+
   // Calculate paid hours with break deductions
   const paidHoursData = useMemo((): PaidHoursData => {
     const userShifts = shifts.filter(shift => 
@@ -65,22 +93,53 @@ const MyHours: React.FC = () => {
     let totalSleepInHours = 0
     let paidHours = 0
     let totalBreakDeductions = 0
+    let overtimeHours = 0
+    let workedRegularHours = 0
+    let workedSleepInHours = 0
+    let sleepNightsWorked = 0
+
+    const now = Date.now()
 
     const shiftsWithPaidHours = userShifts.map(shift => {
-      const c = computeShiftPaidWithBreaks(shift)
+      const assignment = shift.assigned_staff?.find(a => a.user_id === user?.id)
+      // Paid hours use actual clamped clock time once a shift is fully clocked
+      // (late arrival / early leaving reduce pay); otherwise the rostered estimate.
+      const c = computeShiftPaidWithBreaks(shift, assignment)
+
+      // Only approved overtime counts toward paid hours (matches the payroll backend).
+      const ot = overtimeByShiftId.get(shift.id)
+      const shiftOvertimeHours =
+        ot?.status === 'approved' ? Math.max(0, (ot.requested_minutes || 0) / 60) : 0
+
       rosteredHours += c.rosteredHours
       totalSleepInHours += c.sleepInHours
-      paidHours += c.paidHours
+      paidHours += c.paidHours + shiftOvertimeHours
+      overtimeHours += shiftOvertimeHours
       totalBreakDeductions += c.breakDeduction
+
+      // Actual clocked time clamped to the scheduled window, including elapsed time
+      // so far on a shift the user is currently clocked into. Split into regular
+      // work vs the sleep-in portion of sleeping-night shifts.
+      if (assignment?.clock_in_time) {
+        const workedDuration = clampedWorkedDurationHours(shift, assignment, now)
+        if (workedDuration != null && workedDuration > 0) {
+          const wb = getShiftHourBreakdown(shift, workedDuration)
+          workedRegularHours += wb.paid_work_hours + shiftOvertimeHours
+          workedSleepInHours += wb.sleep_in_hours
+          if (shift.shift_type === 'night-sleep') sleepNightsWorked += 1
+        }
+      }
 
       return {
         ...shift,
         rosteredHours: c.rosteredHours,
-        paidHours: c.paidHours,
+        // Paid hours for this shift include approved overtime on top.
+        paidHours: c.paidHours + shiftOvertimeHours,
         breakDeduction: c.breakDeduction,
         deductionReason: c.deductionReason,
         sleepInHours: c.sleepInHours,
         paidWorkBeforeBreak: c.paidWorkBeforeBreak,
+        overtimeHours: shiftOvertimeHours,
       }
     })
 
@@ -89,9 +148,13 @@ const MyHours: React.FC = () => {
       totalSleepInHours,
       paidHours,
       breakDeductions: totalBreakDeductions,
+      overtimeHours,
+      workedRegularHours,
+      workedSleepInHours,
+      sleepNightsWorked,
       shifts: shiftsWithPaidHours
     }
-  }, [shifts, user?.id])
+  }, [shifts, user?.id, overtimeByShiftId])
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -159,13 +222,27 @@ const MyHours: React.FC = () => {
       />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <KpiTile
+          icon={CheckBadgeIcon}
+          tone="accent"
+          label="Worked (regular)"
+          value={`${paidHoursData.workedRegularHours.toFixed(1)}h`}
+          caption="Actual clocked work this week (excl. sleep-in)"
+        />
+        <KpiTile
+          icon={MoonIcon}
+          tone="secondary"
+          label="Sleep nights worked"
+          value={`${paidHoursData.sleepNightsWorked}`}
+          caption={`${paidHoursData.workedSleepInHours.toFixed(1)}h sleep-in clocked this week`}
+        />
         <KpiTile
           icon={ClockIcon}
           tone="primary"
           label="Rostered hours"
           value={`${paidHoursData.rosteredHours.toFixed(1)}h`}
-          caption="Total time on shift (incl. sleep-in)"
+          caption="Total time on shift (incl. sleep-in), this week"
         />
         <KpiTile
           icon={MoonIcon}
@@ -179,7 +256,11 @@ const MyHours: React.FC = () => {
           tone="success"
           label="Paid hours"
           value={`${paidHoursData.paidHours.toFixed(1)}h`}
-          caption="After sleep-in split & breaks"
+          caption={
+            paidHoursData.overtimeHours > 0
+              ? `Incl. ${paidHoursData.overtimeHours.toFixed(1)}h approved overtime`
+              : 'After sleep-in split & breaks'
+          }
         />
         <KpiTile
           icon={ExclamationTriangleIcon}
@@ -227,10 +308,10 @@ const MyHours: React.FC = () => {
           {paidHoursData.shifts.length === 0 ? (
             <div className="text-center py-8">
               <CalendarIcon className="mx-auto h-12 w-12 text-neutral-500" />
-              <h3 className="mt-2 text-sm font-medium text-neutral-950">
+              <h3 className="mt-2 text-sm font-medium text-neutral-950 dark:text-neutral-100">
                 No shifts this week
               </h3>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                 You have not been assigned to any shifts this week
               </p>
             </div>
@@ -247,15 +328,34 @@ const MyHours: React.FC = () => {
                         <CalendarIcon className="h-5 w-5 text-primary-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-neutral-950">
+                        <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100">
                           {format(new Date(shift.date), 'EEEE, MMM d')}
                         </h3>
-                        <p className="text-sm text-neutral-600">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
                           {shift.start_time} - {shift.end_time}
                         </p>
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          {formatShiftTypeLabel(shift.shift_type)}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {formatShiftTypeLabel(shift.shift_type)}
+                          </Badge>
+                          {(() => {
+                            const ot = overtimeByShiftId.get(shift.id)
+                            if (!ot) return null
+                            const variant =
+                              ot.status === 'approved' ? 'success' : ot.status === 'denied' ? 'danger' : 'warning'
+                            const label =
+                              ot.status === 'approved'
+                                ? `Overtime approved · ${ot.requested_minutes}m`
+                                : ot.status === 'denied'
+                                  ? 'Overtime denied'
+                                  : `Overtime pending · ${ot.requested_minutes}m`
+                            return (
+                              <Badge variant={variant} className="text-xs">
+                                {label}
+                              </Badge>
+                            )
+                          })()}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -263,7 +363,7 @@ const MyHours: React.FC = () => {
                         <div>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">Rostered</p>
                           <p className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
-                            {shift.rosteredHours}h
+                            {shift.rosteredHours.toFixed(1)}h
                           </p>
                         </div>
                         <div>
@@ -274,24 +374,32 @@ const MyHours: React.FC = () => {
                         </div>
                         {shift.paidWorkBeforeBreak !== shift.rosteredHours && shift.paidWorkBeforeBreak >= 0 && (
                           <div>
-                            <p className="text-sm text-neutral-600">Paid work</p>
-                            <p className="text-lg font-semibold text-neutral-900">
-                              {shift.paidWorkBeforeBreak}h
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400">Paid work</p>
+                            <p className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
+                              {shift.paidWorkBeforeBreak.toFixed(1)}h
                             </p>
                           </div>
                         )}
                         {shift.breakDeduction > 0 && (
                           <div>
-                            <p className="text-sm text-warning-500">Break Deduction</p>
-                            <p className="text-lg font-semibold text-warning-600">
-                              -{shift.breakDeduction}h
+                            <p className="text-sm text-warning-600 dark:text-warning-400">Break Deduction</p>
+                            <p className="text-lg font-semibold text-warning-700 dark:text-warning-300">
+                              -{shift.breakDeduction.toFixed(1)}h
+                            </p>
+                          </div>
+                        )}
+                        {shift.overtimeHours > 0 && (
+                          <div>
+                            <p className="text-sm text-success-600 dark:text-success-400">Overtime</p>
+                            <p className="text-lg font-semibold text-success-700 dark:text-success-300">
+                              +{shift.overtimeHours.toFixed(1)}h
                             </p>
                           </div>
                         )}
                         <div>
-                          <p className="text-sm text-success-500">Paid Hours</p>
-                          <p className="text-xl font-bold text-success-600">
-                            {shift.paidHours}h
+                          <p className="text-sm text-success-600 dark:text-success-400">Paid Hours</p>
+                          <p className="text-xl font-bold text-success-700 dark:text-success-300">
+                            {shift.paidHours.toFixed(1)}h
                           </p>
                         </div>
                       </div>
