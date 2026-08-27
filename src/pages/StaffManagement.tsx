@@ -18,7 +18,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
-import { User, UserRole, Home, extractHomeId, formatShiftTypeLabel } from '@/types'
+import { User, UserRole, Home, CreateUserData, extractHomeId, formatShiftTypeLabel } from '@/types'
 import toast from 'react-hot-toast'
 import PageHeader from '@/components/common/PageHeader'
 
@@ -44,6 +44,20 @@ const StaffManagement: React.FC = () => {
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editFormData, setEditFormData] = useState<Partial<User>>({})
+
+  // New-user creation state (admin only — replaces the old public registration page)
+  const emptyAddForm = {
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    role: 'support_worker' as UserRole,
+    type: 'fulltime' as 'fulltime' | 'parttime' | 'bank',
+    home_id: '',
+  }
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addFormData, setAddFormData] = useState(emptyAddForm)
 
   // Fetch staff data
   const { data: staff = [], isLoading } = useQuery({
@@ -149,6 +163,20 @@ const StaffManagement: React.FC = () => {
     }
   })
 
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: (data: CreateUserData) => usersApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+      toast.success('Staff member created successfully')
+      setShowAddModal(false)
+      setAddFormData(emptyAddForm)
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to create staff member')
+    }
+  })
+
   // Filter staff based on search and filters
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -238,6 +266,44 @@ const StaffManagement: React.FC = () => {
     setEditFormData({})
   }
 
+  const handleOpenAddModal = () => {
+    setAddFormData(emptyAddForm)
+    setShowAddModal(true)
+  }
+
+  const handleCloseAddModal = () => {
+    setShowAddModal(false)
+    setAddFormData(emptyAddForm)
+  }
+
+  const handleCreateUser = () => {
+    const { name, email, phone, password, confirmPassword, role, type, home_id } = addFormData
+
+    if (!name.trim() || !email.trim() || !phone.trim() || !password) {
+      toast.error('Name, email, phone and password are required')
+      return
+    }
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long')
+      return
+    }
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    createUserMutation.mutate({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      password,
+      role,
+      type,
+      // Admins have no home; only send home_id for other roles when chosen.
+      home_id: role !== 'admin' && home_id ? home_id : undefined,
+    })
+  }
+
   const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
       case 'admin': return 'danger'
@@ -325,6 +391,14 @@ const StaffManagement: React.FC = () => {
       <PageHeader
         title="Staff Management"
         subtitle="Manage staff members, roles, and permissions"
+        actions={
+          isAdmin ? (
+            <Button onClick={handleOpenAddModal}>
+              <UserPlusIcon className="h-5 w-5 mr-2" />
+              Add Staff
+            </Button>
+          ) : undefined
+        }
       />
 
       {/* Filters and Search */}
@@ -1129,6 +1203,167 @@ const StaffManagement: React.FC = () => {
                 disabled={updateUserMutation.isPending}
               >
                 {updateUserMutation.isPending ? 'Updating...' : 'Update Staff Member'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Staff Modal (admin only) */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-neutral-900/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-4 sm:top-10 mx-auto p-4 sm:p-6 border border-neutral-300 dark:border-neutral-700 w-[95vw] max-w-[600px] shadow-lg rounded-md bg-white dark:bg-neutral-900 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100">
+                Add Staff Member
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleCloseAddModal}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">Basic Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="form-label">Name</label>
+                    <input
+                      type="text"
+                      value={addFormData.name}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="input w-full"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      value={addFormData.email}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="input w-full"
+                      placeholder="john@example.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="tel"
+                      value={addFormData.phone}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="input w-full"
+                      placeholder="+44 123 456 7890"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Role and Type */}
+              <div>
+                <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">Role & Employment</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="form-label">Role</label>
+                    <select
+                      value={addFormData.role}
+                      onChange={(e) => setAddFormData(prev => {
+                        const role = e.target.value as UserRole
+                        // Admins are not tied to a home; clear any selection.
+                        return { ...prev, role, home_id: role === 'admin' ? '' : prev.home_id }
+                      })}
+                      className="input w-full"
+                    >
+                      <option value="support_worker">Support Worker</option>
+                      <option value="senior_staff">Senior Staff</option>
+                      <option value="key_worker">Key Worker</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">Employment Type</label>
+                    <select
+                      value={addFormData.type}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, type: e.target.value as 'fulltime' | 'parttime' | 'bank' }))}
+                      className="input w-full"
+                    >
+                      <option value="fulltime">Full Time</option>
+                      <option value="parttime">Part Time</option>
+                      <option value="bank">Bank</option>
+                    </select>
+                  </div>
+                  {addFormData.role !== 'admin' && (
+                    <div className="sm:col-span-2">
+                      <label className="form-label">Care Home (optional)</label>
+                      <select
+                        value={addFormData.home_id}
+                        onChange={(e) => setAddFormData(prev => ({ ...prev, home_id: e.target.value }))}
+                        className="input w-full"
+                      >
+                        <option value="">No home selected (allocate later)</option>
+                        {homes.map((home) => (
+                          <option key={home.id} value={home.id}>
+                            {home.name}{home.location?.city ? ` - ${home.location.city}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">Password</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="form-label">Password</label>
+                    <input
+                      type="password"
+                      value={addFormData.password}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, password: e.target.value }))}
+                      className="input w-full"
+                      placeholder="At least 8 characters"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={addFormData.confirmPassword}
+                      onChange={(e) => setAddFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="input w-full"
+                      placeholder="Re-enter password"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+              <Button
+                variant="outline"
+                onClick={handleCloseAddModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleCreateUser}
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending ? 'Creating...' : 'Create Staff Member'}
               </Button>
             </div>
           </div>

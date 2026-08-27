@@ -1,13 +1,12 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/lib/api'
-import { User, LoginCredentials, RegisterData } from '@/types'
+import { User, LoginCredentials } from '@/types'
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (credentials: LoginCredentials) => Promise<void>
-  register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
   updateUser: (data: Partial<User>) => Promise<void>
 }
@@ -65,17 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const register = async (data: RegisterData) => {
-    const response = await authApi.register(data)
-    const { user: userData, token } = response
-    
-    localStorage.setItem('token', token)
-    setUser(userData)
-    
-    // Clear any existing queries
-    queryClient.clear()
-  }
-
   const logout = async () => {
     try {
       await authApi.logout()
@@ -97,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isLoading,
     login,
-    register,
     logout,
     updateUser,
   }

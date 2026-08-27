@@ -9,7 +9,6 @@ import { User } from '@/types'
 vi.mock('@/lib/api', () => ({
   authApi: {
     login: vi.fn(),
-    register: vi.fn(),
     logout: vi.fn(),
     getCurrentUser: vi.fn(),
     updateProfile: vi.fn(),
@@ -181,51 +180,6 @@ describe('useAuth Hook', () => {
           password: 'password123',
         })
       ).rejects.toThrow()
-    })
-  })
-
-  describe('Register', () => {
-    it('should register successfully', async () => {
-      const mockUser: User = {
-        id: '1',
-        name: 'New User',
-        email: 'new@example.com',
-        role: 'support_worker',
-        type: 'fulltime',
-        is_active: true,
-      }
-
-      const mockResponse = {
-        user: mockUser,
-        token: 'test-token',
-      }
-
-      localStorageMock.getItem.mockReturnValue(null)
-      ;(authApi.register as any).mockResolvedValue(mockResponse)
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: createWrapper(),
-      })
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      await result.current.register({
-        name: 'New User',
-        email: 'new@example.com',
-        phone: '+1234567890',
-        password: 'password123',
-        role: 'support_worker',
-      })
-
-      await waitFor(() => {
-        expect(result.current.user).not.toBeNull()
-      })
-
-      expect(authApi.register).toHaveBeenCalled()
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'test-token')
-      expect(result.current.user).toEqual(mockUser)
     })
   })
 

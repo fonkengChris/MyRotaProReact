@@ -76,17 +76,15 @@ export interface LoginCredentials {
   password: string
 }
 
-export interface RegisterData {
+// Payload for an admin creating a new user (there is no public self-registration).
+export interface CreateUserData {
   name: string
   email: string
   phone: string
   password: string
   role: UserRole
-  homes?: Array<{
-    home_id: string | { id: string; name?: string }
-    is_default: boolean
-  }>
   type?: 'fulltime' | 'parttime' | 'bank'
+  home_id?: string
 }
 
 export interface AuthResponse {

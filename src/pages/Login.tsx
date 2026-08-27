@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -167,18 +167,6 @@ const Login: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-
-        <div className="text-center">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary-600 hover:text-primary-500 dark:text-white dark:hover:text-white"
-            >
-              Create Account
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   )

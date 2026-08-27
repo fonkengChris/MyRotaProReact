@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import axios from 'axios'
-import { LoginCredentials, RegisterData } from '@/types'
+import { LoginCredentials, CreateUserData } from '@/types'
 
 // Mock axios - create a shared mock instance
 const mockAxiosInstance = {
@@ -116,9 +116,9 @@ describe('authApi', () => {
     })
   })
 
-  describe('register', () => {
-    it('should register successfully', async () => {
-      const registerData: RegisterData = {
+  describe('createUser', () => {
+    it('should create a user successfully', async () => {
+      const createData: CreateUserData = {
         name: 'New User',
         email: 'new@example.com',
         phone: '+1234567890',
@@ -128,24 +128,20 @@ describe('authApi', () => {
 
       const mockResponse = {
         data: {
-          user: {
-            id: '1',
-            name: registerData.name,
-            email: registerData.email,
-            role: registerData.role,
-          },
-          token: 'test-token',
-          permissions: {},
+          id: '1',
+          name: createData.name,
+          email: createData.email,
+          role: createData.role,
         },
       }
 
       // Use the shared mock instance
       mockAxiosInstance.post.mockResolvedValue(mockResponse)
 
-      const result = await apiModule.authApi.register(registerData)
+      const result = await apiModule.usersApi.create(createData)
 
-      expect(result.user.email).toBe(registerData.email)
-      expect(result.token).toBe('test-token')
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith('/users', createData)
+      expect(result.email).toBe(createData.email)
     })
   })
 

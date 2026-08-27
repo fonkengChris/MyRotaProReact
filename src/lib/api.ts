@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from 'axios'
 import { 
-  User, 
-  LoginCredentials, 
-  RegisterData, 
+  User,
+  LoginCredentials,
+  CreateUserData,
   AuthResponse,
   Home,
   Service,
@@ -85,7 +85,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only redirect if we're not on a public page AND we have a token
       const currentPath = window.location.pathname
-      const publicPaths = ['/login', '/register', '/setup']
+      const publicPaths = ['/login', '/setup']
       const hasToken = localStorage.getItem('token')
       
       if (!publicPaths.includes(currentPath) && hasToken) {
@@ -106,11 +106,6 @@ api.interceptors.response.use(
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/auth/login', credentials)
-    return response.data
-  },
-
-  register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/register', data)
     return response.data
   },
 
@@ -464,7 +459,7 @@ export const usersApi = {
     return response.data
   },
 
-  create: async (data: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> => {
+  create: async (data: CreateUserData): Promise<User> => {
     const response = await api.post<User>('/users', data)
     return response.data
   },
