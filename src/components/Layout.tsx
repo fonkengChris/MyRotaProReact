@@ -3,10 +3,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
 import ShiftSwapNotification from '@/components/ShiftSwapNotification'
-import { 
-  HomeIcon, 
-  CalendarIcon, 
-  UsersIcon, 
+import {
+  HomeIcon,
+  CalendarIcon,
+  CalendarDaysIcon,
+  TableCellsIcon,
+  QueueListIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  HandRaisedIcon,
+  ArrowsRightLeftIcon,
+  UsersIcon,
   CogIcon,
   Bars3Icon,
   XMarkIcon,
@@ -15,8 +22,6 @@ import {
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
   ChartBarIcon,
-  BellIcon,
-  ArrowPathIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 
@@ -38,20 +43,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ),
     ...(permissions.canManageRotas
       ? [
-          { name: 'Rota', href: '/rota', icon: CalendarIcon, current: location.pathname.startsWith('/rota') },
-          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: ClockIcon, current: location.pathname === '/weekly-schedules' }
+          { name: 'Rota', href: '/rota', icon: TableCellsIcon, current: location.pathname.startsWith('/rota') },
+          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: QueueListIcon, current: location.pathname === '/weekly-schedules' }
         ]
       : [
           { name: 'My Timetables', href: '/my-timetables', icon: CalendarIcon, current: location.pathname === '/my-timetables' }
         ]
     ),
-    ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: CalendarIcon, current: location.pathname === '/timetables' }] : []),
-    { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon, current: location.pathname === '/my-schedule' },
-    { name: 'Shift Selection', href: '/shift-selection', icon: BellIcon, current: location.pathname === '/shift-selection' },
-    { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowPathIcon, current: location.pathname === '/shift-swaps' },
+    ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/timetables' }] : []),
+    { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },
+    { name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' },
+    { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' },
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
     { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
-    { name: 'Availability', href: '/availability', icon: ClockIcon, current: location.pathname === '/availability' },
+    { name: 'Availability', href: '/availability', icon: CheckCircleIcon, current: location.pathname === '/availability' },
     ...(permissions.isAdmin ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
