@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
+import { authApi } from '@/lib/api'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
   isPushSupported,
@@ -123,11 +124,11 @@ const Settings: React.FC = () => {
   const onPasswordSubmit = async (data: PasswordFormData) => {
     try {
       setIsUpdatingPassword(true)
-      // TODO: Implement password change API call
+      await authApi.changePassword(data.currentPassword, data.newPassword)
       toast.success('Password changed successfully!')
       resetPassword()
     } catch (error: any) {
-      toast.error('Failed to change password')
+      toast.error(error.response?.data?.error || 'Failed to change password')
     } finally {
       setIsUpdatingPassword(false)
     }
