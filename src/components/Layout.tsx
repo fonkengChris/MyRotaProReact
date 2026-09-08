@@ -78,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex h-16 items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center space-x-3">
               <img src="/logo.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain sm:h-12" />
-              <h1 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">MyRotaPro</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Scheduler RCS</h1>
             </div>
             <Button
               variant="outline"
@@ -138,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex h-16 items-center px-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center space-x-3">
               <img src="/logo.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain" />
-              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">MyRotaPro</h1>
+              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Scheduler RCS</h1>
             </div>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
