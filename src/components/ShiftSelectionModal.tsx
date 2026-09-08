@@ -34,7 +34,9 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
 }) => {
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null)
   const [isSelecting, setIsSelecting] = useState(false)
-  const [conflicts, setConflicts] = useState<{[shiftId: string]: string}>({})
+  // 'hard' conflicts (overlap) block selection; 'rest' conflicts (<8h gap) are allowed but
+  // flagged for admin approval on the server.
+  const [conflicts, setConflicts] = useState<{[shiftId: string]: { severity: 'hard' | 'rest'; message: string }}>({})
 
   // Check for conflicts when shifts change
   useEffect(() => {
@@ -44,8 +46,8 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
   }, [availableShifts])
 
   const checkConflictsForShifts = async () => {
-    const conflictMap: {[shiftId: string]: string} = {}
-    
+    const conflictMap: {[shiftId: string]: { severity: 'hard' | 'rest'; message: string }} = {}
+
     for (const shift of availableShifts) {
       try {
         // Check if user already has shifts on the same date
@@ -71,22 +73,21 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
           return !(userEnd <= shiftStart || shiftEnd <= userStart)
         })
         
-        if (hasConflict) {
-          conflictMap[shift.id] = 'Time conflict with existing shift'
-        }
-        
         // Check for insufficient rest period (8 hours minimum)
         const hasInsufficientRest = userShifts.some(userShift => {
           if (userShift.id === shift.id) return false
-          
+
           const restPeriod = calculateRestPeriod(userShift, shift)
           return restPeriod < 8
         })
-        
-        if (hasInsufficientRest) {
-          conflictMap[shift.id] = 'Insufficient rest period (less than 8 hours)'
+
+        // Overlap is a hard block; a rest-gap shortfall is allowed but needs admin approval.
+        if (hasConflict) {
+          conflictMap[shift.id] = { severity: 'hard', message: 'Time conflict with existing shift' }
+        } else if (hasInsufficientRest) {
+          conflictMap[shift.id] = { severity: 'rest', message: 'Less than 8h rest — needs admin approval' }
         }
-        
+
       } catch (error) {
         console.error('Error checking conflicts for shift:', shift.id, error)
       }
@@ -118,15 +119,21 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
   }
 
   const handleSelectShift = async (shiftId: string) => {
-    if (conflicts[shiftId]) {
-      toast.error(`Cannot select this shift: ${conflicts[shiftId]}`)
+    const conflict = conflicts[shiftId]
+    if (conflict?.severity === 'hard') {
+      toast.error(`Cannot select this shift: ${conflict.message}`)
       return
     }
 
+    setSelectedShiftId(shiftId)
     setIsSelecting(true)
     try {
       await shiftsApi.assignStaff(shiftId, currentUser.id)
-      toast.success('Shift selected successfully!')
+      if (conflict?.severity === 'rest') {
+        toast.success('Shift selected — pending admin approval of the reduced rest period.')
+      } else {
+        toast.success('Shift selected successfully!')
+      }
       onShiftSelected(shiftId)
       onClose()
     } catch (error: any) {
@@ -230,19 +237,23 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                   
                   <div className="p-4 space-y-3">
                     {shifts.map((shift) => {
-                      const hasConflict = conflicts[shift.id]
+                      const conflict = conflicts[shift.id]
+                      const isHardConflict = conflict?.severity === 'hard'
+                      const isRestConflict = conflict?.severity === 'rest'
                       const duration = getShiftDuration(shift.start_time, shift.end_time)
                       const isSelected = selectedShiftId === shift.id
-                      
+
                       return (
                         <div
                           key={shift.id}
                           className={`border rounded-lg p-4 transition-all ${
-                            hasConflict 
-                              ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20' 
-                              : isSelected 
-                                ? 'border-primary-300 bg-primary-50 dark:border-primary-600 dark:bg-primary-900/20 dark:text-neutral-100' 
-                                : 'border-neutral-300 hover:border-neutral-400 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-700'
+                            isHardConflict
+                              ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                              : isRestConflict
+                                ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
+                                : isSelected
+                                  ? 'border-primary-300 bg-primary-50 dark:border-primary-600 dark:bg-primary-900/20 dark:text-neutral-100'
+                                  : 'border-neutral-300 hover:border-neutral-400 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-700'
                           }`}
                         >
                           <div className="flex items-start justify-between">
@@ -266,10 +277,17 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
                                 
-                                {hasConflict && (
+                                {isHardConflict && (
                                   <Badge variant="danger" className="text-xs">
                                     <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
                                     Conflict
+                                  </Badge>
+                                )}
+
+                                {isRestConflict && (
+                                  <Badge variant="warning" className="text-xs">
+                                    <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
+                                    Needs approval
                                   </Badge>
                                 )}
                               </div>
@@ -288,9 +306,15 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   </div>
                                 )}
                                 
-                                {hasConflict && (
+                                {isHardConflict && (
                                   <div className="text-red-600 dark:text-red-400 font-medium">
-                                    ⚠️ {conflicts[shift.id]}
+                                    ⚠️ {conflict.message}
+                                  </div>
+                                )}
+
+                                {isRestConflict && (
+                                  <div className="text-amber-700 dark:text-amber-400 font-medium">
+                                    ⚠️ {conflict.message}
                                   </div>
                                 )}
                               </div>
@@ -298,10 +322,10 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                             
                             <div className="ml-4">
                               <Button
-                                variant={hasConflict ? "outline" : "primary"}
+                                variant={isHardConflict ? "outline" : "primary"}
                                 size="sm"
                                 onClick={() => handleSelectShift(shift.id)}
-                                disabled={hasConflict || isSelecting}
+                                disabled={isHardConflict || isSelecting}
                                 className="flex items-center space-x-2"
                               >
                                 {isSelecting && selectedShiftId === shift.id ? (
@@ -310,7 +334,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   <CheckIcon className="h-4 w-4" />
                                 )}
                                 <span>
-                                  {hasConflict ? 'Conflict' : 'Select Shift'}
+                                  {isHardConflict ? 'Conflict' : isRestConflict ? 'Select (needs approval)' : 'Select Shift'}
                                 </span>
                               </Button>
                             </div>

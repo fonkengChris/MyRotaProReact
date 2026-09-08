@@ -75,6 +75,14 @@ const RotaEditor: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string>('09:00')
 
+  // Admin override prompt: shown when an assignment hits overridable rules (not overlap).
+  const [overridePrompt, setOverridePrompt] = useState<{
+    shiftId: string
+    userId: string
+    conflicts: { conflictType: string; message: string }[]
+  } | null>(null)
+  const [isOverriding, setIsOverriding] = useState(false)
+
   // Fetch all homes for selector
   const { data: homes = [], isLoading: homesLoading } = useQuery({
     queryKey: ['homes'],
@@ -464,6 +472,19 @@ const RotaEditor: React.FC = () => {
       if (error.response?.status === 409) {
         // Conflict error - show detailed conflict information
         const conflictData = error.response.data
+        // Admin hit overridable rules (never overlap): offer an override confirmation instead
+        // of a hard error.
+        if (conflictData.overridable && Array.isArray(conflictData.overridableConflicts)) {
+          setOverridePrompt({
+            shiftId,
+            userId,
+            conflicts: conflictData.overridableConflicts.map((c: any) => ({
+              conflictType: c.conflictType,
+              message: c.message,
+            })),
+          })
+          return { success: false, error: 'override_required' }
+        }
         if (conflictData.conflict) {
           const conflict = conflictData.conflict
           let errorMessage = 'Scheduling conflict detected: '
@@ -527,6 +548,25 @@ const RotaEditor: React.FC = () => {
       } else {
         toast.error(error.response?.data?.error || 'Failed to unassign staff. Please try again.')
       }
+    }
+  }
+
+  // Re-run the assignment with override=true after the admin confirms the override prompt.
+  const confirmOverride = async () => {
+    if (!overridePrompt) return
+    const { shiftId, userId } = overridePrompt
+    setIsOverriding(true)
+    try {
+      await shiftsApi.assignStaff(shiftId, userId, undefined, true)
+      toast.success('Staff assigned (rules overridden)')
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['conflicts'] })
+      setOverridePrompt(null)
+    } catch (error: any) {
+      // Overlap (or any still-blocking rule) cannot be overridden.
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Override failed')
+    } finally {
+      setIsOverriding(false)
     }
   }
 
@@ -1020,6 +1060,45 @@ const RotaEditor: React.FC = () => {
           existingShifts={shifts || []}
           isLoading={false}
         />
+      )}
+
+      {/* Admin override confirmation — overlap is never offered here (backend hard-blocks it). */}
+      {overridePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-md w-full mx-4 border border-neutral-200 dark:border-neutral-700">
+            <div className="px-6 py-4 border-b border-neutral-300 dark:border-neutral-700">
+              <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
+                Override scheduling rules?
+              </h2>
+            </div>
+            <div className="px-6 py-4 space-y-3">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                Assigning this staff member breaks the following rule{overridePrompt.conflicts.length !== 1 ? 's' : ''}:
+              </p>
+              <ul className="space-y-2">
+                {overridePrompt.conflicts.map((c, i) => (
+                  <li
+                    key={i}
+                    className="text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2"
+                  >
+                    {c.message}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                As an admin you can override and assign anyway. (Same-time double-booking can never be overridden.)
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-neutral-300 dark:border-neutral-700 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOverridePrompt(null)} disabled={isOverriding}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={confirmOverride} disabled={isOverriding}>
+                {isOverriding ? 'Assigning…' : 'Override & assign'}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

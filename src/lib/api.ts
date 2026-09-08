@@ -27,6 +27,7 @@ import {
   MessageThreadResponse,
   PayrollReportResponse,
   OvertimeRequest,
+  RestException,
   ClockOutResponse,
   AttendanceLogsResponse,
 } from '@/types'
@@ -224,13 +225,30 @@ export const shiftsApi = {
     return response.data
   },
 
-  assignStaff: async (shiftId: string, userId: string, note?: string): Promise<Shift> => {
-    const response = await api.post<Shift>(`/shifts/${shiftId}/assign`, { user_id: userId, note })
+  assignStaff: async (shiftId: string, userId: string, note?: string, override?: boolean): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/assign`, { user_id: userId, note, override })
     return response.data
   },
 
   removeStaff: async (shiftId: string, userId: string): Promise<Shift> => {
     const response = await api.delete<Shift>(`/shifts/${shiftId}/assign/${userId}`)
+    return response.data
+  },
+
+  // Rest-exception review (admin): assignments flagged when a support worker self-selected a
+  // shift breaking only the <8h rest rule.
+  listRestExceptions: async (params?: { status?: string; home_id?: string }): Promise<RestException[]> => {
+    const response = await api.get<RestException[]>('/shifts/rest-exceptions', { params })
+    return response.data
+  },
+
+  confirmRestException: async (shiftId: string, userId: string): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/rest-exception/${userId}/confirm`)
+    return response.data
+  },
+
+  removeRestException: async (shiftId: string, userId: string): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/rest-exception/${userId}/remove`)
     return response.data
   },
 

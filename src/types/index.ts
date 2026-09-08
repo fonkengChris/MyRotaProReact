@@ -218,10 +218,13 @@ export interface StaffAssignment {
   status: AssignmentStatus
   assigned_at: string
   note?: string
+  rest_exception_status?: RestExceptionStatus
   clock_in_time?: string | null
   clock_out_time?: string | null
   attendance_status?: AttendanceStatus
 }
+
+export type RestExceptionStatus = 'none' | 'pending' | 'confirmed'
 
 export type AssignmentStatus = 'assigned' | 'pending' | 'swapped' | 'declined'
 
@@ -245,6 +248,20 @@ export interface OvertimeRequest {
   approved_at?: string
   denial_reason?: string
   submitted_at: string
+}
+
+// One flagged rest-exception assignment awaiting admin review (from /shifts/rest-exceptions).
+export interface RestException {
+  shift_id: string
+  user: { id?: string; _id?: string; name?: string; email?: string; role?: string } | string
+  date: string
+  start_time: string
+  end_time: string
+  shift_type: ShiftType
+  home_id: string
+  service?: { id?: string; name?: string } | string | null
+  rest_exception_status: RestExceptionStatus
+  assigned_at: string
 }
 
 export interface ClockOutResponse {

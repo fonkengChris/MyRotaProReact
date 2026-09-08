@@ -55,13 +55,13 @@ const HomeModal: React.FC<HomeModalProps> = ({
           },
           manager_id: extractManagerId(home.manager_id) || '',
           contact_info: {
-            phone: home.contact_info.phone,
-            email: home.contact_info.email
+            phone: home.contact_info?.phone || '',
+            email: home.contact_info?.email || ''
           },
           capacity: home.capacity,
           operating_hours: {
-            start: home.operating_hours.start,
-            end: home.operating_hours.end
+            start: home.operating_hours?.start || '',
+            end: home.operating_hours?.end || ''
           },
           is_active: home.is_active
         })
@@ -91,8 +91,12 @@ const HomeModal: React.FC<HomeModalProps> = ({
 
   const fetchManagers = async () => {
     try {
-      const managersData = await usersApi.getAll({ role: 'key_worker' })
-      setManagers(managersData)
+      // A home can be managed by an admin or a key worker.
+      const [admins, keyWorkers] = await Promise.all([
+        usersApi.getAll({ role: 'admin' }),
+        usersApi.getAll({ role: 'key_worker' })
+      ])
+      setManagers([...admins, ...keyWorkers])
     } catch (error: any) {
       toast.error('Failed to fetch managers')
     }
@@ -150,18 +154,6 @@ const HomeModal: React.FC<HomeModalProps> = ({
     }
     if (!formData.location.postcode.trim()) {
       toast.error('Postcode is required')
-      return false
-    }
-    if (!formData.manager_id) {
-      toast.error('Please select a manager')
-      return false
-    }
-    if (!formData.contact_info.phone.trim()) {
-      toast.error('Phone number is required')
-      return false
-    }
-    if (!formData.contact_info.email.trim()) {
-      toast.error('Email is required')
       return false
     }
     if (formData.capacity < 1) {
@@ -309,15 +301,14 @@ const HomeModal: React.FC<HomeModalProps> = ({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
-                    Manager *
+                    Manager
                   </label>
                   <select
                     value={formData.manager_id}
                     onChange={(e) => handleInputChange('manager_id', e.target.value)}
                     className="w-full rounded-md border border-neutral-400 dark:border-neutral-600 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-700 text-neutral-950 dark:text-neutral-100"
-                    required
                   >
-                    <option value="">Select a manager</option>
+                    <option value="">No manager</option>
                     {managers.map((manager) => (
                       <option key={manager.id} value={manager.id}>
                         {manager.name}
@@ -344,27 +335,25 @@ const HomeModal: React.FC<HomeModalProps> = ({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
-                    Phone *
+                    Phone
                   </label>
                   <Input
                     type="tel"
                     value={formData.contact_info.phone}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange('phone', e.target.value)}
                     placeholder="Enter phone number"
-                    required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
-                    Email *
+                    Email
                   </label>
                   <Input
                     type="email"
                     value={formData.contact_info.email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleContactChange('email', e.target.value)}
                     placeholder="Enter email address"
-                    required
                   />
                 </div>
               </div>
@@ -372,25 +361,23 @@ const HomeModal: React.FC<HomeModalProps> = ({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
-                    Operating Hours Start *
+                    Operating Hours Start
                   </label>
                   <Input
                     type="time"
                     value={formData.operating_hours.start}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleOperatingHoursChange('start', e.target.value)}
-                    required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
-                    Operating Hours End *
+                    Operating Hours End
                   </label>
                   <Input
                     type="time"
                     value={formData.operating_hours.end}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleOperatingHoursChange('end', e.target.value)}
-                    required
                   />
                 </div>
               </div>
