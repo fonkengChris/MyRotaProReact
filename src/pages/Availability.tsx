@@ -5,12 +5,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { 
-  CalendarIcon, 
+import {
+  CalendarIcon,
   ClockIcon,
   PlusIcon,
   DocumentTextIcon,
-  CheckCircleIcon
+  SunIcon
 } from '@heroicons/react/24/outline'
 import { availabilityApi, timeOffApi, usersApi } from '@/lib/api'
 import { Availability, TimeOffRequest, extractUserDefaultHomeId } from '@/types'
@@ -18,15 +18,17 @@ import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import WeeklyAvailabilitySelector from '@/components/WeeklyAvailabilitySelector'
 import TimeOffRequestForm from '@/components/TimeOffRequestForm'
 import TimeOffRequestList from '@/components/TimeOffRequestList'
+import LeaveSummary from '@/components/LeaveSummary'
 import toast from 'react-hot-toast'
 import { filterApprovedLeave } from '@/utils/timeOff'
+import { summariseLeave } from '@/utils/leave'
 
 const AvailabilityPage: React.FC = () => {
   const { user } = useAuth()
   const permissions = usePermissions()
   const queryClient = useQueryClient()
   
-  const [activeTab, setActiveTab] = useState<'calendar' | 'weekly' | 'requests' | 'submit'>('calendar')
+  const [activeTab, setActiveTab] = useState<'calendar' | 'weekly' | 'leave' | 'requests' | 'submit'>('leave')
   const [selectedRequest, setSelectedRequest] = useState<TimeOffRequest | null>(null)
 
   const outlineTabActiveClass =
@@ -70,6 +72,21 @@ const AvailabilityPage: React.FC = () => {
   const approvedLeaveRequests = useMemo(
     () => filterApprovedLeave(timeOffRequests),
     [timeOffRequests]
+  )
+
+  // Annual-leave balance for the current user (their own requests only).
+  const ownRequests = useMemo(
+    () =>
+      timeOffRequests.filter((r) => {
+        const requestUserId = typeof r.user_id === 'string' ? r.user_id : r.user_id?.id
+        return requestUserId === user?.id
+      }),
+    [timeOffRequests, user?.id]
+  )
+
+  const leaveSummary = useMemo(
+    () => summariseLeave(ownRequests, user),
+    [ownRequests, user]
   )
 
   // Fetch staff members (for managers)
@@ -255,131 +272,111 @@ const AvailabilityPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-heading-accent">Availability & Time Off</h1>
+          <h1 className="text-2xl font-bold text-heading-accent">Availability &amp; Leave</h1>
           <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-            Manage your availability and time-off requests
+            Manage your availability and track your annual leave
           </p>
         </div>
-        
-        <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('calendar')}
-            className={activeTab === 'calendar' ? outlineTabActiveClass : ''}
-          >
-            <CalendarIcon className="h-4 w-4 mr-2" />
-            Detailed View
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('weekly')}
-            className={activeTab === 'weekly' ? outlineTabActiveClass : ''}
-          >
-            <ClockIcon className="h-4 w-4 mr-2" />
-            Weekly Select
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('requests')}
-            className={activeTab === 'requests' ? outlineTabActiveClass : ''}
-          >
-            <DocumentTextIcon className="h-4 w-4 mr-2" />
-            Requests
-          </Button>
-          
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setActiveTab('submit')}
-            className={activeTab === 'submit' ? 'ring-2 ring-primary-300 dark:ring-primary-600' : ''}
-          >
-            <PlusIcon className="h-4 w-4 mr-2" />
-            New Request
-          </Button>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          {/* Availability group */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Availability
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('calendar')}
+                className={activeTab === 'calendar' ? outlineTabActiveClass : ''}
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Detailed View
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('weekly')}
+                className={activeTab === 'weekly' ? outlineTabActiveClass : ''}
+              >
+                <ClockIcon className="h-4 w-4 mr-2" />
+                Weekly Select
+              </Button>
+            </div>
+          </div>
+
+          {/* Leave group */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Leave
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('leave')}
+                className={activeTab === 'leave' ? outlineTabActiveClass : ''}
+              >
+                <SunIcon className="h-4 w-4 mr-2" />
+                Overview
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('requests')}
+                className={activeTab === 'requests' ? outlineTabActiveClass : ''}
+              >
+                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                Requests
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setActiveTab('submit')}
+                className={activeTab === 'submit' ? 'ring-2 ring-primary-300 dark:ring-primary-600' : ''}
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                New Request
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                {availabilities.filter(a => a.is_available).length || 0}
-              </p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Available Slots</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-warning-200/80 bg-warning-50/40 dark:border-warning-800/50 dark:bg-warning-950/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning-100 ring-1 ring-warning-300/50 dark:bg-warning-900/50 dark:ring-warning-600/40">
-                <ClockIcon className="h-5 w-5 text-warning-700 dark:text-warning-300" />
-              </div>
-              {requestsLoading ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                <>
-                  <p className="text-2xl font-bold text-warning-700 dark:text-warning-300">
-                    {timeOffRequests.filter(r => r.status === 'pending').length || 0}
-                  </p>
-                  <p className="text-sm font-medium text-warning-900 dark:text-warning-100">Pending Requests</p>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-success-200/80 bg-success-50/40 dark:border-success-800/50 dark:bg-success-950/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success-100 ring-1 ring-success-300/50 dark:bg-success-900/50 dark:ring-success-600/40">
-                <CheckCircleIcon className="h-5 w-5 text-success-700 dark:text-success-300" />
-              </div>
-              {requestsLoading ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                <>
-                  <p className="text-2xl font-bold text-success-700 dark:text-success-300">
-                    {timeOffRequests.filter(r => r.status === 'approved').length || 0}
-                  </p>
-                  <p className="text-sm font-medium text-success-900 dark:text-success-100">Approved Requests</p>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              {requestsLoading ? (
-                <div className="flex items-center justify-center">
-                  <LoadingSpinner size="sm" />
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold text-danger-600 dark:text-danger-400">
-                    {timeOffRequests.filter(r => r.status === 'denied').length || 0}
-                  </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Denied Requests</p>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'leave' && (
+        <div className="space-y-6">
+          {requestsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <>
+              <LeaveSummary summary={leaveSummary} user={user} />
+              <div>
+                <h2 className="mb-3 text-lg font-semibold text-neutral-950 dark:text-neutral-100">
+                  Your leave requests
+                </h2>
+                <TimeOffRequestList
+                  requests={ownRequests}
+                  staff={user ? [user] : []}
+                  onApprove={handleApproveTimeOff}
+                  onDeny={handleDenyTimeOff}
+                  onViewDetails={handleViewTimeOffDetails}
+                  canManage={false}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {activeTab === 'calendar' && (
         <AvailabilityCalendar
           userId={user?.id || ''}

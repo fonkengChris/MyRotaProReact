@@ -54,6 +54,7 @@ const StaffManagement: React.FC = () => {
     confirmPassword: '',
     role: 'support_worker' as UserRole,
     type: 'fulltime' as 'fulltime' | 'parttime' | 'bank',
+    annual_leave_entitlement_days: undefined as number | undefined,
     home_id: '',
   }
   const [showAddModal, setShowAddModal] = useState(false)
@@ -244,6 +245,7 @@ const StaffManagement: React.FC = () => {
       type: user.type,
       min_hours_per_week: user.min_hours_per_week,
       max_hours_per_week: user.max_hours_per_week,
+      annual_leave_entitlement_days: user.annual_leave_entitlement_days,
       skills: user.skills,
       preferred_shift_types: user.preferred_shift_types,
       is_active: user.is_active
@@ -277,7 +279,7 @@ const StaffManagement: React.FC = () => {
   }
 
   const handleCreateUser = () => {
-    const { name, email, phone, password, confirmPassword, role, type, home_id } = addFormData
+    const { name, email, phone, password, confirmPassword, role, type, home_id, annual_leave_entitlement_days } = addFormData
 
     if (!name.trim() || !email.trim() || !phone.trim() || !password) {
       toast.error('Name, email, phone and password are required')
@@ -299,6 +301,11 @@ const StaffManagement: React.FC = () => {
       password,
       role,
       type,
+      // Leave blank to let the server derive the statutory default from the type.
+      annual_leave_entitlement_days:
+        typeof annual_leave_entitlement_days === 'number' && !Number.isNaN(annual_leave_entitlement_days)
+          ? annual_leave_entitlement_days
+          : undefined,
       // Admins have no home; only send home_id for other roles when chosen.
       home_id: role !== 'admin' && home_id ? home_id : undefined,
     })
@@ -1132,6 +1139,26 @@ const StaffManagement: React.FC = () => {
                       className="input w-full"
                     />
                   </div>
+                  <div>
+                    <label className="form-label">
+                      Annual Leave Entitlement (days)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="366"
+                      value={editFormData.annual_leave_entitlement_days ?? ''}
+                      onChange={(e) => setEditFormData(prev => ({
+                        ...prev,
+                        annual_leave_entitlement_days: e.target.value === '' ? undefined : parseInt(e.target.value)
+                      }))}
+                      className="input w-full"
+                      placeholder="e.g. 28 (UK statutory full-time)"
+                    />
+                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      Leave blank to use the statutory default for the employment type (full-time 28, part-time pro-rata).
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -1300,6 +1327,24 @@ const StaffManagement: React.FC = () => {
                       <option value="parttime">Part Time</option>
                       <option value="bank">Bank</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="form-label">Annual Leave Entitlement (days)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="366"
+                      value={addFormData.annual_leave_entitlement_days ?? ''}
+                      onChange={(e) => setAddFormData(prev => ({
+                        ...prev,
+                        annual_leave_entitlement_days: e.target.value === '' ? undefined : parseInt(e.target.value)
+                      }))}
+                      className="input w-full"
+                      placeholder="Auto (28 full-time, pro-rata part-time)"
+                    />
+                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      Leave blank to use the UK statutory default for the employment type.
+                    </p>
                   </div>
                   {addFormData.role !== 'admin' && (
                     <div className="sm:col-span-2">

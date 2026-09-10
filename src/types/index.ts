@@ -12,6 +12,7 @@ export interface User {
   default_home_id?: string
   type: 'fulltime' | 'parttime' | 'bank'
   min_hours_per_week: number
+  annual_leave_entitlement_days?: number
   is_active: boolean
   skills: Skill[]
   preferred_shift_types: ShiftType[]
@@ -84,6 +85,7 @@ export interface CreateUserData {
   password: string
   role: UserRole
   type?: 'fulltime' | 'parttime' | 'bank'
+  annual_leave_entitlement_days?: number
   home_id?: string
 }
 
