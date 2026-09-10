@@ -144,9 +144,20 @@ export interface Home {
   contact_info: ContactInfo
   capacity: number
   operating_hours: OperatingHours
+  break_policy?: BreakPolicy
   is_active: boolean
   created_at: string
   updated_at: string
+}
+
+export interface BreakDeductionTier {
+  min_hours: number
+  deduction_hours: number
+}
+
+export interface BreakPolicy {
+  enabled: boolean
+  tiers: BreakDeductionTier[]
 }
 
 export interface Location {

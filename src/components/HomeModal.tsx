@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Home, User, extractManagerId } from '@/types'
+import { Home, User, BreakPolicy, extractManagerId } from '@/types'
 import { homesApi, usersApi } from '@/lib/api'
+import { usePermissions } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 
 interface HomeModalProps {
@@ -13,12 +14,23 @@ interface HomeModalProps {
   onSuccess: () => void
 }
 
+// Mirrors the server-side default in models/Home.js (8h+ → 0.5h, 12h+ → 1h).
+const DEFAULT_BREAK_POLICY: BreakPolicy = {
+  enabled: true,
+  tiers: [
+    { min_hours: 8, deduction_hours: 0.5 },
+    { min_hours: 12, deduction_hours: 1 },
+  ],
+}
+
 const HomeModal: React.FC<HomeModalProps> = ({
   isOpen,
   onClose,
   home,
   onSuccess
 }) => {
+  const permissions = usePermissions()
+  const isAdmin = permissions.isAdmin
   const [isLoading, setIsLoading] = useState(false)
   const [managers, setManagers] = useState<User[]>([])
   const [formData, setFormData] = useState({
@@ -38,6 +50,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
       start: '08:00',
       end: '18:00'
     },
+    break_policy: DEFAULT_BREAK_POLICY as BreakPolicy,
     is_active: true
   })
 
@@ -63,6 +76,12 @@ const HomeModal: React.FC<HomeModalProps> = ({
             start: home.operating_hours?.start || '',
             end: home.operating_hours?.end || ''
           },
+          break_policy: home.break_policy
+            ? {
+                enabled: home.break_policy.enabled !== false,
+                tiers: (home.break_policy.tiers || []).map((t) => ({ ...t })),
+              }
+            : { ...DEFAULT_BREAK_POLICY, tiers: DEFAULT_BREAK_POLICY.tiers.map((t) => ({ ...t })) },
           is_active: home.is_active
         })
       } else {
@@ -83,6 +102,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
             start: '08:00',
             end: '18:00'
           },
+          break_policy: { ...DEFAULT_BREAK_POLICY, tiers: DEFAULT_BREAK_POLICY.tiers.map((t) => ({ ...t })) },
           is_active: true
         })
       }
@@ -139,6 +159,42 @@ const HomeModal: React.FC<HomeModalProps> = ({
     }))
   }
 
+  const handleBreakEnabledChange = (enabled: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      break_policy: { ...prev.break_policy, enabled }
+    }))
+  }
+
+  const handleTierChange = (index: number, field: 'min_hours' | 'deduction_hours', value: number) => {
+    setFormData(prev => {
+      const tiers = prev.break_policy.tiers.map((tier, i) =>
+        i === index ? { ...tier, [field]: value } : tier
+      )
+      return { ...prev, break_policy: { ...prev.break_policy, tiers } }
+    })
+  }
+
+  const handleAddTier = () => {
+    setFormData(prev => ({
+      ...prev,
+      break_policy: {
+        ...prev.break_policy,
+        tiers: [...prev.break_policy.tiers, { min_hours: 0, deduction_hours: 0 }]
+      }
+    }))
+  }
+
+  const handleRemoveTier = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      break_policy: {
+        ...prev.break_policy,
+        tiers: prev.break_policy.tiers.filter((_, i) => i !== index)
+      }
+    }))
+  }
+
   const validateForm = () => {
     if (!formData.name.trim()) {
       toast.error('Home name is required')
@@ -183,11 +239,18 @@ const HomeModal: React.FC<HomeModalProps> = ({
     setIsLoading(true)
     
     try {
+      // Break policy is admin-only; non-admins never send it (server also enforces this).
+      let payload: typeof formData | Omit<typeof formData, 'break_policy'> = formData
+      if (!isAdmin) {
+        const { break_policy, ...rest } = formData
+        payload = rest
+      }
+
       if (home) {
-        const result = await homesApi.update(home.id, formData)
+        await homesApi.update(home.id, payload)
         toast.success('Home updated successfully')
       } else {
-        const result = await homesApi.create(formData)
+        await homesApi.create(payload)
         toast.success('Home created successfully')
       }
       onSuccess()
@@ -381,6 +444,87 @@ const HomeModal: React.FC<HomeModalProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Break deductions — admins only. Governs unpaid break hours removed
+                  from payable time for this home. */}
+              {isAdmin && (
+                <div className="rounded-lg border border-neutral-300 dark:border-neutral-700 p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-semibold text-neutral-950 dark:text-neutral-100">
+                      Break Deductions
+                    </h4>
+                    <label className="flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-300">
+                      <input
+                        type="checkbox"
+                        checked={formData.break_policy.enabled}
+                        onChange={(e) => handleBreakEnabledChange(e.target.checked)}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-400 rounded"
+                      />
+                      Enabled
+                    </label>
+                  </div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                    Unpaid break hours deducted from a shift's paid time. The highest tier
+                    whose minimum shift hours are met is applied.
+                  </p>
+
+                  {formData.break_policy.enabled && (
+                    <div className="space-y-2">
+                      {formData.break_policy.tiers.length === 0 && (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          No tiers configured — no break will be deducted.
+                        </p>
+                      )}
+                      {formData.break_policy.tiers.map((tier, index) => (
+                        <div key={index} className="flex items-end gap-2">
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-400 mb-1">
+                              Shift hours ≥
+                            </label>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="24"
+                              step="0.5"
+                              value={tier.min_hours}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                handleTierChange(index, 'min_hours', parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-400 mb-1">
+                              Deduct (hours)
+                            </label>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="24"
+                              step="0.25"
+                              value={tier.deduction_hours}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                handleTierChange(index, 'deduction_hours', parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTier(index)}
+                            className="mb-1 rounded-md p-2 text-neutral-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/30"
+                            aria-label="Remove tier"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" onClick={handleAddTier}>
+                        <PlusIcon className="h-4 w-4 mr-1" />
+                        Add tier
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center">
                 <label className="flex items-center">
