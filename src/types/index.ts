@@ -175,6 +175,28 @@ export interface ContactInfo {
   email: string
 }
 
+// Company-wide settings (help/emergency contacts + shift-start checklist),
+// managed by admins and shown to staff on their profile.
+export interface OrgContact {
+  label: string
+  number: string
+  notes?: string
+}
+
+export interface ShiftTips {
+  core: string[]
+  day: string[]
+  night: string[]
+  escalation: string[]
+}
+
+export interface OrganizationSettings {
+  company_contacts: OrgContact[]
+  emergency_contacts: OrgContact[]
+  shift_tips: ShiftTips
+  updated_at?: string
+}
+
 export interface OperatingHours {
   start: string
   end: string

@@ -30,6 +30,7 @@ import {
   RestException,
   ClockOutResponse,
   AttendanceLogsResponse,
+  OrganizationSettings,
 } from '@/types'
 import toast from 'react-hot-toast';
 import { getAppConfig, isDebugMode } from './env';
@@ -158,6 +159,19 @@ export const homesApi = {
 
   delete: async (id: string): Promise<{ message: string }> => {
     const response = await api.delete<{ message: string }>(`/homes/${id}`)
+    return response.data
+  },
+}
+
+// Organization settings API (company-wide help/emergency contacts + shift tips)
+export const organizationSettingsApi = {
+  get: async (): Promise<OrganizationSettings> => {
+    const response = await api.get<OrganizationSettings>('/organization-settings')
+    return response.data
+  },
+
+  update: async (data: Partial<OrganizationSettings>): Promise<OrganizationSettings> => {
+    const response = await api.put<OrganizationSettings>('/organization-settings', data)
     return response.data
   },
 }

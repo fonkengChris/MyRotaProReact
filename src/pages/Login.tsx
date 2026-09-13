@@ -53,7 +53,9 @@ const Login: React.FC = () => {
       await login(data)
       
       toast.success('Login successful!')
-      navigate('/dashboard')
+      // Send to the root route, which redirects by role (management → dashboard,
+      // everyone else → their profile landing page).
+      navigate('/')
     } catch (error: any) {
       console.error('🚀 Login: Error during login:', error)
       toast.error(error.response?.data?.error || error.message || 'Login failed. Please try again.')

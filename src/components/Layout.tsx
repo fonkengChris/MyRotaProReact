@@ -22,7 +22,8 @@ import {
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
   ChartBarIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -39,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     ...(permissions.isManagement
       ? [{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' }]
-      : []
+      : [{ name: 'Profile', href: '/profile', icon: UserCircleIcon, current: location.pathname === '/profile' }]
     ),
     ...(permissions.canManageRotas
       ? [

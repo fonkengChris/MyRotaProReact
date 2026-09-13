@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAuth } from '@/hooks/useAuth'
-import { authApi } from '@/lib/api'
+import { useAuth, usePermissions } from '@/hooks/useAuth'
+import { authApi, organizationSettingsApi } from '@/lib/api'
+import { OrgContact, ShiftTips } from '@/types'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
   isPushSupported,
@@ -22,7 +23,10 @@ import {
   BellIcon,
   ShieldCheckIcon,
   SunIcon,
-  MoonIcon
+  MoonIcon,
+  BuildingOffice2Icon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -46,10 +50,60 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 
 const Settings: React.FC = () => {
   const { user, updateUser } = useAuth()
+  const { isAdmin } = usePermissions()
   const { theme, toggleTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'organization'>('profile')
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+
+  // Company-wide settings (admin only): help/emergency contacts + shift tips.
+  const [companyContacts, setCompanyContacts] = useState<OrgContact[]>([])
+  const [emergencyContacts, setEmergencyContacts] = useState<OrgContact[]>([])
+  const [shiftTips, setShiftTips] = useState<ShiftTips>({ core: [], day: [], night: [], escalation: [] })
+  const [orgLoading, setOrgLoading] = useState(false)
+  const [isSavingOrg, setIsSavingOrg] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin) return
+    let cancelled = false
+    setOrgLoading(true)
+    organizationSettingsApi.get()
+      .then(settings => {
+        if (cancelled) return
+        setCompanyContacts(settings.company_contacts || [])
+        setEmergencyContacts(settings.emergency_contacts || [])
+        setShiftTips(settings.shift_tips || { core: [], day: [], night: [], escalation: [] })
+      })
+      .catch(() => toast.error('Failed to load organization settings'))
+      .finally(() => { if (!cancelled) setOrgLoading(false) })
+    return () => { cancelled = true }
+  }, [isAdmin])
+
+  const updateContact = (
+    list: OrgContact[],
+    setList: React.Dispatch<React.SetStateAction<OrgContact[]>>,
+    index: number,
+    field: keyof OrgContact,
+    value: string
+  ) => {
+    setList(list.map((c, i) => (i === index ? { ...c, [field]: value } : c)))
+  }
+
+  const onOrgSave = async () => {
+    try {
+      setIsSavingOrg(true)
+      await organizationSettingsApi.update({
+        company_contacts: companyContacts.filter(c => c.label.trim()),
+        emergency_contacts: emergencyContacts.filter(c => c.label.trim()),
+        shift_tips: shiftTips,
+      })
+      toast.success('Organization settings saved!')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to save organization settings')
+    } finally {
+      setIsSavingOrg(false)
+    }
+  }
 
   // Web Push notification state for this device.
   const [pushSupported] = useState(() => isPushSupported())
@@ -138,6 +192,7 @@ const Settings: React.FC = () => {
     { id: 'profile', name: 'Profile', icon: UserIcon },
     { id: 'password', name: 'Password', icon: KeyIcon },
     { id: 'preferences', name: 'Preferences', icon: CogIcon },
+    ...(isAdmin ? [{ id: 'organization', name: 'Organization', icon: BuildingOffice2Icon }] : []),
   ]
 
   return (
@@ -467,8 +522,141 @@ const Settings: React.FC = () => {
         </Card>
       )}
 
+      {/* Organization Tab (admin only) */}
+      {activeTab === 'organization' && isAdmin && (
+        <div className="space-y-6">
+          {orgLoading ? (
+            <Card>
+              <CardContent>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 py-6">Loading organization settings…</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Company & help numbers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Company & help numbers</CardTitle>
+                  <CardDescription>
+                    Numbers staff can call for help (office, out-of-hours, on-call, safeguarding). Shown on every staff profile.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ContactEditor
+                    contacts={companyContacts}
+                    onChange={(i, field, value) => updateContact(companyContacts, setCompanyContacts, i, field, value)}
+                    onRemove={(i) => setCompanyContacts(companyContacts.filter((_, idx) => idx !== i))}
+                    onAdd={() => setCompanyContacts([...companyContacts, { label: '', number: '', notes: '' }])}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Emergency numbers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Emergency numbers</CardTitle>
+                  <CardDescription>Emergency / urgent contacts (e.g. 999, NHS 111, local authority duty).</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ContactEditor
+                    contacts={emergencyContacts}
+                    onChange={(i, field, value) => updateContact(emergencyContacts, setEmergencyContacts, i, field, value)}
+                    onRemove={(i) => setEmergencyContacts(emergencyContacts.filter((_, idx) => idx !== i))}
+                    onAdd={() => setEmergencyContacts([...emergencyContacts, { label: '', number: '', notes: '' }])}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Shift tips */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Useful shift tips</CardTitle>
+                  <CardDescription>
+                    Shift-start checklist shown to staff. Enter one tip per line for each section.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {([
+                      { key: 'core', label: 'Core checks (every shift)' },
+                      { key: 'day', label: 'Day shift checks' },
+                      { key: 'night', label: 'Night shift checks' },
+                      { key: 'escalation', label: 'Escalation reminders' },
+                    ] as Array<{ key: keyof ShiftTips; label: string }>).map(({ key, label }) => (
+                      <div key={key}>
+                        <label className="form-label">{label}</label>
+                        <textarea
+                          className="input mt-1 font-mono text-sm"
+                          rows={Math.max(4, shiftTips[key].length + 1)}
+                          value={shiftTips[key].join('\n')}
+                          onChange={(e) =>
+                            setShiftTips({ ...shiftTips, [key]: e.target.value.split('\n').map(l => l.trimEnd()).filter(l => l.trim() !== '') })
+                          }
+                          placeholder="One tip per line"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button variant="primary" loading={isSavingOrg} disabled={isSavingOrg} onClick={onOrgSave}>
+                  {isSavingOrg ? 'Saving…' : 'Save Organization Settings'}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
     </div>
   )
 }
+
+// Editable list of contacts (label / number / notes) used in the Organization tab.
+const ContactEditor: React.FC<{
+  contacts: OrgContact[]
+  onChange: (index: number, field: keyof OrgContact, value: string) => void
+  onRemove: (index: number) => void
+  onAdd: () => void
+}> = ({ contacts, onChange, onRemove, onAdd }) => (
+  <div className="space-y-3">
+    {contacts.length === 0 && (
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">No contacts yet. Add one below.</p>
+    )}
+    {contacts.map((c, i) => (
+      <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
+        <input
+          className="input sm:col-span-3"
+          placeholder="Label (e.g. Head Office)"
+          value={c.label}
+          onChange={(e) => onChange(i, 'label', e.target.value)}
+        />
+        <input
+          className="input sm:col-span-3"
+          placeholder="Number"
+          value={c.number}
+          onChange={(e) => onChange(i, 'number', e.target.value)}
+        />
+        <input
+          className="input sm:col-span-5"
+          placeholder="Notes (optional)"
+          value={c.notes || ''}
+          onChange={(e) => onChange(i, 'notes', e.target.value)}
+        />
+        <div className="sm:col-span-1 flex sm:justify-center">
+          <Button variant="outline" size="sm" onClick={() => onRemove(i)} aria-label="Remove contact">
+            <TrashIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    ))}
+    <Button variant="outline" size="sm" onClick={onAdd}>
+      <PlusIcon className="mr-1.5 h-4 w-4" />
+      Add contact
+    </Button>
+  </div>
+)
 
 export default Settings

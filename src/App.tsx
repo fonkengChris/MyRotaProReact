@@ -8,6 +8,7 @@ import Setup from '@/pages/Setup'
 import Dashboard from '@/pages/Dashboard'
 import RotaEditor from '@/pages/RotaEditor'
 import MySchedule from '@/pages/MySchedule'
+import Profile from '@/pages/Profile'
 import MyHours from '@/pages/MyHours'
 import ClockInAnalysis from '@/pages/ClockInAnalysis'
 import StaffManagement from '@/pages/StaffManagement'
@@ -67,7 +68,7 @@ function App() {
       <Layout>
         <PushNotificationSetup />
         <Routes>
-          <Route path="/" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/my-schedule'} replace />} />
+          <Route path="/" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/profile'} replace />} />
 
           {/* Management-only pages */}
           <Route path="/dashboard" element={<RequireManagement><Dashboard /></RequireManagement>} />
@@ -82,6 +83,7 @@ function App() {
           <Route path="/homes" element={<RequireAdmin><Homes /></RequireAdmin>} />
 
           {/* Personal pages (available to all authenticated users) */}
+          <Route path="/profile" element={<Profile />} />
           <Route path="/shift-selection" element={<ShiftSelection />} />
           <Route path="/shift-swaps" element={<ShiftSwaps />} />
           <Route path="/my-timetables" element={<UserTimetables />} />
@@ -91,7 +93,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/theme" element={<ThemeShowcase />} />
-          <Route path="*" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/my-schedule'} replace />} />
+          <Route path="*" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/profile'} replace />} />
         </Routes>
       </Layout>
     </ThemeProvider>
