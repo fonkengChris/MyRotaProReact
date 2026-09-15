@@ -208,7 +208,7 @@ const MyHours: React.FC = () => {
       {/* Header */}
       <PageHeader
         title="My Paid Hours"
-        subtitle="Sleeping-night shifts: 8h sleep-in is excluded from paid work; breaks apply to paid hours only."
+        subtitle="Sleeping-night shifts: the midnight→shift-end sleep-in is excluded from paid work; breaks apply to paid hours only."
       />
 
       {/* Week Navigation */}

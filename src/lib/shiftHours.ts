@@ -1,14 +1,11 @@
 import type { Shift } from '@/types'
 
 /**
- * Sleeping-night sleep period is the fixed clock window 23:00–06:00 (7h), paid a flat
- * allowance in payroll. Hours outside it are paid as regular hourly work. Minutes from
- * midnight on the shift's start day; 06:00 is next-day so the band is [1380, 1800].
- * Mirrors the server `utils/shiftHours.js`. `night-wake`, `special`, and legacy `night`
- * are not split — full rostered time counts as paid work (before breaks).
+ * Sleeping-night sleep period runs from the wall-clock midnight during the shift up to the shift
+ * end; the pre-midnight portion (shift start → 00:00) is regular paid hours. Sleep is paid a flat
+ * allowance in payroll. Mirrors the server `utils/shiftHours.js`. `night-wake`, `special`, and
+ * legacy `night` are not split — full rostered time counts as paid work (before breaks).
  */
-export const NIGHT_SLEEP_START_MIN = 23 * 60 // 1380
-export const NIGHT_SLEEP_END_MIN = 6 * 60 // 360 (next day)
 
 /** Wall-clock minute range on a start-day-midnight axis (overnight end > 1440), or null. */
 function wallClockRange(startTime?: string, endTime?: string): { startMin: number; endMin: number } | null {
@@ -23,20 +20,14 @@ function wallClockRange(startTime?: string, endTime?: string): { startMin: numbe
 }
 
 /**
- * Hours of [startMin, endMin] inside the nightly 23:00–06:00 sleep window. Checks the
- * current-night band [1380, 1800] and the previous-night band [-60, 360], so it is correct
- * whether a shift starts in the evening or after midnight. Mirrors the server.
+ * Sleep-night hours of a window [startMin, endMin]: from the wall-clock midnight during the shift
+ * to the shift end. Boundary = next 00:00 at/after the scheduled start (evening start → 1440; a
+ * 00:00 start → 0, i.e. the whole shift is sleep). Anchoring to the scheduled start keeps late
+ * arrival / early leave reducing the pre-midnight regular portion. Mirrors the server.
  */
-export function sleepWindowOverlapHours(startMin: number, endMin: number): number {
-  const bands: Array<[number, number]> = [
-    [NIGHT_SLEEP_START_MIN, NIGHT_SLEEP_END_MIN + 24 * 60],
-    [NIGHT_SLEEP_START_MIN - 24 * 60, NIGHT_SLEEP_END_MIN],
-  ]
-  let overlap = 0
-  for (const [bStart, bEnd] of bands) {
-    overlap += Math.max(0, Math.min(endMin, bEnd) - Math.max(startMin, bStart))
-  }
-  return overlap / 60
+export function nightSleepHours(startMin: number, endMin: number, scheduledStartMin: number): number {
+  const boundaryMin = Math.ceil(scheduledStartMin / 1440) * 1440
+  return Math.max(0, endMin - Math.max(startMin, boundaryMin)) / 60
 }
 
 /**
@@ -44,7 +35,13 @@ export function sleepWindowOverlapHours(startMin: number, endMin: number): numbe
  * time from worked/paid hours. Lateness below this is forgiven. Mirrors the server
  * `LATE_ARRIVAL_MINUTES` in `utils/shiftTime.js`.
  */
-export const LATE_ARRIVAL_MINUTES = 30
+export const LATE_ARRIVAL_MINUTES = 15
+
+/**
+ * A clock-out within this many minutes either side of the scheduled end rounds to the
+ * scheduled end. Mirrors the server `CLOCK_OUT_GRACE_MINUTES` in `utils/shiftTime.js`.
+ */
+export const CLOCK_OUT_GRACE_MINUTES = 10
 
 function durationFromTimes(startTime: string, endTime: string): number {
   const [sh, sm] = startTime.split(':').map(Number)
@@ -77,10 +74,12 @@ function scheduledInstants(shift: {
  * Worked hours clamped to the scheduled window (kept in sync with the server
  * `clampedWorkedDurationHours` in `utils/shiftHours.js`):
  * - Early clock-in never counts — worked time starts no earlier than scheduled start.
- * - Late clock-out never counts — worked time ends no later than scheduled end
- *   (extra past-the-end time is only paid via a separately-approved overtime request).
  * - Late arrival below LATE_ARRIVAL_MINUTES is forgiven; at/beyond it the full late
  *   time is deducted.
+ * - Clock-out within CLOCK_OUT_GRACE_MINUTES either side of the scheduled end counts as
+ *   ending exactly at the scheduled end. Beyond that: a late clock-out clamps to the
+ *   scheduled end (extra time only paid via a separately-approved overtime request); an
+ *   early clock-out counts the actual time worked.
  *
  * Returns null when there is no clock-in. Pass `nowMs` to value an in-progress shift
  * (clocked in, not yet out) up to the current time; without it, a missing clock-out
@@ -105,7 +104,12 @@ function effectiveWorkedWindow(
   const lateMinutes = (inMs - sched.start) / 60000
   if (lateMinutes >= LATE_ARRIVAL_MINUTES) effectiveStart = inMs
 
-  const effectiveEnd = Math.min(outMs, sched.end)
+  // Within CLOCK_OUT_GRACE_MINUTES either side of the scheduled end → ends exactly at end.
+  // Otherwise: late clock-out clamps to end (overtime handled separately); early clock-out
+  // counts the actual time worked.
+  const outDiffMin = (outMs - sched.end) / 60000
+  const effectiveEnd =
+    Math.abs(outDiffMin) <= CLOCK_OUT_GRACE_MINUTES ? sched.end : Math.min(outMs, sched.end)
   return { start: effectiveStart, end: effectiveEnd }
 }
 
@@ -123,7 +127,7 @@ export function clampedWorkedDurationHours(
  * Hour breakdown ({ duration_hours, sleep_in_hours, paid_work_hours }) from the ACTUAL
  * clamped worked window, or null without a clock-in. Pass `nowMs` to value an in-progress
  * shift. For `night-sleep`, the effective window is mapped onto the wall-clock minute axis
- * so the 23:00–06:00 sleep overlap reflects the hours actually worked. Mirrors the server
+ * so the midnight→end sleep portion reflects the hours actually worked. Mirrors the server
  * `workedHourBreakdown`.
  */
 export function workedHourBreakdown(
@@ -145,7 +149,7 @@ export function workedHourBreakdown(
   const schedStartMs = sched ? sched.start : w.start
   const startMin = baseStartMin + (w.start - schedStartMs) / 60000
   const endMin = baseStartMin + (w.end - schedStartMs) / 60000
-  const sleep_in_hours = sleepWindowOverlapHours(startMin, endMin)
+  const sleep_in_hours = nightSleepHours(startMin, endMin, baseStartMin)
 
   return {
     duration_hours: duration,
@@ -194,16 +198,16 @@ export function getShiftHourBreakdown(
       : durationFromTimes(shift.start_time ?? '00:00', shift.end_time ?? '00:00')
 
   if (shift.shift_type === 'night-sleep') {
-    // Sleep-in is the overlap of the scheduled window with the fixed 23:00–06:00 band
-    // (not the first N hours). Computed from wall-clock times; a numeric duration
-    // override is not applied here (the clamped-actual path uses workedHourBreakdown).
+    // Sleep-in is the midnight→end portion of the scheduled window; the pre-midnight portion is
+    // regular paid work. Computed from wall-clock times; a numeric duration override is not
+    // applied here (the clamped-actual path uses workedHourBreakdown).
     const range = wallClockRange(shift.start_time, shift.end_time)
     if (!range) {
-      const sleep_in_hours = Math.min(7, duration)
-      return { duration_hours: duration, sleep_in_hours, paid_work_hours: Math.max(0, duration - sleep_in_hours) }
+      // No usable times: fall back to treating the whole duration as sleep.
+      return { duration_hours: duration, sleep_in_hours: duration, paid_work_hours: 0 }
     }
     const scheduledDuration = (range.endMin - range.startMin) / 60
-    const sleep_in_hours = sleepWindowOverlapHours(range.startMin, range.endMin)
+    const sleep_in_hours = nightSleepHours(range.startMin, range.endMin, range.startMin)
     return {
       duration_hours: scheduledDuration,
       sleep_in_hours,

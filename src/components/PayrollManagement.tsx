@@ -11,6 +11,17 @@ interface PayrollManagementProps {
   userRole?: string
 }
 
+// Operational roles that receive an hourly wage, with their default rates (GBP).
+// Mirrors DEFAULT_ROLE_RATES_GBP in the payroll route. Admin defaults live server-side.
+const ROLE_RATE_FIELDS: Array<{ key: string; label: string; default: number }> = [
+  { key: 'support_worker', label: 'Support Worker', default: 12.71 },
+  { key: 'senior_staff', label: 'Senior Staff', default: 14.0 },
+  { key: 'key_worker', label: 'Key Worker', default: 15.0 },
+]
+const DEFAULT_ROLE_RATES: Record<string, number> = Object.fromEntries(
+  ROLE_RATE_FIELDS.map((f) => [f.key, f.default])
+)
+
 const getDefaultDateRange = () => {
   const now = new Date()
   return {
@@ -56,7 +67,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
   const defaults = getDefaultDateRange()
   const [startDate, setStartDate] = useState(defaults.start)
   const [endDate, setEndDate] = useState(defaults.end)
-  const [hourlyRate, setHourlyRate] = useState<number>(12.71)
+  const [roleRates, setRoleRates] = useState<Record<string, number>>(DEFAULT_ROLE_RATES)
   const [sleepNightPay, setSleepNightPay] = useState<number>(50)
   const [mode, setMode] = useState<'draft' | 'final'>('final')
   const [report, setReport] = useState<PayrollReportResponse | null>(null)
@@ -109,7 +120,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
-        hourly_rate: hourlyRate,
+        role_rates: roleRates,
         sleep_night_pay: sleepNightPay,
         mode,
       })
@@ -132,7 +143,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
-        hourly_rate: hourlyRate,
+        role_rates: roleRates,
         sleep_night_pay: sleepNightPay,
         mode,
       })
@@ -149,7 +160,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         <CardHeader>
           <CardTitle>Payroll Management</CardTitle>
           <CardDescription>
-            Paid hours only (after breaks). Leave pay is 7.5 paid hours per approved leave day at the hourly rate.
+            Paid hours only (after breaks), paid at each staff member's role rate. Leave pay is 7.5 paid hours per approved leave day at that rate.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,7 +197,34 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Hourly Rates by Role (GBP)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {ROLE_RATE_FIELDS.map((field) => (
+                <div key={field.key}>
+                  <label className="block text-xs text-neutral-600 mb-1">{field.label}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={roleRates[field.key] ?? field.default}
+                    onChange={(e) =>
+                      setRoleRates((prev) => ({
+                        ...prev,
+                        [field.key]: Math.max(0, Number(e.target.value) || 0),
+                      }))
+                    }
+                    className="input w-full"
+                    disabled={!canEditRates}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">Start Date</label>
               <input
@@ -205,20 +243,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                 onChange={(e) => setEndDate(e.target.value)}
                 className="input w-full"
                 min={startDate || undefined}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Hourly Rate (GBP)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(Math.max(0, Number(e.target.value) || 0))}
-                className="input w-full"
-                disabled={!canEditRates}
               />
             </div>
             <div>

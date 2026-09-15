@@ -803,7 +803,7 @@ export const payrollApi = {
     start_date: string
     end_date: string
     home_id?: string
-    hourly_rate?: number
+    role_rates?: Record<string, number>
     sleep_night_pay?: number
     mode?: 'draft' | 'final'
   }): Promise<PayrollReportResponse | any[]> => {
@@ -813,7 +813,7 @@ export const payrollApi = {
       ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
         ? { home_id: params.home_id }
         : {}),
-      ...(typeof params.hourly_rate === 'number' ? { hourly_rate: params.hourly_rate } : {}),
+      ...(params.role_rates ? { role_rates: JSON.stringify(params.role_rates) } : {}),
       ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
       ...(params.mode ? { mode: params.mode } : {}),
     }
@@ -825,7 +825,7 @@ export const payrollApi = {
     start_date: string
     end_date: string
     home_id?: string
-    hourly_rate?: number
+    role_rates?: Record<string, number>
     sleep_night_pay?: number
     mode?: 'draft' | 'final'
   }): Promise<void> => {
@@ -836,7 +836,7 @@ export const payrollApi = {
         ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
           ? { home_id: params.home_id }
           : {}),
-        ...(typeof params.hourly_rate === 'number' ? { hourly_rate: params.hourly_rate } : {}),
+        ...(params.role_rates ? { role_rates: JSON.stringify(params.role_rates) } : {}),
         ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
         ...(params.mode ? { mode: params.mode } : {}),
       }
