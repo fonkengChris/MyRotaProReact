@@ -116,6 +116,15 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
     }))
   }
 
+  const allHomesSelected = homes.length > 0 && formData.home_ids.length === homes.length
+
+  const handleToggleAllHomes = () => {
+    setFormData(prev => ({
+      ...prev,
+      home_ids: allHomesSelected ? [] : homes.map(home => home.id)
+    }))
+  }
+
   if (!isOpen) return null
 
   return (
@@ -172,9 +181,26 @@ const TimetableCreateModal: React.FC<TimetableCreateModalProps> = ({
 
           {/* Homes Selection */}
           <div>
-            <label className="form-label">
-              Select Homes *
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="form-label">
+                Select Homes *
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {formData.home_ids.length} of {homes.length} selected
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToggleAllHomes}
+                  disabled={homes.length === 0}
+                  className="text-xs h-7 px-2 whitespace-nowrap"
+                >
+                  {allHomesSelected ? 'Clear all' : 'Select all'}
+                </Button>
+              </div>
+            </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
               Generation covers <strong>all services</strong> for these homes so staff who work across multiple services are scheduled in one timetable.
             </p>

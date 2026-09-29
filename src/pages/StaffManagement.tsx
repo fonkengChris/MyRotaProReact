@@ -22,6 +22,145 @@ import { User, UserRole, Home, CreateUserData, extractHomeId, formatShiftTypeLab
 import toast from 'react-hot-toast'
 import PageHeader from '@/components/common/PageHeader'
 
+interface HomeMultiSelectProps {
+  homes: Home[]
+  selectedIds: string[]
+  onChange: (ids: string[]) => void
+  /** When provided, each selected home gets a star toggle to mark it the default. */
+  defaultHomeId?: string
+  onDefaultChange?: (homeId: string) => void
+  emptyMessage?: string
+}
+
+/** Searchable checkbox list used to allocate several homes to a staff member at once. */
+const HomeMultiSelect: React.FC<HomeMultiSelectProps> = ({
+  homes,
+  selectedIds,
+  onChange,
+  defaultHomeId,
+  onDefaultChange,
+  emptyMessage = 'No homes available'
+}) => {
+  const [search, setSearch] = useState('')
+
+  const term = search.trim().toLowerCase()
+  const visibleHomes = term
+    ? homes.filter(home =>
+        home.name.toLowerCase().includes(term) ||
+        (home.location?.city || '').toLowerCase().includes(term)
+      )
+    : homes
+
+  const toggleHome = (homeId: string) => {
+    if (selectedIds.includes(homeId)) {
+      onChange(selectedIds.filter(id => id !== homeId))
+      // Un-ticking the starred home leaves the allocation without a default.
+      if (onDefaultChange && defaultHomeId === homeId) onDefaultChange('')
+    } else {
+      onChange([...selectedIds, homeId])
+    }
+  }
+
+  const allVisibleSelected = visibleHomes.length > 0 && visibleHomes.every(home => selectedIds.includes(home.id))
+
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) {
+      const visibleIds = visibleHomes.map(home => home.id)
+      onChange(selectedIds.filter(id => !visibleIds.includes(id)))
+      if (onDefaultChange && defaultHomeId && visibleIds.includes(defaultHomeId)) onDefaultChange('')
+    } else {
+      const merged = [...selectedIds]
+      visibleHomes.forEach(home => {
+        if (!merged.includes(home.id)) merged.push(home.id)
+      })
+      onChange(merged)
+    }
+  }
+
+  if (homes.length === 0) {
+    return (
+      <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center py-3">{emptyMessage}</p>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search homes..."
+            className="input pl-9 w-full text-sm"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleAllVisible}
+          className="text-xs h-8 px-2 whitespace-nowrap"
+          disabled={visibleHomes.length === 0}
+        >
+          {allVisibleSelected ? 'Clear all' : 'Select all'}
+        </Button>
+      </div>
+
+      <div className="max-h-60 overflow-y-auto rounded-md border border-neutral-300 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-800">
+        {visibleHomes.length === 0 && (
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center py-3">
+            No homes match "{search.trim()}"
+          </p>
+        )}
+        {visibleHomes.map((home) => {
+          const isSelected = selectedIds.includes(home.id)
+          const isDefault = defaultHomeId === home.id
+          return (
+            <div
+              key={home.id}
+              className={`flex items-center justify-between gap-2 px-3 py-2 ${
+                isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+              }`}
+            >
+              <label className="flex items-center space-x-2 flex-1 min-w-0 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleHome(home.id)}
+                  className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-neutral-400 rounded"
+                />
+                <HomeIcon className="h-4 w-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                <span className="text-sm text-neutral-950 dark:text-neutral-100 truncate">
+                  {home.name}{home.location?.city ? ` - ${home.location.city}` : ''}
+                </span>
+              </label>
+              {onDefaultChange && isSelected && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDefaultChange(isDefault ? '' : home.id)}
+                  className={`text-xs h-6 px-2 flex-shrink-0 ${isDefault ? 'text-yellow-600 border-yellow-400' : ''}`}
+                  title={isDefault ? 'Default home (click to unset)' : 'Set as default home'}
+                >
+                  <StarIcon className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
+        <span>{selectedIds.length} selected</span>
+        {onDefaultChange && (
+          <span>{defaultHomeId ? 'Starred home will be the default' : 'Star a home to make it the default'}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const StaffManagement: React.FC = () => {
   const { user: currentUser } = useAuth()
   const permissions = usePermissions()
@@ -35,10 +174,9 @@ const StaffManagement: React.FC = () => {
   const [homeFilter, setHomeFilter] = useState<string>('all')
   const [selectedUserForHomeAllocation, setSelectedUserForHomeAllocation] = useState<User | null>(null)
   const [showHomeAllocationModal, setShowHomeAllocationModal] = useState(false)
-  const [newHomeAllocation, setNewHomeAllocation] = useState<{
-    homeId: string;
-    isDefault: boolean;
-  }>({ homeId: '', isDefault: false })
+  // Multi-home allocation: tick several homes, optionally star one as the default.
+  const [selectedHomeIds, setSelectedHomeIds] = useState<string[]>([])
+  const [defaultHomeIdForAllocation, setDefaultHomeIdForAllocation] = useState('')
 
   // User editing state
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null)
@@ -55,7 +193,8 @@ const StaffManagement: React.FC = () => {
     role: 'support_worker' as UserRole,
     type: 'fulltime' as 'fulltime' | 'parttime' | 'bank',
     annual_leave_entitlement_days: undefined as number | undefined,
-    home_id: '',
+    home_ids: [] as string[],
+    default_home_id: '',
   }
   const [showAddModal, setShowAddModal] = useState(false)
   const [addFormData, setAddFormData] = useState(emptyAddForm)
@@ -109,18 +248,44 @@ const StaffManagement: React.FC = () => {
   })
 
   // Home allocation mutations
-  const addHomeMutation = useMutation({
-    mutationFn: ({ userId, homeId, isDefault }: { userId: string; homeId: string; isDefault: boolean }) => 
-      usersApi.addHome(userId, { home_id: homeId, is_default: isDefault }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff'] })
-      toast.success('Home added successfully')
-      setShowHomeAllocationModal(false)
-      setSelectedUserForHomeAllocation(null)
-      setNewHomeAllocation({ homeId: '', isDefault: false })
+  const addHomesMutation = useMutation({
+    mutationFn: async ({ userId, homeIds, defaultHomeId }: { userId: string; homeIds: string[]; defaultHomeId: string }) => {
+      // One request per home, run in sequence: each one re-reads and saves the whole
+      // user document server-side, so parallel requests would overwrite each other.
+      const added: string[] = []
+      try {
+        for (const homeId of homeIds) {
+          await usersApi.addHome(userId, { home_id: homeId, is_default: homeId === defaultHomeId })
+          added.push(homeId)
+        }
+      } catch (error: any) {
+        // Carry the partial progress so the selection can be pruned.
+        error.addedHomeIds = added
+        throw error
+      }
+      return added
+    },
+    onSuccess: (_result, variables) => {
+      toast.success(
+        variables.homeIds.length === 1
+          ? 'Home added successfully'
+          : `${variables.homeIds.length} homes added successfully`
+      )
+      handleCloseHomeAllocationModal()
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to add home')
+      // Keep only the homes that were not allocated, so a retry does not re-send them.
+      const added: string[] = error.addedHomeIds || []
+      if (added.length > 0) {
+        setSelectedHomeIds(prev => prev.filter(id => !added.includes(id)))
+        setDefaultHomeIdForAllocation(prev => (added.includes(prev) ? '' : prev))
+      }
+      const message = error.response?.data?.error || 'Failed to add homes'
+      toast.error(added.length > 0 ? `${message} (${added.length} already added)` : message)
+    },
+    // Partial failures still change data, so always refresh the list.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
     }
   })
 
@@ -166,7 +331,15 @@ const StaffManagement: React.FC = () => {
 
   // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: (data: CreateUserData) => usersApi.create(data),
+    mutationFn: async ({ extra_home_ids = [], ...data }: CreateUserData & { extra_home_ids?: string[] }) => {
+      // The create endpoint only accepts a single (default) home, so any additional
+      // homes are allocated right after the user exists.
+      const created = await usersApi.create(data)
+      for (const homeId of extra_home_ids) {
+        await usersApi.addHome(created.id, { home_id: homeId, is_default: false })
+      }
+      return created
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
       toast.success('Staff member created successfully')
@@ -211,17 +384,29 @@ const StaffManagement: React.FC = () => {
 
   const handleHomeAllocation = (user: User) => {
     setSelectedUserForHomeAllocation(user)
-    setNewHomeAllocation({ homeId: '', isDefault: false })
+    setSelectedHomeIds([])
+    setDefaultHomeIdForAllocation('')
     setShowHomeAllocationModal(true)
   }
 
-  const handleAddHome = () => {
-    if (!selectedUserForHomeAllocation || !newHomeAllocation.homeId) return
-    
-    addHomeMutation.mutate({
+  const handleCloseHomeAllocationModal = () => {
+    setShowHomeAllocationModal(false)
+    setSelectedUserForHomeAllocation(null)
+    setSelectedHomeIds([])
+    setDefaultHomeIdForAllocation('')
+  }
+
+  const handleAddHomes = () => {
+    if (!selectedUserForHomeAllocation || selectedHomeIds.length === 0) return
+
+    // A staff member with no homes yet needs a default, so fall back to the first pick.
+    const hasExistingHomes = (selectedUserForHomeAllocation.homes?.length || 0) > 0
+    const defaultHomeId = defaultHomeIdForAllocation || (hasExistingHomes ? '' : selectedHomeIds[0])
+
+    addHomesMutation.mutate({
       userId: selectedUserForHomeAllocation.id,
-      homeId: newHomeAllocation.homeId,
-      isDefault: newHomeAllocation.isDefault
+      homeIds: selectedHomeIds,
+      defaultHomeId
     })
   }
 
@@ -279,7 +464,7 @@ const StaffManagement: React.FC = () => {
   }
 
   const handleCreateUser = () => {
-    const { name, email, phone, password, confirmPassword, role, type, home_id, annual_leave_entitlement_days } = addFormData
+    const { name, email, phone, password, confirmPassword, role, type, home_ids, default_home_id, annual_leave_entitlement_days } = addFormData
 
     if (!name.trim() || !email.trim() || !phone.trim() || !password) {
       toast.error('Name, email, phone and password are required')
@@ -294,6 +479,10 @@ const StaffManagement: React.FC = () => {
       return
     }
 
+    const homeIds = role === 'admin' ? [] : home_ids
+    const primaryHomeId = homeIds.includes(default_home_id) ? default_home_id : homeIds[0]
+    const extraHomeIds = homeIds.filter(id => id !== primaryHomeId)
+
     createUserMutation.mutate({
       name: name.trim(),
       email: email.trim(),
@@ -306,8 +495,10 @@ const StaffManagement: React.FC = () => {
         typeof annual_leave_entitlement_days === 'number' && !Number.isNaN(annual_leave_entitlement_days)
           ? annual_leave_entitlement_days
           : undefined,
-      // Admins have no home; only send home_id for other roles when chosen.
-      home_id: role !== 'admin' && home_id ? home_id : undefined,
+      // Admins have no home. For everyone else the starred home (or the first one
+      // ticked) is created as the default and the rest are added straight after.
+      home_id: primaryHomeId || undefined,
+      extra_home_ids: extraHomeIds,
     })
   }
 
@@ -682,7 +873,7 @@ const StaffManagement: React.FC = () => {
                               className="text-xs h-6 px-2 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
                             >
                               <PlusIcon className="h-3 w-3 mr-1" />
-                              Add Home
+                              Add Homes
                             </Button>
                           )}
                         </div>
@@ -855,7 +1046,7 @@ const StaffManagement: React.FC = () => {
                           className="w-full mt-2 text-xs h-6 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
                         >
                           <PlusIcon className="h-3 w-3 mr-1" />
-                          Add Home
+                          Add Homes
                         </Button>
                       )}
                     </div>
@@ -938,59 +1129,38 @@ const StaffManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Add New Home */}
+            {/* Add New Homes */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">Add New Home</h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="form-label">
-                    Select Home
-                  </label>
-                  <select
-                    value={newHomeAllocation.homeId}
-                    onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, homeId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-neutral-400 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100"
-                  >
-                    <option value="">Choose a home...</option>
-                    {getAvailableHomes(selectedUserForHomeAllocation).map((home) => (
-                      <option key={home.id} value={home.id}>
-                        {home.name} - {home.location.city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isDefault"
-                    checked={newHomeAllocation.isDefault}
-                    onChange={(e) => setNewHomeAllocation(prev => ({ ...prev, isDefault: e.target.checked }))}
-                    className="h-4 w-4 text-primary-600 dark:text-white focus:ring-primary-500 border-neutral-400 rounded"
-                  />
-                  <label htmlFor="isDefault" className="text-sm text-neutral-800 dark:text-neutral-300">
-                    Set as default home
-                  </label>
-                </div>
-              </div>
+              <h4 className="text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-3">
+                Add Homes
+              </h4>
+              <HomeMultiSelect
+                homes={getAvailableHomes(selectedUserForHomeAllocation)}
+                selectedIds={selectedHomeIds}
+                onChange={setSelectedHomeIds}
+                defaultHomeId={defaultHomeIdForAllocation}
+                onDefaultChange={setDefaultHomeIdForAllocation}
+                emptyMessage="This staff member is already allocated to every home"
+              />
             </div>
 
             <div className="flex justify-end space-x-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setShowHomeAllocationModal(false)
-                  setSelectedUserForHomeAllocation(null)
-                  setNewHomeAllocation({ homeId: '', isDefault: false })
-                }}
+                onClick={handleCloseHomeAllocationModal}
               >
                 Close
               </Button>
               <Button
                 variant="primary"
-                onClick={handleAddHome}
-                disabled={!newHomeAllocation.homeId || addHomeMutation.isPending}
+                onClick={handleAddHomes}
+                disabled={selectedHomeIds.length === 0 || addHomesMutation.isPending}
               >
-                {addHomeMutation.isPending ? 'Adding...' : 'Add Home'}
+                {addHomesMutation.isPending
+                  ? `Adding ${selectedHomeIds.length}...`
+                  : selectedHomeIds.length > 1
+                    ? `Add ${selectedHomeIds.length} Homes`
+                    : 'Add Home'}
               </Button>
             </div>
           </div>
@@ -1306,7 +1476,8 @@ const StaffManagement: React.FC = () => {
                       onChange={(e) => setAddFormData(prev => {
                         const role = e.target.value as UserRole
                         // Admins are not tied to a home; clear any selection.
-                        return { ...prev, role, home_id: role === 'admin' ? '' : prev.home_id }
+                        if (role === 'admin') return { ...prev, role, home_ids: [], default_home_id: '' }
+                        return { ...prev, role }
                       })}
                       className="input w-full"
                     >
@@ -1348,19 +1519,23 @@ const StaffManagement: React.FC = () => {
                   </div>
                   {addFormData.role !== 'admin' && (
                     <div className="sm:col-span-2">
-                      <label className="form-label">Care Home (optional)</label>
-                      <select
-                        value={addFormData.home_id}
-                        onChange={(e) => setAddFormData(prev => ({ ...prev, home_id: e.target.value }))}
-                        className="input w-full"
-                      >
-                        <option value="">No home selected (allocate later)</option>
-                        {homes.map((home) => (
-                          <option key={home.id} value={home.id}>
-                            {home.name}{home.location?.city ? ` - ${home.location.city}` : ''}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="form-label">Care Homes (optional)</label>
+                      <HomeMultiSelect
+                        homes={homes}
+                        selectedIds={addFormData.home_ids}
+                        onChange={(ids) => setAddFormData(prev => ({
+                          ...prev,
+                          home_ids: ids,
+                          // Drop the default if its home is no longer selected.
+                          default_home_id: ids.includes(prev.default_home_id) ? prev.default_home_id : ''
+                        }))}
+                        defaultHomeId={addFormData.default_home_id}
+                        onDefaultChange={(homeId) => setAddFormData(prev => ({ ...prev, default_home_id: homeId }))}
+                        emptyMessage="No homes available (allocate later)"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        Select any number of homes, or none to allocate them later.
+                      </p>
                     </div>
                   )}
                 </div>
