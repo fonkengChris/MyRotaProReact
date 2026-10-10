@@ -10,6 +10,8 @@ export interface User {
     is_default: boolean
   }>
   default_home_id?: string
+  // Homes reached through the key worker's service users (from /auth/me).
+  service_user_home_ids?: string[]
   type: 'fulltime' | 'parttime' | 'bank'
   min_hours_per_week: number
   annual_leave_entitlement_days?: number
@@ -22,6 +24,34 @@ export interface User {
 }
 
 export type UserRole = 'admin' | 'key_worker' | 'senior_staff' | 'support_worker'
+
+// A person supported by the organisation. Lives in one home; supported by key workers,
+// who gain access to that home (and its staff) through them.
+export interface ServiceUser {
+  id: string
+  name: string
+  home_id: string | Home
+  key_worker_ids: Array<string | Pick<User, 'id' | 'name' | 'email' | 'phone' | 'role'>>
+  notes?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ServiceUserFormData {
+  name: string
+  home_id: string
+  key_worker_ids: string[]
+  notes?: string
+  is_active: boolean
+}
+
+// One home in a key worker's caseload: the home, their service users there, and its staff.
+export interface KeyWorkerCaseloadEntry {
+  home: Home
+  service_users: ServiceUser[]
+  staff: User[]
+}
 
 export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'social_support' | 'specialist_care'
 

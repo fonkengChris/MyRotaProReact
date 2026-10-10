@@ -23,7 +23,8 @@ import {
   WrenchScrewdriverIcon,
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -61,6 +62,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ...(permissions.isAdmin ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
+    ...(permissions.isAdmin || permissions.isKeyWorker
+      ? [{ name: permissions.isAdmin ? 'Service Users' : 'My Service Users', href: '/service-users', icon: HeartIcon, current: location.pathname === '/service-users' }]
+      : []),
     ...(permissions.canManageServices ? [{ name: 'Services', href: '/services', icon: WrenchScrewdriverIcon, current: location.pathname === '/services' }] : []),
     { name: 'Settings', href: '/settings', icon: CogIcon, current: location.pathname === '/settings' },
   ]

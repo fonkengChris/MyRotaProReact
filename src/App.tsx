@@ -16,6 +16,7 @@ import Settings from '@/pages/Settings'
 import Availability from '@/pages/Availability'
 import Services from '@/pages/Services'
 import Homes from '@/pages/Homes'
+import ServiceUsers from '@/pages/ServiceUsers'
 import WeeklySchedules from '@/pages/WeeklySchedules'
 import ShiftSelection from '@/pages/ShiftSelection'
 import ShiftSwaps from '@/pages/ShiftSwaps'
@@ -81,6 +82,7 @@ function App() {
 
           {/* Admin-only pages */}
           <Route path="/homes" element={<RequireAdmin><Homes /></RequireAdmin>} />
+          <Route path="/service-users" element={<RequireManagement><ServiceUsers /></RequireManagement>} />
 
           {/* Personal pages (available to all authenticated users) */}
           <Route path="/profile" element={<Profile />} />

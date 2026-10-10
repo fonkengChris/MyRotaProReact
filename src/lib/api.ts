@@ -31,6 +31,9 @@ import {
   ClockOutResponse,
   AttendanceLogsResponse,
   OrganizationSettings,
+  ServiceUser,
+  ServiceUserFormData,
+  KeyWorkerCaseloadEntry,
 } from '@/types'
 import toast from 'react-hot-toast';
 import { getAppConfig, isDebugMode } from './env';
@@ -159,6 +162,40 @@ export const homesApi = {
 
   delete: async (id: string): Promise<{ message: string }> => {
     const response = await api.delete<{ message: string }>(`/homes/${id}`)
+    return response.data
+  },
+}
+
+// Service users API (admins manage; key workers read their own caseload)
+export const serviceUsersApi = {
+  getAll: async (params?: { home_id?: string; key_worker_id?: string; is_active?: boolean }): Promise<ServiceUser[]> => {
+    const response = await api.get<ServiceUser[]>('/service-users', { params })
+    return response.data
+  },
+
+  getById: async (id: string): Promise<ServiceUser> => {
+    const response = await api.get<ServiceUser>(`/service-users/${id}`)
+    return response.data
+  },
+
+  getMyCaseload: async (keyWorkerId?: string): Promise<KeyWorkerCaseloadEntry[]> => {
+    const params = keyWorkerId ? { key_worker_id: keyWorkerId } : {}
+    const response = await api.get<KeyWorkerCaseloadEntry[]>('/service-users/my-caseload', { params })
+    return response.data
+  },
+
+  create: async (data: ServiceUserFormData): Promise<ServiceUser> => {
+    const response = await api.post<ServiceUser>('/service-users', data)
+    return response.data
+  },
+
+  update: async (id: string, data: Partial<ServiceUserFormData>): Promise<ServiceUser> => {
+    const response = await api.put<ServiceUser>(`/service-users/${id}`, data)
+    return response.data
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const response = await api.delete<{ message: string }>(`/service-users/${id}`)
     return response.data
   },
 }

@@ -688,7 +688,7 @@ const RotaEditor: React.FC = () => {
               size="sm"
               onClick={handleAIGenerate}
               disabled={!permissions.canUseAISolver}
-              title="Generates a rota for the selected week"
+              title="Generates a rota for the selected week. Only support workers are auto-assigned — admins, key workers and senior staff are added manually."
             >
               <CogIcon className="h-4 w-4 mr-2" />
               AI Generate
