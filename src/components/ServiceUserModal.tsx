@@ -23,6 +23,7 @@ const emptyForm: ServiceUserFormData = {
   name: '',
   home_id: '',
   key_worker_ids: [],
+  one_to_one_hours_per_week: null,
   notes: '',
   is_active: true
 }
@@ -48,6 +49,7 @@ const ServiceUserModal: React.FC<ServiceUserModalProps> = ({
         name: serviceUser.name,
         home_id: refId(serviceUser.home_id),
         key_worker_ids: serviceUser.key_worker_ids.map(refId).filter(Boolean),
+        one_to_one_hours_per_week: serviceUser.one_to_one_hours_per_week ?? null,
         notes: serviceUser.notes || '',
         is_active: serviceUser.is_active
       })
@@ -144,6 +146,26 @@ const ServiceUserModal: React.FC<ServiceUserModalProps> = ({
                     <option key={home.id} value={home.id}>{home.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  Allocated 1:1 hours per week
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="168"
+                  step="0.5"
+                  value={formData.one_to_one_hours_per_week ?? ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      one_to_one_hours_per_week: e.target.value === '' ? null : parseFloat(e.target.value)
+                    }))
+                  }
+                  placeholder="e.g. 10"
+                />
               </div>
 
               <div>

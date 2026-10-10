@@ -5,8 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import PageHeader from '@/components/common/PageHeader'
+import ContactList from '@/components/common/ContactList'
+import ChecklistSection from '@/components/common/ChecklistSection'
 import { homesApi, organizationSettingsApi, shiftsApi } from '@/lib/api'
-import { extractHomeId, Home, OrgContact, Shift } from '@/types'
+import { extractHomeId, Home, Shift } from '@/types'
 import { format, addDays } from 'date-fns'
 import {
   UserCircleIcon,
@@ -16,7 +18,6 @@ import {
   BuildingOffice2Icon,
   ExclamationTriangleIcon,
   ClipboardDocumentCheckIcon,
-  ChevronDownIcon,
   SunIcon,
   MoonIcon,
   LifebuoyIcon,
@@ -300,88 +301,24 @@ const Profile: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             {tipSections.map(section => {
-              const isOpen = openSections[section.key]
               const highlighted = section.key === activeSection
-              const Icon = section.icon
               return (
-                <div
+                <ChecklistSection
                   key={section.key}
-                  className={`rounded-xl border ${
-                    highlighted
-                      ? 'border-primary-400 dark:border-primary-500 bg-primary-50/50 dark:bg-primary-900/10'
-                      : 'border-neutral-200 dark:border-neutral-700'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(section.key)}
-                    className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
-                  >
-                    <span className="flex items-center gap-2 font-medium text-neutral-900 dark:text-neutral-100">
-                      <Icon className={`h-5 w-5 ${highlighted ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
-                      {section.title}
-                      {highlighted && <Badge variant="primary">Your shift</Badge>}
-                    </span>
-                    <ChevronDownIcon className={`h-5 w-5 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {isOpen && (
-                    <ul className="px-4 pb-4 space-y-2">
-                      {section.items.length === 0 ? (
-                        <li className="text-sm text-neutral-500 dark:text-neutral-400">No items.</li>
-                      ) : (
-                        section.items.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                            <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary-500" />
-                            {item}
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                  )}
-                </div>
+                  title={section.title}
+                  icon={section.icon}
+                  items={section.items}
+                  open={openSections[section.key]}
+                  onToggle={() => toggleSection(section.key)}
+                  highlighted={highlighted}
+                  badge={highlighted ? 'Your shift' : undefined}
+                />
               )
             })}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-const ContactList: React.FC<{ contacts: OrgContact[]; emptyText: string; danger?: boolean }> = ({
-  contacts,
-  emptyText,
-  danger,
-}) => {
-  if (!contacts || contacts.length === 0) {
-    return <p className="text-sm text-neutral-500 dark:text-neutral-400">{emptyText}</p>
-  }
-  return (
-    <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
-      {contacts.map((c, i) => (
-        <li key={i} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-          <div className="min-w-0">
-            <p className="font-medium text-neutral-900 dark:text-neutral-100">{c.label}</p>
-            {c.notes && <p className="text-xs text-neutral-500 dark:text-neutral-400">{c.notes}</p>}
-          </div>
-          {c.number ? (
-            <a
-              href={`tel:${c.number}`}
-              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${
-                danger
-                  ? 'bg-danger-50 text-danger-700 hover:bg-danger-100 dark:bg-danger-900/20 dark:text-danger-300'
-                  : 'bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-300'
-              }`}
-            >
-              <PhoneIcon className="h-4 w-4" />
-              {c.number}
-            </a>
-          ) : (
-            <span className="text-xs text-neutral-400">Not set</span>
-          )}
-        </li>
-      ))}
-    </ul>
   )
 }
 

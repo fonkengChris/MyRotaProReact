@@ -24,7 +24,8 @@ import {
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
   UserCircleIcon,
-  HeartIcon
+  HeartIcon,
+  HomeModernIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -39,6 +40,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate()
 
   const navigation = [
+    ...(permissions.isKeyWorker
+      ? [{ name: 'Home', href: '/key-worker-home', icon: HomeModernIcon, current: location.pathname === '/key-worker-home' }]
+      : []),
     ...(permissions.isManagement
       ? [{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' }]
       : [{ name: 'Profile', href: '/profile', icon: UserCircleIcon, current: location.pathname === '/profile' }]

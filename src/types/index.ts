@@ -32,6 +32,8 @@ export interface ServiceUser {
   name: string
   home_id: string | Home
   key_worker_ids: Array<string | Pick<User, 'id' | 'name' | 'email' | 'phone' | 'role'>>
+  // Allocated 1:1 support hours per week (differs per person).
+  one_to_one_hours_per_week?: number | null
   notes?: string
   is_active: boolean
   created_at: string
@@ -42,6 +44,7 @@ export interface ServiceUserFormData {
   name: string
   home_id: string
   key_worker_ids: string[]
+  one_to_one_hours_per_week?: number | null
   notes?: string
   is_active: boolean
 }
@@ -220,10 +223,18 @@ export interface ShiftTips {
   escalation: string[]
 }
 
+// Recurring key-worker responsibilities shown on Key Worker Home (static prompts).
+export interface KeyWorkerTasks {
+  daily: string[]
+  weekly: string[]
+  monthly: string[]
+}
+
 export interface OrganizationSettings {
   company_contacts: OrgContact[]
   emergency_contacts: OrgContact[]
   shift_tips: ShiftTips
+  key_worker_tasks?: KeyWorkerTasks
   updated_at?: string
 }
 

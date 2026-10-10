@@ -133,6 +133,7 @@ const AdminServiceUsers: React.FC = () => {
                   <th className={thClass}>Name</th>
                   <th className={thClass}>Home</th>
                   <th className={thClass}>Key Workers</th>
+                  <th className={thClass}>1:1 hrs/wk</th>
                   <th className={thClass}>Status</th>
                   <th className={`${thClass} text-right`}>Actions</th>
                 </tr>
@@ -140,7 +141,7 @@ const AdminServiceUsers: React.FC = () => {
               <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
                 {serviceUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
+                    <td colSpan={6} className="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
                       No service users found
                     </td>
                   </tr>
@@ -158,6 +159,9 @@ const AdminServiceUsers: React.FC = () => {
                         {su.key_worker_ids.length === 0
                           ? <span className="text-neutral-500 dark:text-neutral-400">Unassigned</span>
                           : su.key_worker_ids.map(kw => (typeof kw === 'string' ? kw : kw.name)).join(', ')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                        {su.one_to_one_hours_per_week ?? '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={su.is_active ? 'success' : 'neutral'}>{su.is_active ? 'Active' : 'Inactive'}</Badge>
@@ -252,7 +256,14 @@ const CaseloadHomeCard: React.FC<{ entry: KeyWorkerCaseloadEntry }> = ({ entry }
           <ul className="space-y-3">
             {service_users.map(su => (
               <li key={su.id}>
-                <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{su.name}</div>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{su.name}</span>
+                  {su.one_to_one_hours_per_week != null && (
+                    <span className="whitespace-nowrap text-xs text-neutral-500 dark:text-neutral-400">
+                      {su.one_to_one_hours_per_week} h/wk 1:1
+                    </span>
+                  )}
+                </div>
                 {su.notes && <p className="text-sm text-neutral-500 dark:text-neutral-400">{su.notes}</p>}
               </li>
             ))}

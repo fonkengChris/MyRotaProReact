@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard'
 import RotaEditor from '@/pages/RotaEditor'
 import MySchedule from '@/pages/MySchedule'
 import Profile from '@/pages/Profile'
+import KeyWorkerHome from '@/pages/KeyWorkerHome'
 import MyHours from '@/pages/MyHours'
 import ClockInAnalysis from '@/pages/ClockInAnalysis'
 import StaffManagement from '@/pages/StaffManagement'
@@ -37,6 +38,19 @@ function RequireManagement({ children }: { children: React.ReactElement }) {
 function RequireAdmin({ children }: { children: React.ReactElement }) {
   const { isAdmin } = usePermissions()
   return isAdmin ? children : <Navigate to="/my-schedule" replace />
+}
+
+// Key Worker Home is the key-worker landing page (task prompts + caseload).
+function RequireKeyWorker({ children }: { children: React.ReactElement }) {
+  const { isKeyWorker } = usePermissions()
+  return isKeyWorker ? children : <Navigate to="/" replace />
+}
+
+// Default landing page per role: key workers get Key Worker Home, other managers the
+// Dashboard, and regular staff their Profile.
+function landingPath(permissions: ReturnType<typeof usePermissions>) {
+  if (permissions.isKeyWorker) return '/key-worker-home'
+  return permissions.isManagement ? '/dashboard' : '/profile'
 }
 
 function App() {
@@ -69,7 +83,7 @@ function App() {
       <Layout>
         <PushNotificationSetup />
         <Routes>
-          <Route path="/" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/profile'} replace />} />
+          <Route path="/" element={<Navigate to={landingPath(permissions)} replace />} />
 
           {/* Management-only pages */}
           <Route path="/dashboard" element={<RequireManagement><Dashboard /></RequireManagement>} />
@@ -85,6 +99,7 @@ function App() {
           <Route path="/service-users" element={<RequireManagement><ServiceUsers /></RequireManagement>} />
 
           {/* Personal pages (available to all authenticated users) */}
+          <Route path="/key-worker-home" element={<RequireKeyWorker><KeyWorkerHome /></RequireKeyWorker>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/shift-selection" element={<ShiftSelection />} />
           <Route path="/shift-swaps" element={<ShiftSwaps />} />
@@ -95,7 +110,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/theme" element={<ThemeShowcase />} />
-          <Route path="*" element={<Navigate to={permissions.isManagement ? '/dashboard' : '/profile'} replace />} />
+          <Route path="*" element={<Navigate to={landingPath(permissions)} replace />} />
         </Routes>
       </Layout>
     </ThemeProvider>

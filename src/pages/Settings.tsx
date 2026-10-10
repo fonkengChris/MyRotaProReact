@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { authApi, organizationSettingsApi } from '@/lib/api'
-import { OrgContact, ShiftTips } from '@/types'
+import { KeyWorkerTasks, OrgContact, ShiftTips } from '@/types'
 import { useTheme } from '@/contexts/ThemeContext'
 import {
   isPushSupported,
@@ -60,6 +60,7 @@ const Settings: React.FC = () => {
   const [companyContacts, setCompanyContacts] = useState<OrgContact[]>([])
   const [emergencyContacts, setEmergencyContacts] = useState<OrgContact[]>([])
   const [shiftTips, setShiftTips] = useState<ShiftTips>({ core: [], day: [], night: [], escalation: [] })
+  const [keyWorkerTasks, setKeyWorkerTasks] = useState<KeyWorkerTasks>({ daily: [], weekly: [], monthly: [] })
   const [orgLoading, setOrgLoading] = useState(false)
   const [isSavingOrg, setIsSavingOrg] = useState(false)
 
@@ -73,6 +74,7 @@ const Settings: React.FC = () => {
         setCompanyContacts(settings.company_contacts || [])
         setEmergencyContacts(settings.emergency_contacts || [])
         setShiftTips(settings.shift_tips || { core: [], day: [], night: [], escalation: [] })
+        setKeyWorkerTasks(settings.key_worker_tasks || { daily: [], weekly: [], monthly: [] })
       })
       .catch(() => toast.error('Failed to load organization settings'))
       .finally(() => { if (!cancelled) setOrgLoading(false) })
@@ -89,13 +91,21 @@ const Settings: React.FC = () => {
     setList(list.map((c, i) => (i === index ? { ...c, [field]: value } : c)))
   }
 
+  // Textareas keep raw lines while typing (so Enter and trailing spaces work);
+  // blank lines and stray whitespace are dropped when saving.
+  const cleanLines = <T extends object>(sections: T): T =>
+    Object.fromEntries(
+      Object.entries(sections).map(([k, lines]) => [k, (lines as string[]).map(l => l.trim()).filter(Boolean)])
+    ) as T
+
   const onOrgSave = async () => {
     try {
       setIsSavingOrg(true)
       await organizationSettingsApi.update({
         company_contacts: companyContacts.filter(c => c.label.trim()),
         emergency_contacts: emergencyContacts.filter(c => c.label.trim()),
-        shift_tips: shiftTips,
+        shift_tips: cleanLines(shiftTips),
+        key_worker_tasks: cleanLines(keyWorkerTasks),
       })
       toast.success('Organization settings saved!')
     } catch (error: any) {
@@ -590,9 +600,41 @@ const Settings: React.FC = () => {
                           rows={Math.max(4, shiftTips[key].length + 1)}
                           value={shiftTips[key].join('\n')}
                           onChange={(e) =>
-                            setShiftTips({ ...shiftTips, [key]: e.target.value.split('\n').map(l => l.trimEnd()).filter(l => l.trim() !== '') })
+                            setShiftTips({ ...shiftTips, [key]: e.target.value.split('\n') })
                           }
                           placeholder="One tip per line"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Key-worker task prompts */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Key worker task prompts</CardTitle>
+                  <CardDescription>
+                    Recurring responsibilities shown on the Key Worker Home page. Enter one prompt per line for each section.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {([
+                      { key: 'daily', label: 'Every day' },
+                      { key: 'weekly', label: 'Every week' },
+                      { key: 'monthly', label: 'Every month' },
+                    ] as Array<{ key: keyof KeyWorkerTasks; label: string }>).map(({ key, label }) => (
+                      <div key={key}>
+                        <label className="form-label">{label}</label>
+                        <textarea
+                          className="input mt-1 font-mono text-sm"
+                          rows={Math.max(4, keyWorkerTasks[key].length + 1)}
+                          value={keyWorkerTasks[key].join('\n')}
+                          onChange={(e) =>
+                            setKeyWorkerTasks({ ...keyWorkerTasks, [key]: e.target.value.split('\n') })
+                          }
+                          placeholder="One prompt per line"
                         />
                       </div>
                     ))}
