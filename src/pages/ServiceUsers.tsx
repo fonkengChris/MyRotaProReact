@@ -9,7 +9,8 @@ import {
   EnvelopeIcon,
   ClockIcon,
   UserGroupIcon,
-  HeartIcon
+  HeartIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { addDays, endOfWeek, format, startOfWeek } from 'date-fns'
@@ -18,6 +19,7 @@ import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import PageHeader from '@/components/common/PageHeader'
 import ServiceUserModal from '@/components/ServiceUserModal'
+import OneToOneShiftsModal from '@/components/OneToOneShiftsModal'
 import { usePermissions } from '@/hooks/useAuth'
 import { homesApi, serviceUsersApi, shiftsApi, usersApi } from '@/lib/api'
 import { BadgeVariant, Home, KeyWorkerCaseloadEntry, ServiceUser, Shift, UserRole, shiftServiceUserId } from '@/types'
@@ -114,6 +116,8 @@ const AdminServiceUsers: React.FC = () => {
   const [keyWorkerFilter, setKeyWorkerFilter] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selected, setSelected] = useState<ServiceUser | null>(null)
+  // Service user whose 1-to-1 shifts are being scheduled/staffed.
+  const [oneToOneFor, setOneToOneFor] = useState<ServiceUser | null>(null)
 
   const { data: serviceUsers = [], isLoading } = useQuery({
     queryKey: ['serviceUsers', homeFilter, keyWorkerFilter],
@@ -230,6 +234,16 @@ const AdminServiceUsers: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => setOneToOneFor(su)}
+                            disabled={!su.is_active}
+                            title={su.is_active ? 'Schedule and assign 1-to-1 shifts' : 'Inactive service users cannot have 1-to-1s'}
+                          >
+                            <CalendarDaysIcon className="h-4 w-4 mr-1" />
+                            1-to-1s
+                          </Button>
                           <Button size="sm" variant="outline" onClick={() => openModal(su)} aria-label={`Edit ${su.name}`}>
                             <PencilIcon className="h-4 w-4" />
                           </Button>
@@ -246,6 +260,12 @@ const AdminServiceUsers: React.FC = () => {
           </div>
         )}
       </div>
+
+      <OneToOneShiftsModal
+        isOpen={!!oneToOneFor}
+        onClose={() => setOneToOneFor(null)}
+        serviceUser={oneToOneFor}
+      />
 
       <ServiceUserModal
         isOpen={isModalOpen}
