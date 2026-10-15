@@ -40,6 +40,13 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
   return isAdmin ? children : <Navigate to="/my-schedule" replace />
 }
 
+// Personal rostered-staff pages (My Schedule, Shift Selection/Swaps, My Hours);
+// admins are redirected to their landing page.
+function RequireNonAdmin({ children, fallback }: { children: React.ReactElement; fallback: string }) {
+  const { isAdmin } = usePermissions()
+  return isAdmin ? <Navigate to={fallback} replace /> : children
+}
+
 // Key Worker Home is the key-worker landing page (task prompts + caseload).
 function RequireKeyWorker({ children }: { children: React.ReactElement }) {
   const { isKeyWorker } = usePermissions()
@@ -101,11 +108,11 @@ function App() {
           {/* Personal pages (available to all authenticated users) */}
           <Route path="/key-worker-home" element={<RequireKeyWorker><KeyWorkerHome /></RequireKeyWorker>} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/shift-selection" element={<ShiftSelection />} />
-          <Route path="/shift-swaps" element={<ShiftSwaps />} />
-          <Route path="/my-timetables" element={<UserTimetables />} />
-          <Route path="/my-schedule" element={<MySchedule />} />
-          <Route path="/my-hours" element={<MyHours />} />
+          <Route path="/shift-selection" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSelection /></RequireNonAdmin>} />
+          <Route path="/shift-swaps" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSwaps /></RequireNonAdmin>} />
+          <Route path="/my-timetables" element={<RequireAdmin><UserTimetables /></RequireAdmin>} />
+          <Route path="/my-schedule" element={<RequireNonAdmin fallback={landingPath(permissions)}><MySchedule /></RequireNonAdmin>} />
+          <Route path="/my-hours" element={<RequireNonAdmin fallback={landingPath(permissions)}><MyHours /></RequireNonAdmin>} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />

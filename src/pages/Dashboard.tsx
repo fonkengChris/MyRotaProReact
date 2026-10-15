@@ -95,8 +95,17 @@ const Dashboard: React.FC = () => {
 
   // Calculate statistics (data should now be guaranteed arrays from select option)
   const totalShifts = staff.length || 0
+  // A 1-to-1 only adds the time its staff member spends outside their background shifts.
+  const staffShifts = (userId: string) =>
+    shifts.filter((s) => s.assigned_staff?.some((a) => a.user_id === userId))
   const totalPaidHours =
-    shifts.reduce((sum, shift) => sum + computeShiftPaidWithBreaks(shift).paidHours, 0) || 0
+    shifts.reduce((sum, shift) => {
+      const oneToOneStaff = shift.shift_type === 'one_to_one' ? shift.assigned_staff?.[0]?.user_id : undefined
+      const c = oneToOneStaff
+        ? computeShiftPaidWithBreaks(shift, undefined, undefined, staffShifts(oneToOneStaff))
+        : computeShiftPaidWithBreaks(shift)
+      return sum + c.paidHours
+    }, 0) || 0
   const totalSleepInHours =
     shifts.reduce((sum, shift) => sum + getShiftHourBreakdown(shift).sleep_in_hours, 0) || 0
   const activeStaff = staff.filter(s => s.is_active).length || 0
@@ -132,7 +141,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Available Shifts Notification */}
-      <AvailableShiftsNotification />
+      {!permissions.isAdmin && <AvailableShiftsNotification />}
 
       {/* Welcome Section */}
       <PageHeader
@@ -320,31 +329,35 @@ const Dashboard: React.FC = () => {
                       </Link>
                     )}
 
-                    <Link to="/my-schedule">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="h-24 w-full flex-col justify-center group hover:bg-secondary-50 hover:border-secondary-200 transition-all duration-200"
-                      >
-                        <div className="h-8 w-8 rounded-lg bg-secondary-100 flex items-center justify-center mb-2 group-hover:bg-secondary-200 transition-colors">
-                          <CalendarIcon className="h-5 w-5 text-secondary-600" />
-                        </div>
-                        <span className="font-medium">View My Schedule</span>
-                      </Button>
-                    </Link>
+                    {!permissions.isAdmin && (
+                      <Link to="/my-schedule">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="h-24 w-full flex-col justify-center group hover:bg-secondary-50 hover:border-secondary-200 transition-all duration-200"
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-secondary-100 flex items-center justify-center mb-2 group-hover:bg-secondary-200 transition-colors">
+                            <CalendarIcon className="h-5 w-5 text-secondary-600" />
+                          </div>
+                          <span className="font-medium">View My Schedule</span>
+                        </Button>
+                      </Link>
+                    )}
 
-                    <Link to="/my-hours">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="h-24 w-full flex-col justify-center group hover:bg-accent-50 hover:border-accent-200 transition-all duration-200"
-                      >
-                        <div className="h-8 w-8 rounded-lg bg-accent-100 flex items-center justify-center mb-2 group-hover:bg-accent-200 transition-colors">
-                          <ChartBarIcon className="h-5 w-5 text-accent-600" />
-                        </div>
-                        <span className="font-medium">My Hours</span>
-                      </Button>
-                    </Link>
+                    {!permissions.isAdmin && (
+                      <Link to="/my-hours">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="h-24 w-full flex-col justify-center group hover:bg-accent-50 hover:border-accent-200 transition-all duration-200"
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-accent-100 flex items-center justify-center mb-2 group-hover:bg-accent-200 transition-colors">
+                            <ChartBarIcon className="h-5 w-5 text-accent-600" />
+                          </div>
+                          <span className="font-medium">My Hours</span>
+                        </Button>
+                      </Link>
+                    )}
 
                     {permissions.canManageUsers && (
                       <Link to="/staff">

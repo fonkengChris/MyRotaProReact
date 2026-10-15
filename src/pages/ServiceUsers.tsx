@@ -12,14 +12,16 @@ import {
   HeartIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { addDays, endOfWeek, format, startOfWeek } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import PageHeader from '@/components/common/PageHeader'
 import ServiceUserModal from '@/components/ServiceUserModal'
 import { usePermissions } from '@/hooks/useAuth'
-import { homesApi, serviceUsersApi, usersApi } from '@/lib/api'
-import { BadgeVariant, Home, KeyWorkerCaseloadEntry, ServiceUser, UserRole } from '@/types'
+import { homesApi, serviceUsersApi, shiftsApi, usersApi } from '@/lib/api'
+import { BadgeVariant, Home, KeyWorkerCaseloadEntry, ServiceUser, Shift, UserRole, shiftServiceUserId } from '@/types'
+import { getShiftHourBreakdown } from '@/lib/shiftHours'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Admin',
@@ -47,6 +49,64 @@ const ServiceUsers: React.FC = () => {
   return isAdmin ? <AdminServiceUsers /> : <KeyWorkerCaseload />
 }
 
+interface OneToOneSummary {
+  weekHours: number
+  next: Shift | null
+}
+
+/**
+ * This week's scheduled 1-to-1 hours and the next upcoming 1-to-1 per service user,
+ * from 1-to-1 shifts between the start of this week and two weeks ahead.
+ */
+function useOneToOneSummaries(): Map<string, OneToOneSummary> {
+  const today = new Date()
+  const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  const weekEnd = format(endOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  const todayStr = format(today, 'yyyy-MM-dd')
+  const rangeEnd = format(addDays(today, 14), 'yyyy-MM-dd')
+
+  const { data: shifts = [] } = useQuery({
+    queryKey: ['shifts', 'one_to_one', weekStart, rangeEnd],
+    queryFn: () => shiftsApi.getAll({ kind: 'one_to_one', start_date: weekStart, end_date: rangeEnd }),
+    select: (data) => (Array.isArray(data) ? data : []),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, OneToOneSummary>()
+    const sorted = [...shifts].sort((a, b) =>
+      `${a.date} ${a.start_time}`.localeCompare(`${b.date} ${b.start_time}`)
+    )
+    for (const shift of sorted) {
+      const id = shiftServiceUserId(shift)
+      if (!id || shift.is_active === false) continue
+      const entry = map.get(id) ?? { weekHours: 0, next: null }
+      if (shift.date <= weekEnd) entry.weekHours += getShiftHourBreakdown(shift).duration_hours
+      if (!entry.next && shift.date >= todayStr) entry.next = shift
+      map.set(id, entry)
+    }
+    return map
+  }, [shifts, weekEnd, todayStr])
+}
+
+const OneToOneCell: React.FC<{ serviceUser: ServiceUser; summary?: OneToOneSummary }> = ({ serviceUser, summary }) => {
+  const allocated = serviceUser.one_to_one_hours_per_week
+  const scheduled = summary?.weekHours ?? 0
+  return (
+    <div>
+      <div>
+        {scheduled.toFixed(1)}h{allocated != null ? ` / ${allocated}h` : ''}
+        <span className="text-neutral-500 dark:text-neutral-400"> this week</span>
+      </div>
+      {summary?.next && (
+        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+          Next: {format(new Date(`${summary.next.date}T00:00:00`), 'EEE d MMM')} {summary.next.start_time}–{summary.next.end_time}
+          {summary.next.assigned_staff?.length ? '' : ' · unassigned'}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Admin view: manage every service user and who their key workers are.
 const AdminServiceUsers: React.FC = () => {
   const queryClient = useQueryClient()
@@ -67,6 +127,8 @@ const AdminServiceUsers: React.FC = () => {
     queryKey: ['users', 'key_worker', 'active'],
     queryFn: () => usersApi.getAll({ role: 'key_worker', is_active: true })
   })
+
+  const oneToOneSummaries = useOneToOneSummaries()
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['serviceUsers'] })
 
@@ -133,7 +195,7 @@ const AdminServiceUsers: React.FC = () => {
                   <th className={thClass}>Name</th>
                   <th className={thClass}>Home</th>
                   <th className={thClass}>Key Workers</th>
-                  <th className={thClass}>1:1 hrs/wk</th>
+                  <th className={thClass}>1-to-1 scheduled / allocated</th>
                   <th className={thClass}>Status</th>
                   <th className={`${thClass} text-right`}>Actions</th>
                 </tr>
@@ -161,7 +223,7 @@ const AdminServiceUsers: React.FC = () => {
                           : su.key_worker_ids.map(kw => (typeof kw === 'string' ? kw : kw.name)).join(', ')}
                       </td>
                       <td className="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                        {su.one_to_one_hours_per_week ?? '—'}
+                        <OneToOneCell serviceUser={su} summary={oneToOneSummaries.get(su.id)} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={su.is_active ? 'success' : 'neutral'}>{su.is_active ? 'Active' : 'Inactive'}</Badge>

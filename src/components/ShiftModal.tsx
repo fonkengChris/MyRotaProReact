@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -10,17 +11,24 @@ import {
   ClockIcon,
  
 } from '@heroicons/react/24/outline'
-import { Shift, Service, extractHomeId, extractServiceId } from '@/types'
+import { Shift, Service, extractHomeId, extractServiceId, shiftServiceUserId } from '@/types'
+import { serviceUsersApi } from '@/lib/api'
 
-const shiftSchema = z.object({
-  home_id: z.string().min(1, 'Home is required'),
-  service_id: z.string().min(1, 'Service is required'),
-  start_time: z.string().min(1, 'Start time is required'),
-  end_time: z.string().min(1, 'End time is required'),
-  required_staff_count: z.number().min(1, 'At least 1 staff member required'),
-  shift_type: z.string().min(1, 'Shift type is required'),
-  notes: z.string().optional(),
-})
+const shiftSchema = z
+  .object({
+    home_id: z.string().min(1, 'Home is required'),
+    service_id: z.string().min(1, 'Service is required'),
+    service_user_id: z.string().optional(),
+    start_time: z.string().min(1, 'Start time is required'),
+    end_time: z.string().min(1, 'End time is required'),
+    required_staff_count: z.number().min(1, 'At least 1 staff member required'),
+    shift_type: z.string().min(1, 'Shift type is required'),
+    notes: z.string().optional(),
+  })
+  .refine((d) => d.shift_type !== 'one_to_one' || !!d.service_user_id, {
+    message: 'Choose the service user this 1-to-1 is for',
+    path: ['service_user_id'],
+  })
 
 type ShiftFormData = z.infer<typeof shiftSchema>
 
@@ -34,6 +42,10 @@ interface ShiftModalProps {
   homeId?: string // Add homeId prop for pre-filling
   existingShifts?: Shift[] // Add existing shifts for overlap validation
   isLoading?: boolean
+  /** Admins only: may create/edit 1-to-1 shifts. */
+  canManageOneToOne?: boolean
+  /** Shift type preselected for a new shift (e.g. 'one_to_one' from "Add 1-to-1"). */
+  initialShiftType?: string
 }
 
 const ShiftModal: React.FC<ShiftModalProps> = ({
@@ -45,7 +57,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   services,
   homeId,
   existingShifts,
-  isLoading = false
+  isLoading = false,
+  canManageOneToOne = false,
+  initialShiftType,
 }) => {
   
 
@@ -67,6 +81,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
       end_time: '17:00',
       required_staff_count: 1,
       shift_type: 'morning',
+      service_user_id: '',
       notes: '',
     }
   })
@@ -74,6 +89,17 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   const startTime = watch('start_time')
   const endTime = watch('end_time')
   const selectedServiceId = watch('service_id')
+  const shiftType = watch('shift_type')
+  const selectedHomeId = watch('home_id')
+  const isOneToOne = shiftType === 'one_to_one'
+  // Only admins create/edit 1-to-1s; a non-admin opening one sees it read-only.
+  const readOnlyOneToOne = !canManageOneToOne && (isOneToOne || shift?.shift_type === 'one_to_one')
+
+  const { data: homeServiceUsers = [], isLoading: serviceUsersLoading } = useQuery({
+    queryKey: ['service-users', { home_id: selectedHomeId, is_active: true }],
+    queryFn: () => serviceUsersApi.getAll({ home_id: selectedHomeId, is_active: true }),
+    enabled: isOpen && isOneToOne && !!selectedHomeId,
+  })
 
   // Calculate duration (handles overnight shifts)
   const calculateDuration = () => {
@@ -113,6 +139,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   // Check for shift overlaps (handles multi-day shifts)
   const checkShiftOverlap = (startTime: string, endTime: string, date: string) => {
     if (!existingShifts || !homeId) return null
+    // 1-to-1s are additive support for one service user and may overlap any shift.
+    if (isOneToOne) return null
     
     // Convert current shift times to minutes since midnight
     const currentStartMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1])
@@ -126,6 +154,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     const overlappingShift = existingShifts.find(existingShift => {
       // Skip the current shift being edited
       if (shift && existingShift.id === shift.id) return false
+      if (existingShift.shift_type === 'one_to_one') return false
       
       // Check if it's the same home
       if (existingShift.home_id !== homeId) return false
@@ -226,6 +255,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         setValue('end_time', shift.end_time.substring(0, 5))
         setValue('required_staff_count', shift.required_staff_count || 1)
         setValue('shift_type', shift.shift_type || 'morning')
+        setValue('service_user_id', shiftServiceUserId(shift) || '')
         setValue('notes', shift.notes || '')
       } else {
         // Creating new shift
@@ -233,7 +263,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         setValue('start_time', '09:00')
         setValue('end_time', '17:00')
         setValue('required_staff_count', 1)
-        setValue('shift_type', 'morning')
+        setValue('shift_type', initialShiftType || 'morning')
+        setValue('service_user_id', '')
         
         // Auto-fill home and service if homeId is provided
         if (homeId && services.length > 0) {
@@ -252,7 +283,13 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         }
       }
     }
-  }, [isOpen, shift, setValue, reset, homeId, services])
+  }, [isOpen, shift, setValue, reset, homeId, services, initialShiftType])
+
+  // A 1-to-1 is always one staff member; leaving the type clears the service user.
+  useEffect(() => {
+    if (isOneToOne) setValue('required_staff_count', 1)
+    else setValue('service_user_id', '')
+  }, [isOneToOne, setValue])
 
   // Reset home_id when service changes
   useEffect(() => {
@@ -283,7 +320,10 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
       }
       
       setIsSubmitting(true)
-      await onSubmit(data)
+      await onSubmit({
+        ...data,
+        service_user_id: data.shift_type === 'one_to_one' ? data.service_user_id : '',
+      })
       onClose()
     } catch (error) {
       console.error('Error submitting shift:', error)
@@ -306,7 +346,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>
-                  {shift ? 'Edit Shift' : 'Create New Shift'}
+                  {isOneToOne
+                    ? (shift ? 'Edit 1-to-1 Shift' : 'Create 1-to-1 Shift')
+                    : (shift ? 'Edit Shift' : 'Create New Shift')}
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -501,6 +543,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                       min="1"
                       max="10"
                       className="input w-full"
+                      disabled={isOneToOne}
                     />
                     {errors.required_staff_count && (
                       <p className="mt-1 text-sm text-danger-600">{errors.required_staff_count.message}</p>
@@ -523,7 +566,9 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                       <option value="night-sleep">Sleeping night</option>
                       <option value="overtime">Overtime</option>
                       <option value="long_day">Long Day</option>
-                      <option value="special">Special (1:1 support)</option>
+                      {(canManageOneToOne || shift?.shift_type === 'one_to_one') && (
+                        <option value="one_to_one">1-to-1 (service user)</option>
+                      )}
                       <option value="split">Split</option>
                     </select>
                     {errors.shift_type && (
@@ -531,6 +576,45 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* 1-to-1: service user + how hours are counted */}
+                {isOneToOne && (
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                      Service User
+                    </label>
+                    <select
+                      {...register('service_user_id')}
+                      className="input w-full"
+                      disabled={!selectedHomeId || readOnlyOneToOne}
+                    >
+                      <option value="">
+                        {!selectedHomeId
+                          ? 'Select a home first'
+                          : serviceUsersLoading
+                            ? 'Loading service users…'
+                            : 'Select a service user'}
+                      </option>
+                      {homeServiceUsers.map((su) => (
+                        <option key={su.id} value={su.id}>
+                          {su.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.service_user_id && (
+                      <p className="mt-1 text-sm text-danger-600">{errors.service_user_id.message}</p>
+                    )}
+                    {selectedHomeId && !serviceUsersLoading && homeServiceUsers.length === 0 && (
+                      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                        No active service users in this home.
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                      Staff already on a background shift at this time cover it at no extra hours;
+                      only time outside their background shift is paid.
+                    </p>
+                  </div>
+                )}
 
                 {/* Notes */}
                 <div>
@@ -562,7 +646,8 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     type="submit"
                     variant="primary"
                     loading={isSubmitting}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || readOnlyOneToOne}
+                    title={readOnlyOneToOne ? 'Only admins can edit 1-to-1 shifts' : undefined}
                   >
                     {isSubmitting ? 'Saving...' : (shift ? 'Update Shift' : 'Create Shift')}
                   </Button>

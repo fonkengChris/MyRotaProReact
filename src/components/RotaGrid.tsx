@@ -12,7 +12,8 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User, extractServiceName, WeeklySchedule } from '@/types'
+import { Shift, User, extractServiceName, WeeklySchedule, isOneToOneShift, shiftServiceUserName } from '@/types'
+import { isCoveredByBackground } from '@/lib/shiftHours'
 import { weeklySchedulesApi } from '@/lib/api'
 
 interface RotaGridProps {
@@ -390,6 +391,12 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                       <div className="space-y-1 p-1">
                         {dayShifts.map((shift) => {
                           const shiftAssignments = getAssignmentsForShift(shift.id)
+                          const oneToOne = isOneToOneShift(shift)
+                          // 1-to-1 shifts are created, edited and assigned by admins only.
+                          const canEditShift = canEdit && (!oneToOne || currentUser?.role === 'admin')
+                          // A staff member's shifts in this rota, for 1-to-1 coverage checks.
+                          const shiftsOf = (userId: string) =>
+                            shifts.filter((s) => s.assigned_staff?.some((a) => a.user_id === userId))
                           
                           return (
                             <div
@@ -397,7 +404,9 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                               className={`rounded-lg p-2 text-xs shadow-sm ${
                                 hasShiftConflicts(shift.id)
                                   ? 'bg-danger-50 border border-danger-300 border-l-4 border-l-danger-500 dark:bg-danger-950/30'
-                                  : 'bg-primary-50 border border-primary-200 border-l-4 border-l-primary-500 dark:bg-primary-950/30 dark:border-primary-900'
+                                  : oneToOne
+                                    ? 'bg-secondary-50 border border-secondary-200 border-l-4 border-l-secondary-500 dark:bg-secondary-950/30 dark:border-secondary-900'
+                                    : 'bg-primary-50 border border-primary-200 border-l-4 border-l-primary-500 dark:bg-primary-950/30 dark:border-primary-900'
                               }`}
                             >
                               {/* Shift header */}
@@ -412,8 +421,13 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                       Conflict
                                     </Badge>
                                   )}
+                                  {oneToOne && (
+                                    <Badge variant="secondary" className="text-xs ml-2">
+                                      1-to-1
+                                    </Badge>
+                                  )}
                                 </div>
-                                {canEdit && (
+                                {canEditShift && (
                                   <div className="flex space-x-1">
                                     <Button
                                       variant="outline"
@@ -437,7 +451,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
 
                               {/* Service info */}
                               <div className="text-primary-700 mb-2">
-                                Service: {extractServiceName(shift.service_id) || 'Unknown Service'}
+                                {oneToOne ? (
+                                  <>For: {shiftServiceUserName(shift) || 'Service user not linked'}</>
+                                ) : (
+                                  <>Service: {extractServiceName(shift.service_id) || 'Unknown Service'}</>
+                                )}
                               </div>
 
                               {/* Staff assignments */}
@@ -454,8 +472,13 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                         <span className="text-neutral-800">
                                           {staffMember?.name || 'Unknown Staff'}
                                         </span>
+                                        {oneToOne && isCoveredByBackground(shift, shiftsOf(assignment.user_id)) && (
+                                          <span className="text-neutral-600" title="Covered by their background shift — no extra hours">
+                                            (covered)
+                                          </span>
+                                        )}
                                       </div>
-                                      {canEdit && (
+                                      {canEditShift && (
                                         <Button
                                           variant="outline"
                                           size="sm"
@@ -470,7 +493,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                 })}
 
                                 {/* Add staff button */}
-                                {canEdit && (
+                                {canEditShift && (!oneToOne || shiftAssignments.length === 0) && (
                                   <div className="relative">
                                     <Button
                                       variant="outline"
@@ -502,6 +525,9 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                                     </span>
                                                   </div>
                                                   <span>{member.name}</span>
+                                                  {oneToOne && isCoveredByBackground(shift, shiftsOf(member.id)) && (
+                                                    <span className="text-xs text-neutral-600">on shift · no extra hrs</span>
+                                                  )}
                                                 </div>
                                               </button>
                                             ))}

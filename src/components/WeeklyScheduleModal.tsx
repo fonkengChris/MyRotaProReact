@@ -332,7 +332,6 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
                                       <option value="night-sleep">Sleeping night</option>
                                       <option value="overtime">Overtime</option>
                                       <option value="long_day">Long Day</option>
-                                      <option value="special">Special (1:1 support)</option>
                                       <option value="split">Split</option>
                                     </select>
                                   </div>

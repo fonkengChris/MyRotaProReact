@@ -279,9 +279,12 @@
   :root {
     --background: 42 45% 92%; /* soft cream page background */
     --foreground: 175 40% 12%;
-    --card: 0 0% 100%;
+    /* Softened off-white for raised surfaces (cards, sidebar, header, menus).
+       Also backs every `bg-white` utility via tailwind.config.js. */
+    --surface: 40 38% 96.5%;
+    --card: var(--surface);
     --card-foreground: 175 40% 12%;
-    --popover: 0 0% 100%;
+    --popover: var(--surface);
     --popover-foreground: 175 40% 12%;
     --primary: 174 80% 28%;
     --primary-foreground: 0 0% 100%;
@@ -311,6 +314,7 @@
     --primary-950: 179 84% 10%;
   }
   .dark {
+    --surface: 0 0% 100%; /* keep `bg-white` pure white in dark mode */
     --background: 224 71% 4%;
     --foreground: 210 20% 98%;
     --card: 224 55% 7%;

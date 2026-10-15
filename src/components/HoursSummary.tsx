@@ -15,7 +15,7 @@ import {
 import { shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, User, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, getShiftHourBreakdown, isCoveredByBackground } from '@/lib/shiftHours'
 
 function aggregateUserShiftHours(userShifts: Shift[]) {
   const totalHours = userShifts.reduce(
@@ -29,7 +29,8 @@ function aggregateUserShiftHours(userShifts: Shift[]) {
   let paidHours = 0
   let totalBreakDeductions = 0
   userShifts.forEach((shift) => {
-    const c = computeShiftPaidWithBreaks(shift)
+    // A 1-to-1 only pays time outside this user's background shifts.
+    const c = computeShiftPaidWithBreaks(shift, undefined, undefined, userShifts)
     paidHours += c.paidHours
     totalBreakDeductions += c.breakDeduction
   })
@@ -585,6 +586,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                 <Badge variant="secondary" className="text-xs mt-1">
                                   {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
+                                {isCoveredByBackground(shift, userHour.shifts) && (
+                                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                                    Covered by background shift — 0h extra
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>

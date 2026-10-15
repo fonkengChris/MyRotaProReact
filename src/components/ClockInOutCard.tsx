@@ -8,7 +8,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { ClockIcon } from '@heroicons/react/24/outline'
-import type { Shift, StaffAssignment, ClockOutResponse } from '@/types'
+import { formatShiftTypeLabel, shiftServiceUserName, type Shift, type StaffAssignment, type ClockOutResponse } from '@/types'
+import { isCoveredByBackground } from '@/lib/shiftHours'
 
 // How early (minutes) staff may clock in — mirrors server EARLY_CLOCK_IN_MINUTES.
 const EARLY_CLOCK_IN_MINUTES = 15
@@ -91,6 +92,8 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
     const candidates = shifts
       .map((shift) => ({ shift, assignment: myAssignment(shift, user?.id) }))
       .filter((c) => !!c.assignment)
+      // A 1-to-1 inside the user's background shift needs no clock-in; show the background shift.
+      .filter((c) => !isCoveredByBackground(c.shift, shifts))
       .filter((c) => {
         const windowOpen = new Date(shiftStart(c.shift).getTime() - EARLY_CLOCK_IN_MINUTES * 60000)
         // Keep clocked-out shifts visible for a short while so staff can request overtime.
@@ -164,6 +167,8 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
 
   const homeName =
     typeof shift.home_id === 'object' && shift.home_id?.name ? shift.home_id.name : 'your shift'
+  const covered = isCoveredByBackground(shift, shifts)
+  const serviceUserName = shiftServiceUserName(shift)
 
   const submitOvertime = () => {
     const minutes = Number(overtimeMinutes)
@@ -189,6 +194,12 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
             <p className="text-sm text-muted-foreground">
               {shift.start_time}–{shift.end_time} · {format(start, 'EEE d MMM')}
             </p>
+            {shift.shift_type === 'one_to_one' && (
+              <p className="text-sm text-muted-foreground">
+                {formatShiftTypeLabel(shift.shift_type)}
+                {serviceUserName ? ` with ${serviceUserName}` : ''}
+              </p>
+            )}
           </div>
           {status === 'not_started' && minutesLate >= 5 && now <= end && (
             <Badge variant="danger">{minutesLate} min late</Badge>
@@ -197,8 +208,15 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
           {status === 'clocked_out' && <Badge variant="secondary">Completed</Badge>}
         </div>
 
+        {/* Covered 1-to-1: attendance comes from the background shift */}
+        {covered && status === 'not_started' && (
+          <p className="text-sm text-muted-foreground">
+            Covered by your background shift — no clock-in needed and no extra hours.
+          </p>
+        )}
+
         {/* Not yet clocked in */}
-        {status === 'not_started' && (
+        {status === 'not_started' && !covered && (
           <>
             {now < windowOpen ? (
               <Button disabled className="w-full">

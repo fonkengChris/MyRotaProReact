@@ -251,6 +251,9 @@ export const shiftsApi = {
     start_date?: string
     end_date?: string
     user_id?: string
+    service_user_id?: string
+    /** `one_to_one` → only 1-to-1 shifts; `background` → everything else. */
+    kind?: 'background' | 'one_to_one'
   }): Promise<Shift[]> => {
     const response = await api.get<Shift[]>('/shifts', { params })
     return response.data
@@ -276,8 +279,16 @@ export const shiftsApi = {
     return response.data
   },
 
-  assignStaff: async (shiftId: string, userId: string, note?: string, override?: boolean): Promise<Shift> => {
-    const response = await api.post<Shift>(`/shifts/${shiftId}/assign`, { user_id: userId, note, override })
+  assignStaff: async (
+    shiftId: string,
+    userId: string,
+    note?: string,
+    override?: boolean
+  ): Promise<Shift & { covered_by_background?: boolean; rest_exception_pending?: boolean }> => {
+    const response = await api.post<Shift & { covered_by_background?: boolean; rest_exception_pending?: boolean }>(
+      `/shifts/${shiftId}/assign`,
+      { user_id: userId, note, override }
+    )
     return response.data
   },
 

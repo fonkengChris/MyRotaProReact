@@ -74,6 +74,9 @@ const RotaEditor: React.FC = () => {
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string>('09:00')
+  // Preselected type for a new shift ('one_to_one' when opened via "Add 1-to-1").
+  const [newShiftType, setNewShiftType] = useState<string | undefined>(undefined)
+  const isAdmin = user?.role === 'admin'
 
   // Admin override prompt: shown when an assignment hits overridable rules (not overlap).
   const [overridePrompt, setOverridePrompt] = useState<{
@@ -404,10 +407,11 @@ const RotaEditor: React.FC = () => {
   }
 
   // Shift management handlers
-  const handleAddShift = (date: Date, time: string) => {
+  const handleAddShift = (date: Date, time: string, shiftType?: string) => {
     setSelectedDate(date)
     setSelectedTime(time)
     setSelectedShift(null)
+    setNewShiftType(shiftType)
     setIsShiftModalOpen(true)
   }
 
@@ -460,8 +464,12 @@ const RotaEditor: React.FC = () => {
 
   const handleAssignStaff = async (shiftId: string, userId: string) => {
     try {
-      await shiftsApi.assignStaff(shiftId, userId)
-      toast.success('Staff assigned successfully')
+      const assigned = await shiftsApi.assignStaff(shiftId, userId)
+      toast.success(
+        assigned.covered_by_background
+          ? 'Assigned — covered by their background shift (no extra hours)'
+          : 'Staff assigned successfully'
+      )
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
       return { success: true }
@@ -575,11 +583,12 @@ const RotaEditor: React.FC = () => {
     try {
       toast.loading('Resetting all assignments for the week...')
       
-      // Get all shifts for the current week
+      // Get all background shifts for the current week (1-to-1s are managed individually)
       const weekShifts = await shiftsApi.getAll({
         home_id: ensureStringHomeId(selectedHomeId),
         start_date: format(currentWeekStart, 'yyyy-MM-dd'),
-        end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+        end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
+        kind: 'background'
       })
       
       // Unassign all staff from all shifts
@@ -608,11 +617,12 @@ const RotaEditor: React.FC = () => {
     try {
       toast.loading('Deleting all shifts for the week...')
       
-      // Get all shifts for the current week
+      // Get all background shifts for the current week (1-to-1s are managed individually)
       const weekShifts = await shiftsApi.getAll({
         home_id: ensureStringHomeId(selectedHomeId),
         start_date: format(currentWeekStart, 'yyyy-MM-dd'),
-        end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+        end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
+        kind: 'background'
       })
       
       // Delete all shifts
@@ -915,19 +925,26 @@ const RotaEditor: React.FC = () => {
                 </CardDescription>
               </div>
               {permissions.canManageRotas && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedDate(new Date())
-                    setSelectedTime('09:00')
-                    setSelectedShift(null)
-                    setIsShiftModalOpen(true)
-                  }}
-                >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Add Shift
-                </Button>
+                <div className="flex gap-2">
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddShift(new Date(), '09:00', 'one_to_one')}
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Add 1-to-1
+                    </Button>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleAddShift(new Date(), '09:00')}
+                  >
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Add Shift
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
@@ -979,12 +996,7 @@ const RotaEditor: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setSelectedDate(new Date())
-                        setSelectedTime('09:00')
-                        setSelectedShift(null)
-                        setIsShiftModalOpen(true)
-                      }}
+                      onClick={() => handleAddShift(new Date(), '09:00')}
                     >
                       <PlusIcon className="h-4 w-4 mr-2" />
                       Add Shift Manually
@@ -1059,6 +1071,8 @@ const RotaEditor: React.FC = () => {
           homeId={selectedHomeId}
           existingShifts={shifts || []}
           isLoading={false}
+          canManageOneToOne={isAdmin}
+          initialShiftType={newShiftType}
         />
       )}
 

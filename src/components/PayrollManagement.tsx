@@ -325,6 +325,12 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                       <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wide">Role</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Day Hrs</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Night Hrs</th>
+                      <th
+                        className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide"
+                        title="Part of Day Hrs from 1-to-1 shifts outside the staff member's background shifts"
+                      >
+                        1-to-1 Hrs
+                      </th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Sleep-in Pay</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Leave Pay</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Gross</th>
@@ -347,6 +353,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                         <td className="px-4 py-3 text-sm text-neutral-700">{row.role || '-'}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-700 text-right">{asNumber(row.one_to_one_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{money(asNumber(row.sleep_in_pay))}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">
                           {money(asNumber(row.leave_pay))}

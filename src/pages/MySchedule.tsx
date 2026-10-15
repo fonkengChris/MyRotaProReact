@@ -427,7 +427,11 @@ const MySchedule: React.FC = () => {
               <div className="text-center">
                 <p className="text-2xl font-bold text-success-600">
                   {myShifts
-                    .reduce((total, shift) => total + computeShiftPaidWithBreaks(shift).paidHours, 0)
+                    .reduce(
+                      (total, shift) =>
+                        total + computeShiftPaidWithBreaks(shift, undefined, undefined, myShifts).paidHours,
+                      0
+                    )
                     .toFixed(1)}
                 </p>
                 <p className="text-sm text-neutral-700">Paid hours</p>

@@ -5,7 +5,6 @@ import Button from '@/components/ui/Button'
 import ShiftSwapNotification from '@/components/ShiftSwapNotification'
 import {
   HomeIcon,
-  CalendarIcon,
   CalendarDaysIcon,
   TableCellsIcon,
   QueueListIcon,
@@ -52,16 +51,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           { name: 'Rota', href: '/rota', icon: TableCellsIcon, current: location.pathname.startsWith('/rota') },
           { name: 'Weekly Schedules', href: '/weekly-schedules', icon: QueueListIcon, current: location.pathname === '/weekly-schedules' }
         ]
-      : [
-          { name: 'My Timetables', href: '/my-timetables', icon: CalendarIcon, current: location.pathname === '/my-timetables' }
-        ]
+      : []
     ),
     ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/timetables' }] : []),
-    { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },
-    { name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' },
-    { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' },
+    ...(!permissions.isAdmin
+      ? [
+          { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },
+          { name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' },
+          { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' }
+        ]
+      : []),
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
-    { name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' },
+    ...(!permissions.isAdmin ? [{ name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' }] : []),
     { name: 'Availability/Leave', href: '/availability', icon: CheckCircleIcon, current: location.pathname === '/availability' },
     ...(permissions.isAdmin ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
     ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
@@ -224,7 +225,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
       
       {/* Shift Swap Notifications */}
-      <ShiftSwapNotification />
+      {!permissions.isAdmin && <ShiftSwapNotification />}
     </div>
   )
 }

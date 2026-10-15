@@ -9,6 +9,14 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      // `bg-white` (and gradients) follow --surface, so light-mode panels use
+      // a softened off-white. `text-white` etc. stay pure white.
+      backgroundColor: {
+        white: 'hsl(var(--surface) / <alpha-value>)',
+      },
+      gradientColorStops: {
+        white: 'hsl(var(--surface) / <alpha-value>)',
+      },
       colors: {
         // shadcn/ui semantic tokens — driven by CSS variables so the entire
         // palette can be swapped at runtime (see the theme sets in index.css).

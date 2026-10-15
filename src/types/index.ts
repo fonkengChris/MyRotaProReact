@@ -63,6 +63,9 @@ export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'socia
  * - `night-wake`: waking night — full shift length counts as regular paid hours (no sleep-in deduction)
  * - `night-sleep`: sleeping night — the midnight→shift-end sleep-in is excluded from paid work; the pre-midnight portion is regular paid hours
  * - `night` (legacy): treated like waking night for hours (full span = paid work)
+ * - `one_to_one`: admin-created support for one service user (never templated). Every other
+ *   type is a "background" shift. A 1-to-1 inside the staff member's own background shift
+ *   adds no paid hours; only time outside their background shifts counts.
  */
 export type ShiftType =
   | 'morning'
@@ -74,7 +77,7 @@ export type ShiftType =
   | 'night' // legacy; use night-wake or night-sleep for new shifts
   | 'overtime'
   | 'long_day'
-  | 'special'
+  | 'one_to_one'
   | 'none'
   | 'split'
 
@@ -89,7 +92,7 @@ export const SHIFT_TYPE_LABELS: Record<ShiftType, string> = {
   night: 'Night',
   overtime: 'Overtime',
   long_day: 'Long day',
-  special: 'Special (1:1 support)',
+  one_to_one: '1-to-1',
   none: 'None',
   split: 'Split',
 }
@@ -274,6 +277,8 @@ export interface Shift {
   start_time: string
   end_time: string
   shift_type: ShiftType
+  /** Only on `one_to_one` shifts; populated with the name by list/detail endpoints. */
+  service_user_id?: string | { _id?: string; id?: string; name: string } | null
   required_staff_count: number
   assigned_staff: StaffAssignment[]
   is_urgent: boolean
@@ -287,6 +292,24 @@ export interface Shift {
   /** Paid working hours before break rules (excludes sleep-in on night-sleep). */
   paid_work_hours?: number
   status: ShiftStatus
+}
+
+/** Service user id of a 1-to-1 shift, whether or not the API populated it. */
+export function shiftServiceUserId(shift: Pick<Shift, 'service_user_id'>): string | null {
+  const su = shift.service_user_id
+  if (!su) return null
+  if (typeof su === 'string') return su
+  return su.id || su._id || null
+}
+
+/** Service user name of a populated 1-to-1 shift. */
+export function shiftServiceUserName(shift: Pick<Shift, 'service_user_id'>): string | null {
+  const su = shift.service_user_id
+  return su && typeof su === 'object' ? su.name : null
+}
+
+export function isOneToOneShift(shift: Pick<Shift, 'shift_type'> | null | undefined): boolean {
+  return shift?.shift_type === 'one_to_one'
 }
 
 export interface StaffAssignment {
@@ -835,6 +858,9 @@ export interface PayrollRecord {
   // Final mode only: count of this staff member's shifts paid on rostered time
   // because no clock-out was recorded. Always 0 in draft mode.
   needs_review?: number
+  // Hours paid for 1-to-1 shifts outside the staff member's background shifts
+  // (already included in day_hours).
+  one_to_one_hours?: number
 }
 
 export interface PayrollReportResponse {
@@ -850,5 +876,6 @@ export interface PayrollReportResponse {
     total_leave_pay?: number
     total_gross_pay?: number
     total_needs_review?: number
+    total_one_to_one_hours?: number
   }
 }

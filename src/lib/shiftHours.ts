@@ -3,7 +3,7 @@ import type { Shift } from '@/types'
 /**
  * Sleeping-night sleep period runs from the wall-clock midnight during the shift up to the shift
  * end; the pre-midnight portion (shift start → 00:00) is regular paid hours. Sleep is paid a flat
- * allowance in payroll. Mirrors the server `utils/shiftHours.js`. `night-wake`, `special`, and
+ * allowance in payroll. Mirrors the server `utils/shiftHours.js`. `night-wake`, `one_to_one`, and
  * legacy `night` are not split — full rostered time counts as paid work (before breaks).
  */
 
@@ -158,6 +158,65 @@ export function workedHourBreakdown(
   }
 }
 
+type Interval = { start: number; end: number }
+type TimedShift = { id?: string; date?: string; start_time?: string; end_time?: string; shift_type?: string }
+
+/**
+ * The part of a background shift that is paid work: for `night-sleep` the midnight→end
+ * sleep-in is not paid hours, so a 1-to-1 then is extra time. Mirrors the server
+ * `paidPortion` in `utils/oneToOne.js`.
+ */
+function backgroundPaidWindow(shift: TimedShift): Interval | null {
+  const w = scheduledInstants(shift)
+  if (!w) return null
+  if (shift.shift_type !== 'night-sleep' || !shift.date) return w
+  const [y, mo, d] = shift.date.split('-').map(Number)
+  const midnight = new Date(y, mo - 1, d + 1).getTime()
+  const cut = w.start >= midnight ? w.start : Math.min(midnight, w.end)
+  return cut > w.start ? { start: w.start, end: cut } : null
+}
+
+/** `window` minus every interval in `cuts`, as total hours. */
+export function subtractIntervalsHours(window: Interval | null, cuts: Interval[]): number {
+  if (!window || window.end <= window.start) return 0
+  let remaining: Interval[] = [window]
+  for (const cut of cuts) {
+    if (cut.end <= cut.start) continue
+    remaining = remaining.flatMap((r) => {
+      if (cut.end <= r.start || cut.start >= r.end) return [r]
+      const parts: Interval[] = []
+      if (cut.start > r.start) parts.push({ start: r.start, end: cut.start })
+      if (cut.end < r.end) parts.push({ start: cut.end, end: r.end })
+      return parts
+    })
+  }
+  return remaining.reduce((sum, r) => sum + (r.end - r.start), 0) / 3_600_000
+}
+
+function backgroundCuts(oneToOne: TimedShift, userShifts: TimedShift[]): Interval[] {
+  return userShifts
+    .filter((s) => s.shift_type !== 'one_to_one' && s.id !== oneToOne.id)
+    .map(backgroundPaidWindow)
+    .filter((w): w is Interval => !!w)
+}
+
+/**
+ * True when a 1-to-1 lies fully inside one of the staff member's background shifts:
+ * it then adds no paid hours and needs no clock-in (attendance comes from the
+ * background shift). Mirrors the server `isCoveredBy` in `utils/oneToOne.js`.
+ */
+export function isCoveredByBackground(oneToOne: TimedShift, userShifts: TimedShift[]): boolean {
+  if (oneToOne.shift_type !== 'one_to_one') return false
+  const w = scheduledInstants(oneToOne)
+  if (!w) return false
+  return backgroundCuts(oneToOne, userShifts).some((b) => b.start <= w.start && b.end >= w.end)
+}
+
+/** Rostered hours a 1-to-1 adds for a staff member beyond their background shifts. */
+export function extraOneToOneHours(oneToOne: TimedShift, userShifts: TimedShift[]): number {
+  return subtractIntervalsHours(scheduledInstants(oneToOne), backgroundCuts(oneToOne, userShifts))
+}
+
 function breakDeductionFor(work: number): { breakDeduction: number; deductionReason: string } {
   if (work >= 12) return { breakDeduction: 1, deductionReason: '12+ hour paid work — break' }
   if (work >= 8) return { breakDeduction: 0.5, deductionReason: '8–12 hour paid work — break' }
@@ -215,7 +274,7 @@ export function getShiftHourBreakdown(
     }
   }
 
-  // night-wake, special, night (legacy), and everything else: 100% of duration is paid work
+  // night-wake, one_to_one, night (legacy), and everything else: 100% of duration is paid work
   return {
     duration_hours: duration,
     sleep_in_hours: 0,
@@ -233,11 +292,16 @@ export function getShiftHourBreakdown(
  * time. Otherwise — no assignment, or a shift not yet clocked — it falls back to
  * the rostered estimate. `rosteredHours`/`sleepInHours` always reflect the
  * rostered plan.
+ *
+ * For a `one_to_one` shift, pass `userShifts` (the staff member's other shifts) so only
+ * the time outside their background shifts is paid, as payroll does. A 1-to-1 fully
+ * inside a background shift is `coveredByBackground` and pays 0.
  */
 export function computeShiftPaidWithBreaks(
   shift: Shift,
   assignment?: { clock_in_time?: string | null; clock_out_time?: string | null },
-  nowMs?: number
+  nowMs?: number,
+  userShifts?: Shift[]
 ): {
   rosteredHours: number
   sleepInHours: number
@@ -245,11 +309,20 @@ export function computeShiftPaidWithBreaks(
   breakDeduction: number
   deductionReason: string
   paidHours: number
+  coveredByBackground: boolean
 } {
   const rosteredBr = getShiftHourBreakdown(shift)
   const wb = assignment ? workedHourBreakdown(shift, assignment, nowMs) : null
   const br = wb ?? rosteredBr
-  const work = br.paid_work_hours
+  let work = br.paid_work_hours
+  let coveredByBackground = false
+
+  if (shift.shift_type === 'one_to_one' && userShifts) {
+    coveredByBackground = isCoveredByBackground(shift, userShifts)
+    const window =
+      (assignment && effectiveWorkedWindow(shift, assignment, nowMs)) || scheduledInstants(shift)
+    work = coveredByBackground ? 0 : subtractIntervalsHours(window, backgroundCuts(shift, userShifts))
+  }
   const { breakDeduction, deductionReason } = breakDeductionFor(work)
 
   return {
@@ -257,7 +330,8 @@ export function computeShiftPaidWithBreaks(
     sleepInHours: rosteredBr.sleep_in_hours,
     paidWorkBeforeBreak: work,
     breakDeduction,
-    deductionReason,
+    deductionReason: coveredByBackground ? 'Covered by background shift — no extra hours' : deductionReason,
     paidHours: Math.max(0, work - breakDeduction),
+    coveredByBackground,
   }
 }

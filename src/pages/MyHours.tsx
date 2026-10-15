@@ -105,7 +105,8 @@ const MyHours: React.FC = () => {
       // Paid hours use actual clamped clock time once a shift is clocked into
       // (late arrival / early leaving reduce pay; `now` values an in-progress
       // shift by elapsed time); otherwise the rostered estimate.
-      const c = computeShiftPaidWithBreaks(shift, assignment, now)
+      // A 1-to-1 only pays time outside the user's background shifts.
+      const c = computeShiftPaidWithBreaks(shift, assignment, now, userShifts)
 
       // Only approved overtime counts toward paid hours (matches the payroll backend).
       const ot = overtimeByShiftId.get(shift.id)
