@@ -176,6 +176,10 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
       toast.error('Enter the number of extra minutes worked')
       return
     }
+    if (!overtimeReason.trim()) {
+      toast.error('Explain which work duties kept you past the end of your shift')
+      return
+    }
     overtimeMutation.mutate({ shiftId: shift.id, minutes, reason: overtimeReason })
   }
 
@@ -271,7 +275,8 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
               You clocked out {overtimeInfo.extra_minutes} min past the scheduled end.
             </p>
             <p className="text-xs text-muted-foreground">
-              Request overtime for a manager to approve before it counts toward paid hours.
+              If work duties kept you late, request overtime. It only counts toward paid
+              hours once an admin approves it.
             </p>
             <input
               type="number"
@@ -285,7 +290,7 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
               type="text"
               value={overtimeReason}
               onChange={(e) => setOvertimeReason(e.target.value)}
-              placeholder="Reason (optional)"
+              placeholder="Work duties that kept you late (required)"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
             <div className="flex gap-2">
