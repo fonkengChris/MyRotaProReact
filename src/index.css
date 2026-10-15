@@ -277,7 +277,7 @@
      Theme studio (/theme) for comparison.
      ============================================================ */
   :root {
-    --background: 160 33% 98%;
+    --background: 42 45% 92%; /* soft cream page background */
     --foreground: 175 40% 12%;
     --card: 0 0% 100%;
     --card-foreground: 175 40% 12%;
