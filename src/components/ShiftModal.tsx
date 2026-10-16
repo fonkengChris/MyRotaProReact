@@ -40,7 +40,6 @@ interface ShiftModalProps {
   date: Date
   services: Service[]
   homeId?: string // Add homeId prop for pre-filling
-  existingShifts?: Shift[] // Add existing shifts for overlap validation
   isLoading?: boolean
   /** Admins only: may create/edit 1-to-1 shifts. */
   canManageOneToOne?: boolean
@@ -56,7 +55,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   date,
   services,
   homeId,
-  existingShifts,
   isLoading = false,
   canManageOneToOne = false,
   initialShiftType,
@@ -136,114 +134,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     return `${start} - ${end}`
   }
 
-  // Check for shift overlaps (handles multi-day shifts)
-  const checkShiftOverlap = (startTime: string, endTime: string, date: string) => {
-    if (!existingShifts || !homeId) return null
-    // 1-to-1s are additive support for one service user and may overlap any shift.
-    if (isOneToOne) return null
-    
-    // Convert current shift times to minutes since midnight
-    const currentStartMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1])
-    let currentEndMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1])
-    
-    // Handle overnight shifts
-    if (currentEndMinutes < currentStartMinutes) {
-      currentEndMinutes += 24 * 60 // Add 24 hours (1440 minutes)
-    }
-    
-    const overlappingShift = existingShifts.find(existingShift => {
-      // Skip the current shift being edited
-      if (shift && existingShift.id === shift.id) return false
-      if (existingShift.shift_type === 'one_to_one') return false
-      
-      // Check if it's the same home
-      if (existingShift.home_id !== homeId) return false
-      
-      // Check for overlaps on the same date
-      if (existingShift.date === date) {
-        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
-        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
-        
-        // Handle overnight shifts for existing shifts
-        if (existingEndMinutes < existingStartMinutes) {
-          existingEndMinutes += 24 * 60
-        }
-        
-        // Check for overlap
-        const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
-        return hasOverlap
-      }
-      
-      // Check for overlaps on the next day (for overnight shifts)
-      // We need to check the next day in two scenarios:
-      // 1. Current shift crosses midnight (spans into next day)
-      // 2. Current shift might overlap with overnight shifts that start on current day and span into next day
-      const nextDay = new Date(date)
-      nextDay.setDate(nextDay.getDate() + 1)
-      const nextDayStr = nextDay.toISOString().split('T')[0]
-      
-      if (existingShift.date === nextDayStr) {
-        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
-        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
-        
-        // Handle overnight shifts for existing shifts
-        if (existingEndMinutes < existingStartMinutes) {
-          existingEndMinutes += 24 * 60
-        }
-        
-        // Check for overlap with next day shifts
-        const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
-        return hasOverlap
-      }
-      
-      // Check for overlaps with overnight shifts that start on the current day and span into the next day
-      if (existingShift.date === date) {
-        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
-        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
-        
-        // If this existing shift crosses midnight (spans into next day)
-        if (existingEndMinutes < existingStartMinutes) {
-          // Adjust the end time to be relative to the next day
-          existingEndMinutes += 24 * 60
-          
-          // Check for overlap with the portion of the overnight shift that's in the next day
-          const hasOverlap = !(currentEndMinutes <= existingStartMinutes || currentStartMinutes >= existingEndMinutes)
-          return hasOverlap
-        }
-      }
-      
-      // Check for overlaps with shifts from the previous day that span into the current day
-      const previousDay = new Date(date)
-      previousDay.setDate(previousDay.getDate() - 1)
-      const previousDayStr = previousDay.toISOString().split('T')[0]
-      
-      if (existingShift.date === previousDayStr) {
-        // Check if this existing shift spans into the current day (overnight shift)
-        const existingStartMinutes = parseInt(existingShift.start_time.split(':')[0]) * 60 + parseInt(existingShift.start_time.split(':')[1])
-        let existingEndMinutes = parseInt(existingShift.end_time.split(':')[0]) * 60 + parseInt(existingShift.end_time.split(':')[1])
-        
-        // If end time is before start time, it's an overnight shift that spans into the current day
-        if (existingEndMinutes < existingStartMinutes) {
-          // This shift spans from previous day into current day
-          // The existing shift starts at midnight of the previous day and ends at existingEndMinutes of the current day
-          // We need to check if the current shift overlaps with the portion that's in the current day (00:00 to existingEndMinutes)
-          
-          // For overlap calculation, we need to adjust the start time to be relative to the current day
-          const adjustedExistingStartMinutes = 0 // Start at midnight of current day (00:00)
-          
-          // Check for overlap with the portion of the overnight shift that's in the current day
-          // adjustedExistingStartMinutes is 0 (midnight), existingEndMinutes is the end time in current day
-          const hasOverlap = !(currentEndMinutes <= adjustedExistingStartMinutes || currentStartMinutes >= existingEndMinutes)
-          return hasOverlap
-        }
-      }
-      
-      return false
-    })
-    
-    return overlappingShift
-  }
-
   // Reset form when modal opens/closes or shift changes
   useEffect(() => {
     if (isOpen) {
@@ -310,15 +200,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
   const handleFormSubmit = async (data: ShiftFormData) => {
     try {
-      // Check for shift overlaps before submitting
-      const overlap = checkShiftOverlap(data.start_time, data.end_time, format(date, 'yyyy-MM-dd'))
-      
-      if (overlap) {
-        const overlapStart = overlap.start_time.substring(0, 5)
-        const overlapEnd = overlap.end_time.substring(0, 5)
-        throw new Error(`Shift overlaps with existing shift: ${overlapStart} - ${overlapEnd}`)
-      }
-      
       setIsSubmitting(true)
       await onSubmit({
         ...data,
@@ -504,19 +385,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                     })()}
                   </div>
                 )}
-
-                {/* Overlap Warning */}
-                {startTime && endTime && existingShifts && homeId && (() => {
-                  const overlap = checkShiftOverlap(startTime, endTime, format(date, 'yyyy-MM-dd'))
-                  if (overlap) {
-                    return (
-                      <div className="text-xs text-red-600 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
-                        ⚠️ Overlaps with existing shift: {overlap.start_time.substring(0, 5)} - {overlap.end_time.substring(0, 5)}
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
 
                 {/* Duration Display */}
                 <div className="bg-neutral-100 dark:bg-neutral-700 p-3 rounded-md">

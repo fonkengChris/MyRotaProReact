@@ -1069,7 +1069,6 @@ const RotaEditor: React.FC = () => {
           date={selectedDate}
           services={services || []}
           homeId={selectedHomeId}
-          existingShifts={shifts || []}
           isLoading={false}
           canManageOneToOne={isAdmin}
           initialShiftType={newShiftType}
