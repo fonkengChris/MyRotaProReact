@@ -566,7 +566,7 @@ const RotaEditor: React.FC = () => {
     setIsOverriding(true)
     try {
       await shiftsApi.assignStaff(shiftId, userId, undefined, true)
-      toast.success('Staff assigned (rules overridden)')
+      toast.success('Staff assigned (approved)')
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
       queryClient.invalidateQueries({ queryKey: ['conflicts'] })
       setOverridePrompt(null)
@@ -1099,7 +1099,7 @@ const RotaEditor: React.FC = () => {
                 ))}
               </ul>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                As an admin you can override and assign anyway. (Same-time double-booking can never be overridden.)
+                You can approve this and assign anyway. Approvals over the weekly hours limit are recorded. (Same-time double-booking can never be overridden.)
               </p>
             </div>
             <div className="px-6 py-4 border-t border-neutral-300 dark:border-neutral-700 flex justify-end gap-3">
@@ -1107,7 +1107,7 @@ const RotaEditor: React.FC = () => {
                 Cancel
               </Button>
               <Button variant="primary" onClick={confirmOverride} disabled={isOverriding}>
-                {isOverriding ? 'Assigning…' : 'Override & assign'}
+                {isOverriding ? 'Assigning…' : 'Approve & assign'}
               </Button>
             </div>
           </div>

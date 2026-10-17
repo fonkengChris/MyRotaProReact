@@ -22,6 +22,7 @@ import WeeklySchedules from '@/pages/WeeklySchedules'
 import ShiftSelection from '@/pages/ShiftSelection'
 import ShiftSwaps from '@/pages/ShiftSwaps'
 import Timetables from '@/pages/Timetables'
+import SolverSettings from '@/pages/SolverSettings'
 import UserTimetables from '@/pages/UserTimetables'
 import Messages from '@/pages/Messages'
 import ThemeShowcase from '@/pages/ThemeShowcase'
@@ -97,6 +98,7 @@ function App() {
           <Route path="/rota/:weekStart?" element={<RequireManagement><RotaEditor /></RequireManagement>} />
           <Route path="/weekly-schedules" element={<RequireManagement><WeeklySchedules /></RequireManagement>} />
           <Route path="/timetables" element={<RequireAdmin><Timetables /></RequireAdmin>} />
+          <Route path="/solver-settings" element={<RequireAdmin><SolverSettings /></RequireAdmin>} />
           <Route path="/staff" element={<RequireManagement><StaffManagement /></RequireManagement>} />
           <Route path="/services" element={<RequireManagement><Services /></RequireManagement>} />
           <Route path="/clock-in-analysis" element={<RequireAdmin><ClockInAnalysis /></RequireAdmin>} />

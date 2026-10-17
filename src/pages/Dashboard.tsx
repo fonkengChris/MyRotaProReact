@@ -36,7 +36,7 @@ import AvailableShiftsNotification from '@/components/AvailableShiftsNotificatio
 import HoursSummary from '@/components/HoursSummary'
 import PayrollManagement from '@/components/PayrollManagement'
 import OvertimeApprovals from '@/components/OvertimeApprovals'
-import RestExceptionApprovals from '@/components/RestExceptionApprovals'
+import AssignmentApprovals from '@/components/AssignmentApprovals'
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
@@ -152,8 +152,9 @@ const Dashboard: React.FC = () => {
       {/* Overtime approvals — admin only (only admins may approve/deny overtime) */}
       {permissions.isAdmin && <OvertimeApprovals />}
 
-      {/* Rest-exception approvals — self-selected shifts that broke only the <8h rest rule */}
-      {permissions.isAdmin && <RestExceptionApprovals />}
+      {/* Self-selected shifts held pending review: over the full-time weekly cap / short rest */}
+      {permissions.isAdmin && <AssignmentApprovals kind="hours_cap" />}
+      {permissions.isAdmin && <AssignmentApprovals kind="rest" />}
 
       {/* Tabs - Only show for users who can view hours summary */}
       {canViewHoursSummary && (

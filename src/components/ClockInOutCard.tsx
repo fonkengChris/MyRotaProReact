@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { ClockIcon } from '@heroicons/react/24/outline'
-import { formatShiftTypeLabel, shiftServiceUserName, type Shift, type StaffAssignment, type ClockOutResponse } from '@/types'
+import { formatShiftTypeLabel, shiftServiceUserName, isAwaitingApproval, type Shift, type StaffAssignment, type ClockOutResponse } from '@/types'
 import { isCoveredByBackground } from '@/lib/shiftHours'
 
 // How early (minutes) staff may clock in — mirrors server EARLY_CLOCK_IN_MINUTES.
@@ -168,6 +168,7 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
   const homeName =
     typeof shift.home_id === 'object' && shift.home_id?.name ? shift.home_id.name : 'your shift'
   const covered = isCoveredByBackground(shift, shifts)
+  const awaitingApproval = isAwaitingApproval(assignment)
   const serviceUserName = shiftServiceUserName(shift)
 
   const submitOvertime = () => {
@@ -208,6 +209,7 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
           {status === 'not_started' && minutesLate >= 5 && now <= end && (
             <Badge variant="danger">{minutesLate} min late</Badge>
           )}
+          {status === 'not_started' && awaitingApproval && <Badge variant="warning">Pending</Badge>}
           {status === 'clocked_in' && <Badge variant="success">On shift</Badge>}
           {status === 'clocked_out' && <Badge variant="secondary">Completed</Badge>}
         </div>
@@ -219,8 +221,15 @@ const ClockInOutCard: React.FC<ClockInOutCardProps> = ({ shiftId, onClockInSucce
           </p>
         )}
 
+        {/* Held pending admin approval: no clock-in until approved */}
+        {status === 'not_started' && !covered && awaitingApproval && (
+          <p className="text-sm text-muted-foreground">
+            This shift is awaiting admin approval. You can clock in once it's approved.
+          </p>
+        )}
+
         {/* Not yet clocked in */}
-        {status === 'not_started' && !covered && (
+        {status === 'not_started' && !covered && !awaitingApproval && (
           <>
             {now < windowOpen ? (
               <Button disabled className="w-full">

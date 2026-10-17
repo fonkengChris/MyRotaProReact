@@ -24,7 +24,8 @@ import {
   ChatBubbleLeftRightIcon,
   UserCircleIcon,
   HeartIcon,
-  HomeModernIcon
+  HomeModernIcon,
+  AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -54,6 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       : []
     ),
     ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/timetables' }] : []),
+    ...(permissions.isAdmin ? [{ name: 'AI Solver Rules', href: '/solver-settings', icon: AdjustmentsHorizontalIcon, current: location.pathname === '/solver-settings' }] : []),
     ...(!permissions.isAdmin
       ? [
           { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },

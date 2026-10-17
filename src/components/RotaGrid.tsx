@@ -12,7 +12,7 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User, extractServiceName, WeeklySchedule, isOneToOneShift, shiftServiceUserName } from '@/types'
+import { Shift, User, StaffAssignment, extractServiceName, WeeklySchedule, isOneToOneShift, shiftServiceUserName, isAwaitingApproval } from '@/types'
 import { isCoveredByBackground } from '@/lib/shiftHours'
 import { weeklySchedulesApi } from '@/lib/api'
 
@@ -213,6 +213,20 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   const getAssignmentsForShift = (shiftId: string) => {
     const shift = shifts.find(s => s.id === shiftId)
     return shift?.assigned_staff || []
+  }
+
+  // Why an assignment is held pending admin approval, for the "Pending" badge tooltip.
+  const pendingReason = (assignment: StaffAssignment) => {
+    const reasons: string[] = []
+    if (assignment.hours_cap_exception_status === 'pending') {
+      reasons.push(
+        typeof assignment.hours_cap_exception_hours === 'number'
+          ? `over the weekly hours limit (${assignment.hours_cap_exception_hours}h)`
+          : 'over the weekly hours limit'
+      )
+    }
+    if (assignment.rest_exception_status === 'pending') reasons.push('short rest between shifts')
+    return `Awaiting admin approval: ${reasons.join(' and ')}. Approve or remove it on the Dashboard.`
   }
 
   // Get staff member by ID
@@ -476,6 +490,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                           <span className="text-neutral-600" title="Covered by their background shift — no extra hours">
                                             (covered)
                                           </span>
+                                        )}
+                                        {isAwaitingApproval(assignment) && (
+                                          <Badge variant="warning" className="text-[10px] px-1 py-0" title={pendingReason(assignment)}>
+                                            Pending
+                                          </Badge>
                                         )}
                                       </div>
                                       {canEditShift && (

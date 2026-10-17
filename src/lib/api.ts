@@ -12,7 +12,8 @@ import {
   TimeOffRequest,
   AIGenerationRequest,
   AIGenerationResult,
-  ConstraintWeight,
+  SolverSettings,
+  SolverConstraintsResponse,
   WeeklySchedule,
   ShiftSwap,
   ShiftSwapRequest,
@@ -28,6 +29,7 @@ import {
   PayrollReportResponse,
   OvertimeRequest,
   RestException,
+  HoursCapException,
   ClockOutResponse,
   AttendanceLogsResponse,
   OrganizationSettings,
@@ -284,8 +286,8 @@ export const shiftsApi = {
     userId: string,
     note?: string,
     override?: boolean
-  ): Promise<Shift & { covered_by_background?: boolean; rest_exception_pending?: boolean }> => {
-    const response = await api.post<Shift & { covered_by_background?: boolean; rest_exception_pending?: boolean }>(
+  ): Promise<AssignStaffResult> => {
+    const response = await api.post<AssignStaffResult>(
       `/shifts/${shiftId}/assign`,
       { user_id: userId, note, override }
     )
@@ -298,7 +300,7 @@ export const shiftsApi = {
   },
 
   // Rest-exception review (admin): assignments flagged when a support worker self-selected a
-  // shift breaking only the <8h rest rule.
+  // shift breaking the minimum-rest rule (SolverSettings.min_rest_hours).
   listRestExceptions: async (params?: { status?: string; home_id?: string }): Promise<RestException[]> => {
     const response = await api.get<RestException[]>('/shifts/rest-exceptions', { params })
     return response.data
@@ -311,6 +313,27 @@ export const shiftsApi = {
 
   removeRestException: async (shiftId: string, userId: string): Promise<Shift> => {
     const response = await api.post<Shift>(`/shifts/${shiftId}/rest-exception/${userId}/remove`)
+    return response.data
+  },
+
+  // What selecting each shift for yourself would do (same rules as assignStaff).
+  previewSelection: async (shiftIds: string[]): Promise<Record<string, SelectionPreview>> => {
+    const response = await api.post<Record<string, SelectionPreview>>('/shifts/assign-preview', { shift_ids: shiftIds })
+    return response.data
+  },
+
+  listHoursCapExceptions: async (params?: { status?: string; home_id?: string }): Promise<HoursCapException[]> => {
+    const response = await api.get<HoursCapException[]>('/shifts/hours-cap-exceptions', { params })
+    return response.data
+  },
+
+  confirmHoursCapException: async (shiftId: string, userId: string): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/hours-cap-exception/${userId}/confirm`)
+    return response.data
+  },
+
+  removeHoursCapException: async (shiftId: string, userId: string): Promise<Shift> => {
+    const response = await api.post<Shift>(`/shifts/${shiftId}/hours-cap-exception/${userId}/remove`)
     return response.data
   },
 
@@ -490,6 +513,18 @@ export const timeOffApi = {
   },
 }
 
+type SelectionPreview = {
+  outcome: 'ok' | 'pending' | 'blocked'
+  message?: string
+  reasons?: string[]
+}
+
+type AssignStaffResult = Shift & {
+  covered_by_background?: boolean
+  rest_exception_pending?: boolean
+  hours_cap_exception_pending?: boolean
+}
+
 // AI Solver API
 export const aiSolverApi = {
   generateRota: async (data: AIGenerationRequest): Promise<AIGenerationResult> => {
@@ -507,13 +542,18 @@ export const aiSolverApi = {
     return response.data
   },
 
-  getConstraints: async (params?: { home_id?: string; service_id?: string }): Promise<any> => {
-    const response = await api.get('/ai-solver/constraints', { params })
+  getSolverSettings: async (): Promise<SolverConstraintsResponse> => {
+    const response = await api.get<SolverConstraintsResponse>('/ai-solver/constraints')
     return response.data
   },
 
-  updateConstraints: async (constraints: ConstraintWeight[]): Promise<any> => {
-    const response = await api.post('/ai-solver/update-constraints', { constraints })
+  updateSolverSettings: async (settings: Partial<SolverSettings>): Promise<SolverConstraintsResponse> => {
+    const response = await api.put<SolverConstraintsResponse>('/ai-solver/constraints', settings)
+    return response.data
+  },
+
+  resetSolverSettings: async (): Promise<SolverConstraintsResponse> => {
+    const response = await api.post<SolverConstraintsResponse>('/ai-solver/constraints/reset')
     return response.data
   },
 

@@ -318,12 +318,20 @@ export interface StaffAssignment {
   assigned_at: string
   note?: string
   rest_exception_status?: RestExceptionStatus
+  hours_cap_exception_status?: RestExceptionStatus
+  hours_cap_exception_hours?: number | null
   clock_in_time?: string | null
   clock_out_time?: string | null
   attendance_status?: AttendanceStatus
 }
 
 export type RestExceptionStatus = 'none' | 'pending' | 'confirmed'
+
+// Held pending admin review (short rest or over the weekly hours limit): shown as
+// "Pending" on the rota and can't be clocked into until approved.
+export function isAwaitingApproval(assignment: Pick<StaffAssignment, 'rest_exception_status' | 'hours_cap_exception_status'> | null | undefined): boolean {
+  return assignment?.rest_exception_status === 'pending' || assignment?.hours_cap_exception_status === 'pending'
+}
 
 export type AssignmentStatus = 'assigned' | 'pending' | 'swapped' | 'declined'
 
@@ -361,6 +369,13 @@ export interface RestException {
   service?: { id?: string; name?: string } | string | null
   rest_exception_status: RestExceptionStatus
   assigned_at: string
+}
+
+// A self-selected shift that takes a full-timer over the weekly cap, awaiting admin
+// approval (from /shifts/hours-cap-exceptions).
+export interface HoursCapException extends Omit<RestException, 'rest_exception_status'> {
+  hours_cap_exception_status: RestExceptionStatus
+  projected_weekly_hours: number | null
 }
 
 export interface ClockOutResponse {
@@ -615,6 +630,62 @@ export interface ConstraintViolation {
 }
 
 // Constraint types
+// Org-wide AI solver rules (GET/PUT /ai-solver/constraints). Mirrors
+// MyRotaProNode/models/SolverSettings.js.
+export type EmploymentType = 'fulltime' | 'parttime' | 'bank'
+
+export interface SolverHoursRule {
+  hard_max: number
+  target_min: number
+  band_upper: number
+  over_penalty_threshold: number
+  priority_soft_max: number
+  below_target_bonus: number
+  in_band_bonus: number
+  over_penalty: number
+  default_home_bonus: number
+}
+
+export interface SolverSettings {
+  auto_assignable_roles: string[]
+  min_rest_hours: number
+  consecutive_days_enabled: boolean
+  max_consecutive_days: number
+  hours: Record<EmploymentType, SolverHoursRule>
+  manual_assign_cap: { fulltime_hours: number; approver_roles: string[] }
+  scoring: {
+    non_preferred_shift_type_penalty: number
+    outside_available_hours_penalty: number
+    default_home_sort_boost: number
+  }
+  fairness: {
+    weekend_penalty_per_prior: number
+    weekend_penalty_cap: number
+    distribution_penalty_per_prior: number
+    distribution_penalty_cap: number
+  }
+  type_mix: {
+    fulltime_share: number
+    fulltime_max_per_head: number
+    parttime_share: number
+    parttime_max_per_head: number
+  }
+  updated_at?: string
+}
+
+export interface SolverLockedRule {
+  key: string
+  name: string
+  description: string
+}
+
+export interface SolverConstraintsResponse {
+  settings: SolverSettings
+  defaults: SolverSettings
+  locked_rules: SolverLockedRule[]
+  roles: string[]
+}
+
 export interface ConstraintWeight {
   id: string
   name: string

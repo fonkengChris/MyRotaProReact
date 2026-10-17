@@ -34,89 +34,33 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
 }) => {
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null)
   const [isSelecting, setIsSelecting] = useState(false)
-  // 'hard' conflicts (overlap) block selection; 'rest' conflicts (<8h gap) are allowed but
-  // flagged for admin approval on the server.
-  const [conflicts, setConflicts] = useState<{[shiftId: string]: { severity: 'hard' | 'rest'; message: string }}>({})
+  // The server previews each shift with the same rules it applies on selection: 'hard'
+  // means it would be refused, 'review' means it would be held pending admin approval
+  // (short rest and/or over the weekly hours limit).
+  const [conflicts, setConflicts] = useState<{[shiftId: string]: { severity: 'hard' | 'review'; message: string }}>({})
 
-  // Check for conflicts when shifts change
   useEffect(() => {
-    if (availableShifts.length > 0) {
-      checkConflictsForShifts()
-    }
-  }, [availableShifts])
-
-  const checkConflictsForShifts = async () => {
-    const conflictMap: {[shiftId: string]: { severity: 'hard' | 'rest'; message: string }} = {}
-
-    for (const shift of availableShifts) {
-      try {
-        // Check if user already has shifts on the same date
-        const userShifts = await shiftsApi.getAll({
-          user_id: currentUser.id,
-          date: shift.date
-        })
-        
-        // Check for time conflicts
-        const hasConflict = userShifts.some(userShift => {
-          if (userShift.id === shift.id) return false // Skip the same shift
-          
-          const userStart = new Date(`2000-01-01T${userShift.start_time}`)
-          const userEnd = new Date(`2000-01-01T${userShift.end_time}`)
-          const shiftStart = new Date(`2000-01-01T${shift.start_time}`)
-          const shiftEnd = new Date(`2000-01-01T${shift.end_time}`)
-          
-          // Handle overnight shifts
-          if (userEnd < userStart) userEnd.setDate(userEnd.getDate() + 1)
-          if (shiftEnd < shiftStart) shiftEnd.setDate(shiftEnd.getDate() + 1)
-          
-          // Check for overlap
-          return !(userEnd <= shiftStart || shiftEnd <= userStart)
-        })
-        
-        // Check for insufficient rest period (8 hours minimum)
-        const hasInsufficientRest = userShifts.some(userShift => {
-          if (userShift.id === shift.id) return false
-
-          const restPeriod = calculateRestPeriod(userShift, shift)
-          return restPeriod < 8
-        })
-
-        // Overlap is a hard block; a rest-gap shortfall is allowed but needs admin approval.
-        if (hasConflict) {
-          conflictMap[shift.id] = { severity: 'hard', message: 'Time conflict with existing shift' }
-        } else if (hasInsufficientRest) {
-          conflictMap[shift.id] = { severity: 'rest', message: 'Less than 8h rest — needs admin approval' }
+    if (!isOpen || availableShifts.length === 0) return
+    let cancelled = false
+    shiftsApi.previewSelection(availableShifts.map((s) => s.id))
+      .then((preview) => {
+        if (cancelled) return
+        const conflictMap: {[shiftId: string]: { severity: 'hard' | 'review'; message: string }} = {}
+        for (const [shiftId, result] of Object.entries(preview)) {
+          if (result.outcome === 'blocked') {
+            conflictMap[shiftId] = { severity: 'hard', message: result.message || 'This shift cannot be selected' }
+          } else if (result.outcome === 'pending') {
+            conflictMap[shiftId] = {
+              severity: 'review',
+              message: `Needs admin approval: ${(result.reasons || []).join('; ')}`,
+            }
+          }
         }
-
-      } catch (error) {
-        console.error('Error checking conflicts for shift:', shift.id, error)
-      }
-    }
-    
-    setConflicts(conflictMap)
-  }
-
-  const calculateRestPeriod = (shift1: Shift, shift2: Shift) => {
-    const date1 = new Date(shift1.date)
-    const date2 = new Date(shift2.date)
-    
-    const end1 = new Date(`2000-01-01T${shift1.end_time}`)
-    const start2 = new Date(`2000-01-01T${shift2.start_time}`)
-    
-    // Handle overnight shifts
-    if (end1.getHours() < start2.getHours()) {
-      end1.setDate(end1.getDate() + 1)
-    }
-    
-    const start2Adjusted = new Date(`2000-01-01T${shift2.start_time}`)
-    const dayDiff = (date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)
-    start2Adjusted.setDate(start2Adjusted.getDate() + dayDiff)
-    
-    const restPeriodMs = start2Adjusted.getTime() - end1.getTime()
-    const restPeriodHours = restPeriodMs / (1000 * 60 * 60)
-    
-    return Math.abs(restPeriodHours)
-  }
+        setConflicts(conflictMap)
+      })
+      .catch((error) => console.error('Error previewing shift selection:', error))
+    return () => { cancelled = true }
+  }, [isOpen, availableShifts])
 
   const handleSelectShift = async (shiftId: string) => {
     const conflict = conflicts[shiftId]
@@ -128,9 +72,14 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
     setSelectedShiftId(shiftId)
     setIsSelecting(true)
     try {
-      await shiftsApi.assignStaff(shiftId, currentUser.id)
-      if (conflict?.severity === 'rest') {
-        toast.success('Shift selected — pending admin approval of the reduced rest period.')
+      const result = await shiftsApi.assignStaff(shiftId, currentUser.id)
+      // The server decides what needs approval; it holds the shift for them meanwhile.
+      const pendingReasons = [
+        result.hours_cap_exception_pending && 'going over your weekly hours limit',
+        result.rest_exception_pending && 'the reduced rest period',
+      ].filter(Boolean)
+      if (pendingReasons.length > 0) {
+        toast.success(`Shift held for you — pending admin approval of ${pendingReasons.join(' and ')}.`, { duration: 6000 })
       } else {
         toast.success('Shift selected successfully!')
       }
@@ -239,7 +188,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                     {shifts.map((shift) => {
                       const conflict = conflicts[shift.id]
                       const isHardConflict = conflict?.severity === 'hard'
-                      const isRestConflict = conflict?.severity === 'rest'
+                      const isReviewConflict = conflict?.severity === 'review'
                       const duration = getShiftDuration(shift.start_time, shift.end_time)
                       const isSelected = selectedShiftId === shift.id
 
@@ -249,7 +198,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                           className={`border rounded-lg p-4 transition-all ${
                             isHardConflict
                               ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                              : isRestConflict
+                              : isReviewConflict
                                 ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
                                 : isSelected
                                   ? 'border-primary-300 bg-primary-50 dark:border-primary-600 dark:bg-primary-900/20 dark:text-neutral-100'
@@ -284,7 +233,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   </Badge>
                                 )}
 
-                                {isRestConflict && (
+                                {isReviewConflict && (
                                   <Badge variant="warning" className="text-xs">
                                     <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
                                     Needs approval
@@ -312,7 +261,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   </div>
                                 )}
 
-                                {isRestConflict && (
+                                {isReviewConflict && (
                                   <div className="text-amber-700 dark:text-amber-400 font-medium">
                                     ⚠️ {conflict.message}
                                   </div>
@@ -334,7 +283,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   <CheckIcon className="h-4 w-4" />
                                 )}
                                 <span>
-                                  {isHardConflict ? 'Conflict' : isRestConflict ? 'Select (needs approval)' : 'Select Shift'}
+                                  {isHardConflict ? 'Conflict' : isReviewConflict ? 'Select (needs approval)' : 'Select Shift'}
                                 </span>
                               </Button>
                             </div>
