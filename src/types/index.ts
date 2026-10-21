@@ -572,9 +572,22 @@ export interface TimeOffRequest {
   approved_at?: string
   denial_reason?: string
   is_urgent: boolean
+  home_leave_limit_warning?: HomeLeaveLimitWarning
+  home_leave_limit_override?: { approved_by: string | User; approved_at: string }
   submitted_at: string
   updated_at: string
   duration_days: number
+}
+
+// Present when granting the leave would put more than `limit` staff from one home on
+// leave at once; such requests need an admin to approve them.
+export interface HomeLeaveLimitWarning {
+  home_id: string
+  home_name: string
+  date: string
+  staff_on_leave: string[]
+  limit: number
+  message: string
 }
 
 export type TimeOffType = 'annual_leave' | 'sick_leave' | 'personal_leave' | 'bereavement' | 'other'
@@ -670,6 +683,7 @@ export interface SolverSettings {
     parttime_share: number
     parttime_max_per_head: number
   }
+  leave_limit: { max_staff_per_home: number }
   updated_at?: string
 }
 

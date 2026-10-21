@@ -9,7 +9,8 @@ import { ArrowPathIcon, ExclamationTriangleIcon, LockClosedIcon } from '@heroico
 import toast from 'react-hot-toast'
 
 // Admin page for the org-wide rules the AI solver uses when it fills rotas and
-// generates timetables (backend: MyRotaProNode/models/SolverSettings.js).
+// generates timetables, plus the per-home leave limit (backend:
+// MyRotaProNode/models/SolverSettings.js).
 
 const UK_DAILY_REST_HOURS = 11
 const UK_WEEKLY_AVERAGE_HOURS = 48
@@ -394,6 +395,18 @@ const SolverSettingsPage: React.FC = () => {
           <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
             Bank share: {Math.max(0, Math.round((1 - settings.type_mix.fulltime_share - settings.type_mix.parttime_share) * 100))}%
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Leave limit per home</CardTitle>
+          <CardDescription>
+            The most staff from one home who can be on approved leave on the same day. Requests over this are flagged and only an admin can approve them. Sick leave and bereavement are never blocked, but they count towards the total.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {num(['leave_limit', 'max_staff_per_home'], { label: 'Staff on leave at once', unit: 'staff', min: 1, max: 100, step: 1 })}
         </CardContent>
       </Card>
 

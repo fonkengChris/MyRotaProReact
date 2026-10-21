@@ -502,8 +502,11 @@ export const timeOffApi = {
     return response.data
   },
 
-  approve: async (id: string): Promise<TimeOffRequest> => {
-    const response = await api.post<TimeOffRequest>(`/timeoff/${id}/approve`)
+  approve: async (id: string, overrideHomeLeaveLimit = false): Promise<TimeOffRequest> => {
+    const response = await api.post<TimeOffRequest>(
+      `/timeoff/${id}/approve`,
+      overrideHomeLeaveLimit ? { override_home_leave_limit: true } : {}
+    )
     return response.data
   },
 

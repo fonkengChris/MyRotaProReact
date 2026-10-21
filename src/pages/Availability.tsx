@@ -142,6 +142,11 @@ const AvailabilityPage: React.FC = () => {
             response?.denial_reason ||
             'Request was automatically rejected because you are scheduled on an existing timetable'
         )
+      } else if (response?.home_leave_limit_warning) {
+        toast(
+          `Request submitted, but it needs admin approval: ${response.home_leave_limit_warning.message}`,
+          { icon: '⚠️', duration: 8000 }
+        )
       } else {
         toast.success('Time-off request submitted successfully')
       }
@@ -154,8 +159,23 @@ const AvailabilityPage: React.FC = () => {
 
   // Approve time-off request mutation
   const approveTimeOffMutation = useMutation({
-    mutationFn: (requestId: string) => timeOffApi.approve(requestId),
-    onSuccess: () => {
+    mutationFn: async (requestId: string) => {
+      try {
+        return await timeOffApi.approve(requestId)
+      } catch (error: any) {
+        // An admin approving over the per-home leave limit must confirm the override.
+        const data = error.response?.data
+        if (error.response?.status === 409 && data?.code === 'HOME_LEAVE_LIMIT') {
+          if (window.confirm(`${data.details}\n\nApprove anyway as an admin override?`)) {
+            return await timeOffApi.approve(requestId, true)
+          }
+          return null
+        }
+        throw error
+      }
+    },
+    onSuccess: (result) => {
+      if (!result) return
       queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
       queryClient.invalidateQueries({ queryKey: ['availabilities'] })
       toast.success('Time-off request approved — availability grid updated')
@@ -164,7 +184,9 @@ const AvailabilityPage: React.FC = () => {
       const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to approve request'
       
       // Handle specific error cases
-      if (errorMessage.includes('Only pending requests can be approved')) {
+      if (error.response?.data?.code === 'HOME_LEAVE_LIMIT') {
+        toast.error(error.response.data.details, { duration: 8000 })
+      } else if (errorMessage.includes('Only pending requests can be approved')) {
         toast.error('This request has already been processed. Please refresh the page.')
         // Force refresh the data
         queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
@@ -205,6 +227,23 @@ const AvailabilityPage: React.FC = () => {
   // Handle deleting availability
   const handleDeleteAvailability = async (availabilityId: string) => {
     await deleteAvailabilityMutation.mutateAsync(availabilityId)
+  }
+
+  // Withdraw a pending request (own) or cancel approved leave (managers)
+  const deleteTimeOffMutation = useMutation({
+    mutationFn: (requestId: string) => timeOffApi.delete(requestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
+      queryClient.invalidateQueries({ queryKey: ['availabilities'] })
+      toast.success('Time-off request removed')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to remove time-off request')
+    }
+  })
+
+  const handleDeleteTimeOff = async (requestId: string) => {
+    await deleteTimeOffMutation.mutateAsync(requestId)
   }
 
   // Handle submitting time-off request
@@ -370,6 +409,8 @@ const AvailabilityPage: React.FC = () => {
                   onDeny={handleDenyTimeOff}
                   onViewDetails={handleViewTimeOffDetails}
                   canManage={false}
+                  onDelete={handleDeleteTimeOff}
+                  currentUserId={user?.id}
                 />
               </div>
             </>
@@ -416,6 +457,8 @@ const AvailabilityPage: React.FC = () => {
             onDeny={handleDenyTimeOff}
             onViewDetails={handleViewTimeOffDetails}
             canManage={permissions.canManageTimeOff}
+            onDelete={handleDeleteTimeOff}
+            currentUserId={user?.id}
           />
         </div>
       )}

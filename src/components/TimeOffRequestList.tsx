@@ -13,7 +13,8 @@ import {
   EyeIcon,
   CheckCircleIcon,
   DocumentTextIcon,
-  ChatBubbleLeftEllipsisIcon
+  ChatBubbleLeftEllipsisIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
 import { TimeOffRequest, User } from '@/types'
 
@@ -24,6 +25,9 @@ interface TimeOffRequestListProps {
   onDeny: (requestId: string, reason: string) => Promise<void>
   onViewDetails: (request: TimeOffRequest) => void
   canManage: boolean
+  // Staff withdraw their own pending requests; managers cancel approved leave.
+  onDelete?: (requestId: string) => Promise<void>
+  currentUserId?: string
 }
 
 const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
@@ -32,7 +36,9 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
   onApprove,
   onDeny,
   onViewDetails,
-  canManage
+  canManage,
+  onDelete,
+  currentUserId
 }) => {
   const [denyReason, setDenyReason] = useState('')
   const [denyingRequest, setDenyingRequest] = useState<string | null>(null)
@@ -67,6 +73,20 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
       } catch (error) {
         console.error('Error approving request:', error)
       }
+    }
+  }
+
+  const isOwnRequest = (request: TimeOffRequest) => {
+    const requestUserId = typeof request.user_id === 'string' ? request.user_id : request.user_id?.id
+    return !!currentUserId && requestUserId === currentUserId
+  }
+
+  const handleDelete = async (requestId: string, message: string) => {
+    if (!onDelete || !window.confirm(message)) return
+    try {
+      await onDelete(requestId)
+    } catch (error) {
+      console.error('Error deleting request:', error)
     }
   }
 
@@ -189,6 +209,16 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                           </div>
                         )}
 
+                        {request.home_leave_limit_warning && (
+                          <div className="mb-3 flex items-start gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-danger-800 dark:border-danger-800/50 dark:bg-danger-950/30 dark:text-danger-200">
+                            <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-sm font-semibold">Admin approval required</p>
+                              <p className="text-sm leading-relaxed">{request.home_leave_limit_warning.message}</p>
+                            </div>
+                          </div>
+                        )}
+
                         {request.is_urgent && (
                           <div className="inline-flex items-center gap-2 rounded-full bg-warning-100 px-3 py-1 text-warning-800 ring-1 ring-warning-300/60 dark:bg-warning-900/50 dark:text-warning-200 dark:ring-warning-600/40">
                             <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
@@ -206,6 +236,17 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                           <EyeIcon className="h-4 w-4 mr-2" />
                           View
                         </Button>
+
+                        {onDelete && isOwnRequest(request) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(request.id, 'Withdraw this time-off request?')}
+                          >
+                            <TrashIcon className="h-4 w-4 mr-2" />
+                            Withdraw
+                          </Button>
+                        )}
 
                         {canManage && (
                           <>
@@ -345,6 +386,12 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                             {getRequestTypeDisplay(request.request_type)}
                           </span>
                         </div>
+                        {request.home_leave_limit_override && (
+                          <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-warning-700 dark:text-warning-300">
+                            <ExclamationTriangleIcon className="h-3.5 w-3.5 shrink-0" />
+                            Admin override: approved over the home leave limit
+                          </p>
+                        )}
                         {approver && (
                           <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-success-700 dark:text-success-300">
                             <CheckIcon className="h-3.5 w-3.5 shrink-0" />
@@ -358,10 +405,27 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         )}
                       </div>
                     </div>
-                    <Badge variant="success" className="shrink-0 self-start sm:self-center">
-                      <CheckIcon className="h-3 w-3 mr-1 inline" />
-                      Approved
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
+                      <Badge variant="success">
+                        <CheckIcon className="h-3 w-3 mr-1 inline" />
+                        Approved
+                      </Badge>
+                      {onDelete && canManage && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleDelete(
+                              request.id,
+                              `Cancel ${staffMember?.name || 'this staff member'}'s approved leave? Their leave days will become available for rostering again.`
+                            )
+                          }
+                        >
+                          <XMarkIcon className="h-4 w-4 mr-1" />
+                          Cancel leave
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )
               })}
