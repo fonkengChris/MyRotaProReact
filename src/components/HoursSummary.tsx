@@ -15,17 +15,14 @@ import {
 import { shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, User, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, getShiftHourBreakdown, isCoveredByBackground } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, countSleepNights, getShiftHourBreakdown, isCoveredByBackground } from '@/lib/shiftHours'
 
 function aggregateUserShiftHours(userShifts: Shift[]) {
   const totalHours = userShifts.reduce(
     (sum, shift) => sum + getShiftHourBreakdown(shift).duration_hours,
     0
   )
-  const sleepInHours = userShifts.reduce(
-    (sum, shift) => sum + getShiftHourBreakdown(shift).sleep_in_hours,
-    0
-  )
+  const sleepNights = countSleepNights(userShifts)
   let paidHours = 0
   let totalBreakDeductions = 0
   userShifts.forEach((shift) => {
@@ -34,7 +31,7 @@ function aggregateUserShiftHours(userShifts: Shift[]) {
     paidHours += c.paidHours
     totalBreakDeductions += c.breakDeduction
   })
-  return { totalHours, sleepInHours, paidHours, breakDeductions: totalBreakDeductions }
+  return { totalHours, sleepNights, paidHours, breakDeductions: totalBreakDeductions }
 }
 
 interface HoursSummaryProps {
@@ -47,7 +44,7 @@ interface HoursSummaryProps {
 interface UserHours {
   user: User
   totalHours: number
-  sleepInHours: number
+  sleepNights: number
   paidHours: number
   breakDeductions: number
   totalShifts: number
@@ -111,12 +108,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return {
           user: staffMember,
           totalHours,
-          sleepInHours,
+          sleepNights,
           paidHours,
           breakDeductions,
           totalShifts: userShifts.length,
@@ -135,12 +132,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return [{
           user: userData || { id: userId, name: 'Unknown User', role: userRole },
           totalHours,
-          sleepInHours,
+          sleepNights,
           paidHours,
           breakDeductions,
           totalShifts: userShifts.length,
@@ -154,12 +151,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         )
       )
       
-      const { totalHours, sleepInHours, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+      const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
       
       return [{
         user: userData || { id: userId, name: 'Unknown User', role: userRole },
         totalHours,
-        sleepInHours,
+        sleepNights,
         paidHours,
         breakDeductions,
         totalShifts: userShifts.length,
@@ -170,7 +167,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
   const userHours = calculateUserHours
   const totalHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalHours, 0), [userHours])
-  const totalSleepInHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.sleepInHours, 0), [userHours])
+  const totalSleepNights = useMemo(() => userHours.reduce((sum, uh) => sum + uh.sleepNights, 0), [userHours])
   const totalPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.paidHours, 0), [userHours])
   const totalBreakDeductions = useMemo(() => userHours.reduce((sum, uh) => sum + uh.breakDeductions, 0), [userHours])
   const totalShifts = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalShifts, 0), [userHours])
@@ -409,10 +406,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
               </div>
               <div className="ml-4 min-w-0">
                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                  {isAdminView ? 'Sleep-in hours' : 'My sleep-in hours'}
+                  {isAdminView ? 'Sleep nights' : 'My sleep nights'}
                 </p>
                 <p className="text-2xl font-semibold text-secondary-700 dark:text-secondary-300">
-                  {totalSleepInHours.toFixed(1)}h
+                  {totalSleepNights}
                 </p>
                 <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-0.5">
                   Not paid as work
@@ -524,9 +521,9 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep-in</p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep nights</p>
                           <p className="text-lg font-semibold text-secondary-700 dark:text-secondary-300">
-                            {userHour.sleepInHours.toFixed(1)}h
+                            {userHour.sleepNights}
                           </p>
                         </div>
                         {userHour.breakDeductions > 0 && (
@@ -580,7 +577,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                 </p>
                                 {shift.shift_type === 'night-sleep' && (
                                   <p className="text-secondary-700 dark:text-secondary-300 text-xs">
-                                    {br.sleep_in_hours.toFixed(1)}h sleep-in
+                                    1 sleep night
                                   </p>
                                 )}
                                 <Badge variant="secondary" className="text-xs mt-1">

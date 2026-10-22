@@ -254,6 +254,11 @@ export function actualDurationHours(assignment?: {
   return (outMs - inMs) / 3_600_000
 }
 
+/** Number of sleeping nights (night-sleep shifts) among `shifts`; sleep-in is shown as nights, not hours. */
+export function countSleepNights(shifts: Shift[]): number {
+  return shifts.filter((s) => s.shift_type === 'night-sleep').length
+}
+
 export function getShiftHourBreakdown(
   shift: {
     shift_type?: string

@@ -15,21 +15,20 @@ import {
 import { shiftsApi, overtimeApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import { Shift, OvertimeRequest, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, workedHourBreakdown } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, countSleepNights, workedHourBreakdown } from '@/lib/shiftHours'
 import PageHeader from '@/components/common/PageHeader'
 import WeekNavigator from '@/components/common/WeekNavigator'
 import KpiTile from '@/components/common/KpiTile'
 
 interface PaidHoursData {
   rosteredHours: number
-  totalSleepInHours: number
+  totalSleepNights: number
   paidHours: number
   breakDeductions: number
   // Approved overtime hours this week (added on top of paid hours).
   overtimeHours: number
   // Actual clocked time this week, split into regular work vs sleep-night sleep-in.
   workedRegularHours: number
-  workedSleepInHours: number
   sleepNightsWorked: number
   shifts: Array<Shift & {
     rosteredHours: number
@@ -90,12 +89,10 @@ const MyHours: React.FC = () => {
     )
 
     let rosteredHours = 0
-    let totalSleepInHours = 0
     let paidHours = 0
     let totalBreakDeductions = 0
     let overtimeHours = 0
     let workedRegularHours = 0
-    let workedSleepInHours = 0
     let sleepNightsWorked = 0
 
     const now = Date.now()
@@ -114,7 +111,6 @@ const MyHours: React.FC = () => {
         ot?.status === 'approved' ? Math.max(0, (ot.requested_minutes || 0) / 60) : 0
 
       rosteredHours += c.rosteredHours
-      totalSleepInHours += c.sleepInHours
       paidHours += c.paidHours + shiftOvertimeHours
       overtimeHours += shiftOvertimeHours
       totalBreakDeductions += c.breakDeduction
@@ -126,7 +122,6 @@ const MyHours: React.FC = () => {
         const wb = workedHourBreakdown(shift, assignment, now)
         if (wb != null && wb.duration_hours > 0) {
           workedRegularHours += wb.paid_work_hours + shiftOvertimeHours
-          workedSleepInHours += wb.sleep_in_hours
           if (shift.shift_type === 'night-sleep') sleepNightsWorked += 1
         }
       }
@@ -146,12 +141,11 @@ const MyHours: React.FC = () => {
 
     return {
       rosteredHours,
-      totalSleepInHours,
+      totalSleepNights: countSleepNights(userShifts),
       paidHours,
       breakDeductions: totalBreakDeductions,
       overtimeHours,
       workedRegularHours,
-      workedSleepInHours,
       sleepNightsWorked,
       shifts: shiftsWithPaidHours
     }
@@ -236,7 +230,7 @@ const MyHours: React.FC = () => {
           tone="secondary"
           label="Sleep nights worked"
           value={`${paidHoursData.sleepNightsWorked}`}
-          caption={`${paidHoursData.workedSleepInHours.toFixed(1)}h sleep-in clocked this week`}
+          caption="Sleeping-night shifts clocked this week"
         />
         <KpiTile
           icon={ClockIcon}
@@ -248,8 +242,8 @@ const MyHours: React.FC = () => {
         <KpiTile
           icon={MoonIcon}
           tone="secondary"
-          label="Sleep-in hours"
-          value={`${paidHoursData.totalSleepInHours.toFixed(1)}h`}
+          label="Rostered sleep nights"
+          value={`${paidHoursData.totalSleepNights}`}
           caption="From sleeping-night shifts (not paid as work)"
         />
         <KpiTile
@@ -367,12 +361,14 @@ const MyHours: React.FC = () => {
                             {shift.rosteredHours.toFixed(1)}h
                           </p>
                         </div>
-                        <div>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep-in</p>
-                          <p className="text-lg font-semibold text-secondary-700 dark:text-secondary-300">
-                            {shift.sleepInHours.toFixed(1)}h
-                          </p>
-                        </div>
+                        {shift.shift_type === 'night-sleep' && (
+                          <div>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400">Sleep night</p>
+                            <p className="text-lg font-semibold text-secondary-700 dark:text-secondary-300">
+                              1
+                            </p>
+                          </div>
+                        )}
                         {shift.paidWorkBeforeBreak !== shift.rosteredHours && shift.paidWorkBeforeBreak >= 0 && (
                           <div>
                             <p className="text-sm text-neutral-600 dark:text-neutral-400">Paid work</p>

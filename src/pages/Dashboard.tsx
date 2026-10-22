@@ -31,7 +31,7 @@ const TitleIcon: React.FC<{ icon: React.ComponentType<{ className?: string }> }>
 import { rotasApi, shiftsApi, usersApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { extractUserDefaultHomeId } from '@/types'
-import { computeShiftPaidWithBreaks, getShiftHourBreakdown } from '@/lib/shiftHours'
+import { computeShiftPaidWithBreaks, countSleepNights } from '@/lib/shiftHours'
 import AvailableShiftsNotification from '@/components/AvailableShiftsNotification'
 import HoursSummary from '@/components/HoursSummary'
 import PayrollManagement from '@/components/PayrollManagement'
@@ -106,8 +106,7 @@ const Dashboard: React.FC = () => {
         : computeShiftPaidWithBreaks(shift)
       return sum + c.paidHours
     }, 0) || 0
-  const totalSleepInHours =
-    shifts.reduce((sum, shift) => sum + getShiftHourBreakdown(shift).sleep_in_hours, 0) || 0
+  const totalSleepNights = countSleepNights(shifts)
   const activeStaff = staff.filter(s => s.is_active).length || 0
   const pendingRequests = 0 // TODO: Implement time off requests
 
@@ -215,8 +214,8 @@ const Dashboard: React.FC = () => {
             <KpiTile
               icon={MoonIcon}
               tone="secondary"
-              label="Sleep-in hours"
-              value={totalSleepInHours.toFixed(1)}
+              label="Sleep nights"
+              value={totalSleepNights}
               caption="Sleeping-night shifts (not paid as work)"
             />
             <KpiTile icon={UsersIcon} tone="accent" label="Active Staff" value={activeStaff} />
