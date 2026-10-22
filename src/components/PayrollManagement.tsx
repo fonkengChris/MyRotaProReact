@@ -78,10 +78,11 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
     const totalDay = rows.reduce((sum, row) => sum + asNumber(row.day_hours), 0)
     const totalNight = rows.reduce((sum, row) => sum + asNumber(row.night_hours), 0)
     const totalPaid = rows.reduce((sum, row) => sum + asNumber(row.paid_hours), 0)
+    const totalSleepNights = rows.reduce((sum, row) => sum + asNumber(row.sleep_night_shifts), 0)
     const totalSleepInPay = rows.reduce((sum, row) => sum + asNumber(row.sleep_in_pay), 0)
     const totalLeavePay = rows.reduce((sum, row) => sum + asNumber(row.leave_pay), 0)
     const totalGross = rows.reduce((sum, row) => sum + asNumber(row.gross_pay), 0)
-    return { totalDay, totalNight, totalPaid, totalSleepInPay, totalLeavePay, totalGross }
+    return { totalDay, totalNight, totalPaid, totalSleepNights, totalSleepInPay, totalLeavePay, totalGross }
   }, [rows])
 
   const totals = report?.totals
@@ -89,6 +90,8 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         totalDay: asNumber(report.totals.total_day_hours),
         totalNight: asNumber(report.totals.total_night_hours),
         totalPaid: asNumber(report.totals.total_paid_hours),
+        // Older backends don't send total_sleep_nights; fall back to summing the rows.
+        totalSleepNights: report.totals.total_sleep_nights ?? computedTotals.totalSleepNights,
         totalSleepInPay: asNumber(report.totals.total_sleep_in_pay),
         totalLeavePay: asNumber(report.totals.total_leave_pay),
         totalGross: asNumber(report.totals.total_gross_pay),
@@ -291,6 +294,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                       >
                         1-to-1 Hrs
                       </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Sleep Nights</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Sleep-in Pay</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Leave Pay</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Gross</th>
@@ -315,6 +319,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-700 text-right">{asNumber(row.one_to_one_hours).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.sleep_night_shifts)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{money(asNumber(row.sleep_in_pay))}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">
                           {money(asNumber(row.leave_pay))}
@@ -349,6 +354,9 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Sleep-in Pay</p>
                   <p className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{money(totals.totalSleepInPay)}</p>
+                  <p className="text-xs text-neutral-500">
+                    {totals.totalSleepNights} sleep night{totals.totalSleepNights === 1 ? '' : 's'}
+                  </p>
                 </div>
                 <div className="rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-xs font-medium text-primary">Total Leave Pay</p>

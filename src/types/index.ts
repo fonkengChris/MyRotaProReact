@@ -667,6 +667,8 @@ export interface SolverSettings {
   min_rest_hours: number
   consecutive_days_enabled: boolean
   max_consecutive_days: number
+  same_shift_limit_enabled: boolean
+  max_same_shift_in_a_row: number
   hours: Record<EmploymentType, SolverHoursRule>
   manual_assign_cap: { fulltime_hours: number; approver_roles: string[] }
   scoring: {
@@ -687,7 +689,7 @@ export interface SolverSettings {
     parttime_max_per_head: number
   }
   leave_limit: { max_staff_per_home: number }
-  sleep_in: { sleep_hours: number }
+  sleep_in: { sleep_hours: number; cap_hours: number }
   updated_at?: string
 }
 
@@ -961,6 +963,7 @@ export interface PayrollReportResponse {
     total_day_hours?: number
     total_night_hours?: number
     total_paid_hours?: number
+    total_sleep_nights?: number
     total_sleep_in_pay?: number
     total_leave_pay?: number
     total_gross_pay?: number

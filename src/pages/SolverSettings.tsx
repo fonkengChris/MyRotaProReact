@@ -275,6 +275,24 @@ const SolverSettingsPage: React.FC = () => {
                 {num(['max_consecutive_days'], { label: 'Maximum days in a row', unit: 'days', min: 1, max: 14, step: 1 })}
               </div>
             </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-neutral-300"
+                  checked={settings.same_shift_limit_enabled}
+                  onChange={(e) => update(['same_shift_limit_enabled'], e.target.checked)}
+                />
+                Rotate staff off the same shift
+                {settings.same_shift_limit_enabled !== defaults.same_shift_limit_enabled && <ModifiedDot />}
+              </label>
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                Someone over the limit is only given the shift when nobody else can take it.
+              </p>
+              <div className={settings.same_shift_limit_enabled ? 'mt-3' : 'mt-3 opacity-50 pointer-events-none'}>
+                {num(['max_same_shift_in_a_row'], { label: 'Maximum same shift in a row', unit: 'days', min: 1, max: 14, step: 1 })}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -421,7 +439,15 @@ const SolverSettingsPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {num(['sleep_in', 'sleep_hours'], { label: 'Sleep period', unit: 'h', min: 1, max: 24, step: 0.5 })}
+          <div className="grid gap-6 sm:grid-cols-2">
+            {num(['sleep_in', 'sleep_hours'], { label: 'Sleep period', unit: 'h', min: 1, max: 24, step: 0.5 })}
+            <div>
+              {num(['sleep_in', 'cap_hours'], { label: 'Sleep counts towards weekly limit as', unit: 'h', min: 0, max: 24, step: 0.5 })}
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                Work hours a full sleep period adds to the weekly hours limits, so sleeping nights can't stack up unchecked. Pay is unaffected.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
