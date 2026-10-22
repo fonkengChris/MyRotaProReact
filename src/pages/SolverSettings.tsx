@@ -7,9 +7,10 @@ import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { ArrowPathIcon, ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { setSleepInHours } from '@/lib/shiftHours'
 
 // Admin page for the org-wide rules the AI solver uses when it fills rotas and
-// generates timetables, plus the per-home leave limit (backend:
+// generates timetables, plus the per-home leave limit and the sleep-in length (backend:
 // MyRotaProNode/models/SolverSettings.js).
 
 const UK_DAILY_REST_HOURS = 11
@@ -67,6 +68,8 @@ const SolverSettingsPage: React.FC = () => {
     setDefaults(data.defaults)
     setLockedRules(data.locked_rules)
     setRoles(data.roles)
+    // Hours shown elsewhere in the app use the saved sleep-in length straight away.
+    setSleepInHours(data.settings.sleep_in?.sleep_hours)
   }
 
   const load = () => {
@@ -407,6 +410,18 @@ const SolverSettingsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {num(['leave_limit', 'max_staff_per_home'], { label: 'Staff on leave at once', unit: 'staff', min: 1, max: 100, step: 1 })}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sleep-in shifts</CardTitle>
+          <CardDescription>
+            How many hours at the end of a sleeping-night shift count as the sleep period. Sleep is paid the flat sleep-night allowance; any earlier hours of the shift are paid as regular hours. E.g. with 9 hours, 20:00–08:00 is 3 regular hours then sleep 23:00–08:00. A shift no longer than this is all sleep.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {num(['sleep_in', 'sleep_hours'], { label: 'Sleep period', unit: 'h', min: 1, max: 24, step: 0.5 })}
         </CardContent>
       </Card>
 

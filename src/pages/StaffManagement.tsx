@@ -161,6 +161,15 @@ const HomeMultiSelect: React.FC<HomeMultiSelectProps> = ({
   )
 }
 
+// Starting hourly rate (GBP) a new user gets when none is entered. Mirrors
+// DEFAULT_ROLE_RATES_GBP in the server's utils/payRates.js.
+const DEFAULT_ROLE_RATES: Record<UserRole, number> = {
+  support_worker: 12.71,
+  senior_staff: 14,
+  key_worker: 15,
+  admin: 14,
+}
+
 const StaffManagement: React.FC = () => {
   const { user: currentUser } = useAuth()
   const permissions = usePermissions()
@@ -193,6 +202,7 @@ const StaffManagement: React.FC = () => {
     role: 'support_worker' as UserRole,
     type: 'fulltime' as 'fulltime' | 'parttime' | 'bank',
     annual_leave_entitlement_days: undefined as number | undefined,
+    hourly_rate: undefined as number | undefined,
     home_ids: [] as string[],
     default_home_id: '',
   }
@@ -431,6 +441,8 @@ const StaffManagement: React.FC = () => {
       min_hours_per_week: user.min_hours_per_week,
       max_hours_per_week: user.max_hours_per_week,
       annual_leave_entitlement_days: user.annual_leave_entitlement_days,
+      // Pay is admin-only; omit it otherwise so the update never touches it.
+      ...(isAdmin ? { hourly_rate: user.hourly_rate } : {}),
       skills: user.skills,
       preferred_shift_types: user.preferred_shift_types,
       is_active: user.is_active
@@ -464,7 +476,7 @@ const StaffManagement: React.FC = () => {
   }
 
   const handleCreateUser = () => {
-    const { name, email, phone, password, confirmPassword, role, type, home_ids, default_home_id, annual_leave_entitlement_days } = addFormData
+    const { name, email, phone, password, confirmPassword, role, type, home_ids, default_home_id, annual_leave_entitlement_days, hourly_rate } = addFormData
 
     if (!name.trim() || !email.trim() || !phone.trim() || !password) {
       toast.error('Name, email, phone and password are required')
@@ -495,6 +507,9 @@ const StaffManagement: React.FC = () => {
         typeof annual_leave_entitlement_days === 'number' && !Number.isNaN(annual_leave_entitlement_days)
           ? annual_leave_entitlement_days
           : undefined,
+      // Leave blank to start them on their role's default rate.
+      hourly_rate:
+        typeof hourly_rate === 'number' && !Number.isNaN(hourly_rate) ? hourly_rate : undefined,
       // Admins have no home. For everyone else the starred home (or the first one
       // ticked) is created as the default and the rest are added straight after.
       home_id: primaryHomeId || undefined,
@@ -1329,6 +1344,29 @@ const StaffManagement: React.FC = () => {
                       Leave blank to use the statutory default for the employment type (full-time 28, part-time pro-rata).
                     </p>
                   </div>
+                  {isAdmin && (
+                    <div>
+                      <label className="form-label">
+                        Hourly Rate (GBP)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={editFormData.hourly_rate ?? ''}
+                        onChange={(e) => setEditFormData(prev => ({
+                          ...prev,
+                          hourly_rate: e.target.value === '' ? undefined : parseFloat(e.target.value)
+                        }))}
+                        className="input w-full"
+                        placeholder={editFormData.role ? DEFAULT_ROLE_RATES[editFormData.role].toFixed(2) : ''}
+                      />
+                      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        This person's pay per paid hour, used for payroll.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1515,6 +1553,25 @@ const StaffManagement: React.FC = () => {
                     />
                     <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                       Leave blank to use the UK statutory default for the employment type.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="form-label">Hourly Rate (GBP)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={addFormData.hourly_rate ?? ''}
+                      onChange={(e) => setAddFormData(prev => ({
+                        ...prev,
+                        hourly_rate: e.target.value === '' ? undefined : parseFloat(e.target.value)
+                      }))}
+                      className="input w-full"
+                      placeholder={`Default ${DEFAULT_ROLE_RATES[addFormData.role].toFixed(2)}`}
+                    />
+                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      Leave blank to use the current rate for the role.
                     </p>
                   </div>
                   {addFormData.role !== 'admin' && (

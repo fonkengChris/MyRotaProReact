@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { authApi } from '@/lib/api'
+import { aiSolverApi, authApi } from '@/lib/api'
+import { setSleepInHours } from '@/lib/shiftHours'
 import { User, LoginCredentials } from '@/types'
 
 interface AuthContextType {
@@ -28,9 +29,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []) // Remove user from dependency array to prevent infinite loop
 
+  // Load the org's sleep-in length before showing the app, so every hours figure uses it.
+  // On failure the default (9h) stays in place.
+  const loadSleepInHours = async () => {
+    try {
+      setSleepInHours(await aiSolverApi.getSleepInHours())
+    } catch {
+      // keep the default
+    }
+  }
+
   const checkAuth = async () => {
     try {
       const userData = await authApi.getCurrentUser()
+      await loadSleepInHours()
       setUser(userData)
     } catch (error) {
       console.error('🔐 useAuth: checkAuth error:', error)
@@ -53,7 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user: userData, token } = response
       
       localStorage.setItem('token', token)
-      
+      await loadSleepInHours()
+
       setUser(userData)
       
       // Clear any existing queries

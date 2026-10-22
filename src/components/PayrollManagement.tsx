@@ -11,17 +11,6 @@ interface PayrollManagementProps {
   userRole?: string
 }
 
-// Operational roles that receive an hourly wage, with their default rates (GBP).
-// Mirrors DEFAULT_ROLE_RATES_GBP in the payroll route. Admin defaults live server-side.
-const ROLE_RATE_FIELDS: Array<{ key: string; label: string; default: number }> = [
-  { key: 'support_worker', label: 'Support Worker', default: 12.71 },
-  { key: 'senior_staff', label: 'Senior Staff', default: 14.0 },
-  { key: 'key_worker', label: 'Key Worker', default: 15.0 },
-]
-const DEFAULT_ROLE_RATES: Record<string, number> = Object.fromEntries(
-  ROLE_RATE_FIELDS.map((f) => [f.key, f.default])
-)
-
 const getDefaultDateRange = () => {
   const now = new Date()
   return {
@@ -67,7 +56,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
   const defaults = getDefaultDateRange()
   const [startDate, setStartDate] = useState(defaults.start)
   const [endDate, setEndDate] = useState(defaults.end)
-  const [roleRates, setRoleRates] = useState<Record<string, number>>(DEFAULT_ROLE_RATES)
   const [sleepNightPay, setSleepNightPay] = useState<number>(50)
   const [mode, setMode] = useState<'draft' | 'final'>('final')
   const [report, setReport] = useState<PayrollReportResponse | null>(null)
@@ -120,7 +108,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
-        role_rates: roleRates,
         sleep_night_pay: sleepNightPay,
         mode,
       })
@@ -143,7 +130,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         start_date: startDate,
         end_date: endDate,
         home_id: homeId,
-        role_rates: roleRates,
         sleep_night_pay: sleepNightPay,
         mode,
       })
@@ -160,7 +146,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
         <CardHeader>
           <CardTitle>Payroll Management</CardTitle>
           <CardDescription>
-            Paid hours only (after breaks), paid at each staff member's role rate. Leave pay is 7.5 paid hours per approved leave day at that rate.
+            Paid hours only (after breaks), paid at each staff member's own hourly rate (set in Staff Management). Leave pay is 7.5 paid hours per approved leave day at that rate.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -195,33 +181,6 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                 ? 'Estimated cost from rostered hours + approved leave. Overtime and actual clocked time are ignored.'
                 : 'Payable hours from clocked-in shifts + approved overtime. Shifts never clocked into are not paid; those clocked in but not out are counted on rostered time and flagged for review.'}
             </p>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Hourly Rates by Role (GBP)
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {ROLE_RATE_FIELDS.map((field) => (
-                <div key={field.key}>
-                  <label className="block text-xs text-neutral-600 mb-1">{field.label}</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={roleRates[field.key] ?? field.default}
-                    onChange={(e) =>
-                      setRoleRates((prev) => ({
-                        ...prev,
-                        [field.key]: Math.max(0, Number(e.target.value) || 0),
-                      }))
-                    }
-                    className="input w-full"
-                    disabled={!canEditRates}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
@@ -287,7 +246,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
           )}
           {!canEditRates && (
             <p className="text-sm text-neutral-600 mt-3">
-              Only admins can modify payroll rates.
+              Only admins can modify sleep-night pay.
             </p>
           )}
           {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
@@ -323,6 +282,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wide">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wide">Role</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Rate/hr</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Day Hrs</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-700 uppercase tracking-wide">Night Hrs</th>
                       <th
@@ -351,6 +311,7 @@ const PayrollManagement: React.FC<PayrollManagementProps> = ({ homeId, userRole 
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm text-neutral-700">{row.role || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-700 text-right">{money(asNumber(row.hourly_rate))}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.day_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-900 text-right">{asNumber(row.night_hours).toFixed(1)}</td>
                         <td className="px-4 py-3 text-sm text-neutral-700 text-right">{asNumber(row.one_to_one_hours).toFixed(1)}</td>

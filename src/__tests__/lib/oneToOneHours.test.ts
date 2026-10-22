@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import type { Shift } from '@/types'
 import {
   computeShiftPaidWithBreaks,
+  DEFAULT_SLEEP_IN_HOURS,
   extraOneToOneHours,
+  getShiftHourBreakdown,
   isCoveredByBackground,
+  setSleepInHours,
 } from '@/lib/shiftHours'
 
 const shift = (id: string, start_time: string, end_time: string, shift_type = 'day', date = '2026-01-13') =>
@@ -37,5 +40,27 @@ describe('1-to-1 hours', () => {
     const oneToOne = shift('d', '02:00', '04:00', 'one_to_one')
     expect(isCoveredByBackground(oneToOne, [sleep])).toBe(false)
     expect(extraOneToOneHours(oneToOne, [sleep])).toBe(2)
+  })
+})
+
+describe('night-sleep: sleep is the last N hours of the shift', () => {
+  afterEach(() => setSleepInHours(DEFAULT_SLEEP_IN_HOURS))
+
+  it.each([
+    ['20:00', '08:00', 9, 3],
+    ['19:00', '07:00', 9, 3],
+    ['23:00', '08:00', 9, 0],
+    ['22:00', '06:00', 8, 0],
+  ])('%s–%s → %ih sleep, %ih regular', (start_time, end_time, sleep, regular) => {
+    const br = getShiftHourBreakdown({ shift_type: 'night-sleep', start_time, end_time })
+    expect(br.sleep_in_hours).toBe(sleep)
+    expect(br.paid_work_hours).toBe(regular)
+  })
+
+  it('follows the admin setting', () => {
+    setSleepInHours(8)
+    const br = getShiftHourBreakdown({ shift_type: 'night-sleep', start_time: '20:00', end_time: '08:00' })
+    expect(br.sleep_in_hours).toBe(8)
+    expect(br.paid_work_hours).toBe(4)
   })
 })

@@ -1,11 +1,25 @@
 import type { Shift } from '@/types'
 
 /**
- * Sleeping-night sleep period runs from the wall-clock midnight during the shift up to the shift
- * end; the pre-midnight portion (shift start → 00:00) is regular paid hours. Sleep is paid a flat
- * allowance in payroll. Mirrors the server `utils/shiftHours.js`. `night-wake`, `one_to_one`, and
- * legacy `night` are not split — full rostered time counts as paid work (before breaks).
+ * Sleeping-night sleep period is the LAST `getSleepInHours()` hours (default 9, admin-editable on
+ * the solver settings page) of the rostered shift; any earlier hours are regular paid hours, and a
+ * shift no longer than that is all sleep. Sleep is paid a flat allowance in payroll. Mirrors the
+ * server `utils/shiftHours.js`. `night-wake`, `one_to_one`, and legacy `night` are not split —
+ * full rostered time counts as paid work (before breaks).
  */
+
+export const DEFAULT_SLEEP_IN_HOURS = 9
+let sleepInHours = DEFAULT_SLEEP_IN_HOURS
+
+/** Set the org's sleep-in length (loaded at sign-in from GET /ai-solver/sleep-in). */
+export function setSleepInHours(hours: unknown): void {
+  const n = Number(hours)
+  sleepInHours = Number.isFinite(n) && n > 0 ? n : DEFAULT_SLEEP_IN_HOURS
+}
+
+export function getSleepInHours(): number {
+  return sleepInHours
+}
 
 /** Wall-clock minute range on a start-day-midnight axis (overnight end > 1440), or null. */
 function wallClockRange(startTime?: string, endTime?: string): { startMin: number; endMin: number } | null {
@@ -20,14 +34,20 @@ function wallClockRange(startTime?: string, endTime?: string): { startMin: numbe
 }
 
 /**
- * Sleep-night hours of a window [startMin, endMin]: from the wall-clock midnight during the shift
- * to the shift end. Boundary = next 00:00 at/after the scheduled start (evening start → 1440; a
- * 00:00 start → 0, i.e. the whole shift is sleep). Anchoring to the scheduled start keeps late
- * arrival / early leave reducing the pre-midnight regular portion. Mirrors the server.
+ * Sleep hours of a window [startMin, endMin]: its overlap with the rostered sleep period, the
+ * last getSleepInHours() of [scheduledStartMin, scheduledEndMin]. Fixed on rota times, so late
+ * arrival cuts regular hours and leaving early cuts sleep. Mirrors the server.
  */
-export function nightSleepHours(startMin: number, endMin: number, scheduledStartMin: number): number {
-  const boundaryMin = Math.ceil(scheduledStartMin / 1440) * 1440
-  return Math.max(0, endMin - Math.max(startMin, boundaryMin)) / 60
+export function nightSleepHours(
+  startMin: number,
+  endMin: number,
+  scheduledStartMin: number,
+  scheduledEndMin: number
+): number {
+  const sleepStart = Math.max(scheduledStartMin, scheduledEndMin - sleepInHours * 60)
+  const from = Math.max(startMin, sleepStart)
+  const to = Math.min(endMin, scheduledEndMin)
+  return Math.max(0, to - from) / 60
 }
 
 /**
@@ -127,7 +147,7 @@ export function clampedWorkedDurationHours(
  * Hour breakdown ({ duration_hours, sleep_in_hours, paid_work_hours }) from the ACTUAL
  * clamped worked window, or null without a clock-in. Pass `nowMs` to value an in-progress
  * shift. For `night-sleep`, the effective window is mapped onto the wall-clock minute axis
- * so the midnight→end sleep portion reflects the hours actually worked. Mirrors the server
+ * and intersected with the rostered sleep period. Mirrors the server
  * `workedHourBreakdown`.
  */
 export function workedHourBreakdown(
@@ -147,9 +167,10 @@ export function workedHourBreakdown(
   const range = wallClockRange(shift.start_time, shift.end_time)
   const baseStartMin = range ? range.startMin : 0
   const schedStartMs = sched ? sched.start : w.start
+  const baseEndMin = range ? range.endMin : baseStartMin + ((sched ? sched.end : w.end) - schedStartMs) / 60000
   const startMin = baseStartMin + (w.start - schedStartMs) / 60000
   const endMin = baseStartMin + (w.end - schedStartMs) / 60000
-  const sleep_in_hours = nightSleepHours(startMin, endMin, baseStartMin)
+  const sleep_in_hours = nightSleepHours(startMin, endMin, baseStartMin, baseEndMin)
 
   return {
     duration_hours: duration,
@@ -162,17 +183,15 @@ type Interval = { start: number; end: number }
 type TimedShift = { id?: string; date?: string; start_time?: string; end_time?: string; shift_type?: string }
 
 /**
- * The part of a background shift that is paid work: for `night-sleep` the midnight→end
- * sleep-in is not paid hours, so a 1-to-1 then is extra time. Mirrors the server
- * `paidPortion` in `utils/oneToOne.js`.
+ * The part of a background shift that is paid work: for `night-sleep` the last
+ * getSleepInHours() of the shift are sleep-in, not paid hours, so a 1-to-1 then is extra
+ * time. Mirrors the server `paidPortion` in `utils/oneToOne.js`.
  */
 function backgroundPaidWindow(shift: TimedShift): Interval | null {
   const w = scheduledInstants(shift)
   if (!w) return null
-  if (shift.shift_type !== 'night-sleep' || !shift.date) return w
-  const [y, mo, d] = shift.date.split('-').map(Number)
-  const midnight = new Date(y, mo - 1, d + 1).getTime()
-  const cut = w.start >= midnight ? w.start : Math.min(midnight, w.end)
+  if (shift.shift_type !== 'night-sleep') return w
+  const cut = Math.max(w.start, w.end - sleepInHours * 3_600_000)
   return cut > w.start ? { start: w.start, end: cut } : null
 }
 
@@ -257,16 +276,17 @@ export function getShiftHourBreakdown(
       : durationFromTimes(shift.start_time ?? '00:00', shift.end_time ?? '00:00')
 
   if (shift.shift_type === 'night-sleep') {
-    // Sleep-in is the midnight→end portion of the scheduled window; the pre-midnight portion is
+    // Sleep-in is the last getSleepInHours() of the scheduled window; anything before it is
     // regular paid work. Computed from wall-clock times; a numeric duration override is not
     // applied here (the clamped-actual path uses workedHourBreakdown).
     const range = wallClockRange(shift.start_time, shift.end_time)
     if (!range) {
-      // No usable times: fall back to treating the whole duration as sleep.
-      return { duration_hours: duration, sleep_in_hours: duration, paid_work_hours: 0 }
+      // No usable times: up to getSleepInHours() of the duration is sleep, the rest regular.
+      const sleep = Math.min(duration, sleepInHours)
+      return { duration_hours: duration, sleep_in_hours: sleep, paid_work_hours: Math.max(0, duration - sleep) }
     }
     const scheduledDuration = (range.endMin - range.startMin) / 60
-    const sleep_in_hours = nightSleepHours(range.startMin, range.endMin, range.startMin)
+    const sleep_in_hours = nightSleepHours(range.startMin, range.endMin, range.startMin, range.endMin)
     return {
       duration_hours: scheduledDuration,
       sleep_in_hours,

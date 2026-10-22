@@ -13,6 +13,9 @@ vi.mock('@/lib/api', () => ({
     getCurrentUser: vi.fn(),
     updateProfile: vi.fn(),
   },
+  aiSolverApi: {
+    getSleepInHours: vi.fn().mockResolvedValue(9),
+  },
 }))
 
 // Mock localStorage

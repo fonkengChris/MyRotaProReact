@@ -545,6 +545,12 @@ export const aiSolverApi = {
     return response.data
   },
 
+  // Sleep-in length for night-sleep shifts; readable by every signed-in user.
+  getSleepInHours: async (): Promise<number> => {
+    const response = await api.get<{ sleep_hours: number }>('/ai-solver/sleep-in')
+    return response.data.sleep_hours
+  },
+
   getSolverSettings: async (): Promise<SolverConstraintsResponse> => {
     const response = await api.get<SolverConstraintsResponse>('/ai-solver/constraints')
     return response.data
@@ -894,7 +900,6 @@ export const payrollApi = {
     start_date: string
     end_date: string
     home_id?: string
-    role_rates?: Record<string, number>
     sleep_night_pay?: number
     mode?: 'draft' | 'final'
   }): Promise<PayrollReportResponse | any[]> => {
@@ -904,7 +909,6 @@ export const payrollApi = {
       ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
         ? { home_id: params.home_id }
         : {}),
-      ...(params.role_rates ? { role_rates: JSON.stringify(params.role_rates) } : {}),
       ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
       ...(params.mode ? { mode: params.mode } : {}),
     }
@@ -916,7 +920,6 @@ export const payrollApi = {
     start_date: string
     end_date: string
     home_id?: string
-    role_rates?: Record<string, number>
     sleep_night_pay?: number
     mode?: 'draft' | 'final'
   }): Promise<void> => {
@@ -927,7 +930,6 @@ export const payrollApi = {
         ...(params.home_id && params.home_id !== 'null' && params.home_id !== 'undefined'
           ? { home_id: params.home_id }
           : {}),
-        ...(params.role_rates ? { role_rates: JSON.stringify(params.role_rates) } : {}),
         ...(typeof params.sleep_night_pay === 'number' ? { sleep_night_pay: params.sleep_night_pay } : {}),
         ...(params.mode ? { mode: params.mode } : {}),
       }

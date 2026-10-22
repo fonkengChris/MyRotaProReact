@@ -15,6 +15,8 @@ export interface User {
   type: 'fulltime' | 'parttime' | 'bank'
   min_hours_per_week: number
   annual_leave_entitlement_days?: number
+  // Individual hourly pay (GBP). Only returned to admins.
+  hourly_rate?: number
   is_active: boolean
   skills: Skill[]
   preferred_shift_types: ShiftType[]
@@ -61,7 +63,7 @@ export type Skill = 'medication' | 'personal_care' | 'domestic_support' | 'socia
 /**
  * Must match `shift_type` enum on the Shift model (`MyRotaProNode/models/Shift.js`).
  * - `night-wake`: waking night — full shift length counts as regular paid hours (no sleep-in deduction)
- * - `night-sleep`: sleeping night — the midnight→shift-end sleep-in is excluded from paid work; the pre-midnight portion is regular paid hours
+ * - `night-sleep`: sleeping night — the last N hours (default 9, admin-editable) are sleep-in, excluded from paid work; any earlier hours are regular paid hours
  * - `night` (legacy): treated like waking night for hours (full span = paid work)
  * - `one_to_one`: admin-created support for one service user (never templated). Every other
  *   type is a "background" shift. A 1-to-1 inside the staff member's own background shift
@@ -122,6 +124,7 @@ export interface CreateUserData {
   role: UserRole
   type?: 'fulltime' | 'parttime' | 'bank'
   annual_leave_entitlement_days?: number
+  hourly_rate?: number
   home_id?: string
 }
 
@@ -684,6 +687,7 @@ export interface SolverSettings {
     parttime_max_per_head: number
   }
   leave_limit: { max_staff_per_home: number }
+  sleep_in: { sleep_hours: number }
   updated_at?: string
 }
 
