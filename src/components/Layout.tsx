@@ -59,6 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ...(!permissions.isAdmin
       ? [
           { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },
+          { name: 'My Timetables', href: '/my-timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/my-timetables' },
           { name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' },
           { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' }
         ]

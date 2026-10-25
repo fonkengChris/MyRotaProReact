@@ -91,7 +91,7 @@ const UserTimetables: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-heading-accent">My Timetables</h1>
           <p className="text-neutral-700 mt-1">
-            View your published work schedules and timetables
+            Published timetables for the homes you work in
           </p>
         </div>
       </div>
@@ -103,7 +103,7 @@ const UserTimetables: React.FC = () => {
             <CalendarIcon className="mx-auto h-12 w-12 text-neutral-500" />
             <h3 className="mt-2 text-sm font-medium text-neutral-950">No timetables available</h3>
             <p className="mt-1 text-sm text-neutral-600">
-              You don't have access to any published timetables yet.
+              No timetables have been published for your homes yet.
             </p>
           </CardContent>
         </Card>
@@ -196,7 +196,7 @@ const UserTimetables: React.FC = () => {
           isOpen={isViewModalOpen}
           onClose={handleCloseModal}
           timetable={selectedTimetable}
-          userFilter={true}
+          userFilter={false}
         />
       )}
     </div>

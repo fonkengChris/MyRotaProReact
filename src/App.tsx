@@ -112,7 +112,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/shift-selection" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSelection /></RequireNonAdmin>} />
           <Route path="/shift-swaps" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSwaps /></RequireNonAdmin>} />
-          <Route path="/my-timetables" element={<RequireAdmin><UserTimetables /></RequireAdmin>} />
+          <Route path="/my-timetables" element={<RequireNonAdmin fallback={landingPath(permissions)}><UserTimetables /></RequireNonAdmin>} />
           <Route path="/my-schedule" element={<RequireNonAdmin fallback={landingPath(permissions)}><MySchedule /></RequireNonAdmin>} />
           <Route path="/my-hours" element={<RequireNonAdmin fallback={landingPath(permissions)}><MyHours /></RequireNonAdmin>} />
           <Route path="/availability" element={<Availability />} />
