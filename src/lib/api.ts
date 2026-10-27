@@ -658,6 +658,11 @@ export const messagesApi = {
     const response = await api.post<Message>('/messages', { to_user_id, body })
     return response.data
   },
+
+  sendBulk: async (to_user_ids: string[], body: string): Promise<{ sent: number; messages: Message[] }> => {
+    const response = await api.post<{ sent: number; messages: Message[] }>('/messages/bulk', { to_user_ids, body })
+    return response.data
+  },
 }
 
 // Weekly Schedule API

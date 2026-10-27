@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import {
   ArrowLeftIcon,
   ChatBubbleLeftRightIcon,
+  CheckIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
   PencilSquareIcon,
@@ -97,7 +98,8 @@ const Messages: React.FC = () => {
   const [draft, setDraft] = useState('')
   const [search, setSearch] = useState('')
   const [showCompose, setShowCompose] = useState(false)
-  const [newRecipientId, setNewRecipientId] = useState('')
+  const [newRecipientIds, setNewRecipientIds] = useState<string[]>([])
+  const [recipientSearch, setRecipientSearch] = useState('')
   const [newFirstMessage, setNewFirstMessage] = useState('')
   const threadEndRef = useRef<HTMLDivElement>(null)
   const composeInputRef = useRef<HTMLTextAreaElement>(null)
@@ -138,19 +140,29 @@ const Messages: React.FC = () => {
     onError: () => toast.error('Could not send message'),
   })
 
+  // One recipient opens that thread; several are sent as individual direct messages.
   const startFirstConversation = useMutation({
-    mutationFn: ({ to_user_id, body }: { to_user_id: string; body: string }) =>
-      messagesApi.send(to_user_id, body),
+    mutationFn: async ({ to_user_ids, body }: { to_user_ids: string[]; body: string }): Promise<void> => {
+      if (to_user_ids.length === 1) await messagesApi.send(to_user_ids[0], body)
+      else await messagesApi.sendBulk(to_user_ids, body)
+    },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['messages', 'conversations'] })
-      queryClient.invalidateQueries({ queryKey: ['messages', 'thread', vars.to_user_id] })
-      setSelectedOtherId(vars.to_user_id)
+      vars.to_user_ids.forEach((id) =>
+        queryClient.invalidateQueries({ queryKey: ['messages', 'thread', id] })
+      )
       setShowCompose(false)
-      setNewRecipientId('')
+      setNewRecipientIds([])
+      setRecipientSearch('')
       setNewFirstMessage('')
-      setMobileView('thread')
+      if (vars.to_user_ids.length === 1) {
+        setSelectedOtherId(vars.to_user_ids[0])
+        setMobileView('thread')
+      } else {
+        toast.success(`Message sent to ${vars.to_user_ids.length} people`)
+      }
     },
-    onError: () => toast.error('Could not send message'),
+    onError: (error: any) => toast.error(error?.response?.data?.error || 'Could not send message'),
   })
 
   useEffect(() => {
@@ -207,6 +219,35 @@ const Messages: React.FC = () => {
     )
   }, [listRows, search])
 
+  const filteredRecipients = useMemo(() => {
+    const q = recipientSearch.trim().toLowerCase()
+    if (!q) return recipients
+    return recipients.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q) ||
+        formatRoleLabel(r.role).toLowerCase().includes(q)
+    )
+  }, [recipients, recipientSearch])
+
+  const selectedRecipientSet = useMemo(() => new Set(newRecipientIds), [newRecipientIds])
+  const allFilteredSelected =
+    filteredRecipients.length > 0 && filteredRecipients.every((r) => selectedRecipientSet.has(r.id))
+
+  const toggleRecipient = (id: string) => {
+    setNewRecipientIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  // Selects (or clears) everyone currently matching the recipient search.
+  const toggleAllFilteredRecipients = () => {
+    const ids = filteredRecipients.map((r) => r.id)
+    setNewRecipientIds((prev) =>
+      allFilteredSelected
+        ? prev.filter((id) => !ids.includes(id))
+        : [...prev, ...ids.filter((id) => !prev.includes(id))]
+    )
+  }
+
   const messageGroups = useMemo(
     () => groupMessagesByDay(thread?.messages ?? []),
     [thread?.messages]
@@ -237,8 +278,8 @@ const Messages: React.FC = () => {
   const handleNewConversation = (e: React.FormEvent) => {
     e.preventDefault()
     const body = newFirstMessage.trim()
-    if (!newRecipientId || !body || startFirstConversation.isPending) return
-    startFirstConversation.mutate({ to_user_id: newRecipientId, body })
+    if (newRecipientIds.length === 0 || !body || startFirstConversation.isPending) return
+    startFirstConversation.mutate({ to_user_ids: newRecipientIds, body })
   }
 
   if (!user) {
@@ -265,8 +306,8 @@ const Messages: React.FC = () => {
       />
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex max-h-[min(90dvh,32rem)] flex-col rounded-t-2xl border border-neutral-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-neutral-700 dark:bg-neutral-800',
-          'lg:absolute lg:inset-auto lg:right-4 lg:top-20 lg:max-h-[28rem] lg:w-full lg:max-w-sm lg:rounded-2xl lg:shadow-xl',
+          'fixed inset-x-0 bottom-0 z-50 flex max-h-[min(92dvh,40rem)] flex-col rounded-t-2xl border border-neutral-200 bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-neutral-700 dark:bg-neutral-800',
+          'lg:absolute lg:inset-auto lg:right-4 lg:top-20 lg:max-h-[36rem] lg:w-full lg:max-w-md lg:rounded-2xl lg:shadow-xl',
           showCompose ? 'translate-y-0' : 'pointer-events-none translate-y-full lg:translate-y-2 lg:opacity-0'
         )}
         role="dialog"
@@ -289,23 +330,113 @@ const Messages: React.FC = () => {
         </div>
         <form onSubmit={handleNewConversation} className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
           <div>
-            <label htmlFor="compose-to" className="form-label">
-              To
-            </label>
-            <select
-              id="compose-to"
-              className="input w-full min-h-[44px] text-base"
-              value={newRecipientId}
-              onChange={(e) => setNewRecipientId(e.target.value)}
-              disabled={recipientsLoading || startFirstConversation.isPending}
-            >
-              <option value="">Choose a colleague…</option>
-              {recipients.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name} · {formatRoleLabel(r.role)}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="compose-to" className="form-label">
+                To{newRecipientIds.length > 0 && ` (${newRecipientIds.length} selected)`}
+              </label>
+              {newRecipientIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setNewRecipientIds([])}
+                  className="text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Selected recipients */}
+            {newRecipientIds.length > 0 && (
+              <div className="mb-2 flex max-h-20 flex-wrap gap-1.5 overflow-y-auto">
+                {newRecipientIds.map((id) => {
+                  const r = recipients.find((x) => x.id === id)
+                  if (!r) return null
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 rounded-full bg-primary-100 py-0.5 pl-2.5 pr-1 text-xs font-medium text-primary-800 dark:bg-primary-900/50 dark:text-primary-200"
+                    >
+                      {r.name}
+                      <button
+                        type="button"
+                        onClick={() => toggleRecipient(id)}
+                        className="rounded-full p-0.5 hover:bg-primary-200 dark:hover:bg-primary-800"
+                        aria-label={`Remove ${r.name}`}
+                      >
+                        <XMarkIcon className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="relative">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <input
+                id="compose-to"
+                type="search"
+                value={recipientSearch}
+                onChange={(e) => setRecipientSearch(e.target.value)}
+                placeholder="Search by name, email or role…"
+                className="input w-full min-h-[40px] pl-9 text-sm"
+                disabled={recipientsLoading || startFirstConversation.isPending}
+              />
+            </div>
+
+            <div className="mt-2 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+              {filteredRecipients.length > 0 && (
+                <button
+                  type="button"
+                  onClick={toggleAllFilteredRecipients}
+                  className="flex w-full items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium text-primary-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-primary-300 dark:hover:bg-neutral-900/70"
+                >
+                  {allFilteredSelected ? 'Deselect' : 'Select'} all{recipientSearch.trim() ? ' matching' : ''}
+                  <span className="text-neutral-500">{filteredRecipients.length}</span>
+                </button>
+              )}
+              <ul className="max-h-44 overflow-y-auto overscroll-contain" role="listbox" aria-multiselectable="true">
+                {recipientsLoading ? (
+                  <li className="flex justify-center py-4"><LoadingSpinner /></li>
+                ) : filteredRecipients.length === 0 ? (
+                  <li className="px-3 py-4 text-center text-sm text-neutral-500">No colleagues match</li>
+                ) : (
+                  filteredRecipients.map((r) => {
+                    const checked = selectedRecipientSet.has(r.id)
+                    return (
+                      <li key={r.id} role="option" aria-selected={checked}>
+                        <button
+                          type="button"
+                          onClick={() => toggleRecipient(r.id)}
+                          className={cn(
+                            'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700/50',
+                            checked && 'bg-primary-50/70 dark:bg-primary-950/30'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'flex h-5 w-5 shrink-0 items-center justify-center rounded border',
+                              checked
+                                ? 'border-primary-600 bg-primary-600 text-white'
+                                : 'border-neutral-300 dark:border-neutral-600'
+                            )}
+                          >
+                            {checked && <CheckIcon className="h-3.5 w-3.5" />}
+                          </span>
+                          <UserAvatar name={r.name} size="sm" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                              {r.name}
+                            </span>
+                            <span className="block truncate text-xs text-neutral-500">{formatRoleLabel(r.role)}</span>
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })
+                )}
+              </ul>
+            </div>
           </div>
           <div className="flex-1">
             <label htmlFor="compose-body" className="form-label">
@@ -314,7 +445,7 @@ const Messages: React.FC = () => {
             <textarea
               id="compose-body"
               ref={composeInputRef}
-              className="input min-h-[120px] w-full resize-none text-base leading-relaxed"
+              className="input min-h-[96px] w-full resize-none text-base leading-relaxed"
               value={newFirstMessage}
               onChange={(e) => setNewFirstMessage(e.target.value)}
               placeholder="Say hello…"
@@ -324,9 +455,13 @@ const Messages: React.FC = () => {
           <Button
             type="submit"
             className="w-full min-h-[48px] text-base"
-            disabled={!newRecipientId || !newFirstMessage.trim() || startFirstConversation.isPending}
+            disabled={newRecipientIds.length === 0 || !newFirstMessage.trim() || startFirstConversation.isPending}
           >
-            {startFirstConversation.isPending ? 'Sending…' : 'Send message'}
+            {startFirstConversation.isPending
+              ? 'Sending…'
+              : newRecipientIds.length > 1
+                ? `Send to ${newRecipientIds.length} people`
+                : 'Send message'}
           </Button>
         </form>
       </div>
@@ -359,7 +494,8 @@ const Messages: React.FC = () => {
             type="button"
             onClick={() => {
               setShowCompose(true)
-              setNewRecipientId('')
+              setNewRecipientIds([])
+              setRecipientSearch('')
               setNewFirstMessage('')
             }}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-white shadow-md transition hover:bg-primary-700 active:scale-95 lg:h-10 lg:w-10"
