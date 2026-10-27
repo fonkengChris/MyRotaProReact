@@ -229,7 +229,7 @@ const AvailabilityPage: React.FC = () => {
     await deleteAvailabilityMutation.mutateAsync(availabilityId)
   }
 
-  // Withdraw a pending request (own) or cancel approved leave (managers)
+  // Withdraw a pending request (own) or cancel approved leave (admins)
   const deleteTimeOffMutation = useMutation({
     mutationFn: (requestId: string) => timeOffApi.delete(requestId),
     onSuccess: () => {
@@ -457,6 +457,7 @@ const AvailabilityPage: React.FC = () => {
             onDeny={handleDenyTimeOff}
             onViewDetails={handleViewTimeOffDetails}
             canManage={permissions.canManageTimeOff}
+            canApprove={permissions.canApproveTimeOff}
             onDelete={handleDeleteTimeOff}
             currentUserId={user?.id}
           />

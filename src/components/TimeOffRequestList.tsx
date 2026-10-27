@@ -25,7 +25,9 @@ interface TimeOffRequestListProps {
   onDeny: (requestId: string, reason: string) => Promise<void>
   onViewDetails: (request: TimeOffRequest) => void
   canManage: boolean
-  // Staff withdraw their own pending requests; managers cancel approved leave.
+  // Approve/deny and cancelling approved leave are admin-only, separate from general management.
+  canApprove?: boolean
+  // Staff withdraw their own pending requests; admins cancel approved leave.
   onDelete?: (requestId: string) => Promise<void>
   currentUserId?: string
 }
@@ -37,6 +39,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
   onDeny,
   onViewDetails,
   canManage,
+  canApprove = false,
   onDelete,
   currentUserId
 }) => {
@@ -248,7 +251,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                           </Button>
                         )}
 
-                        {canManage && (
+                        {canApprove && (
                           <>
                             <Button
                               variant="success"
@@ -410,7 +413,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                         <CheckIcon className="h-3 w-3 mr-1 inline" />
                         Approved
                       </Badge>
-                      {onDelete && canManage && (
+                      {onDelete && canApprove && (
                         <Button
                           variant="outline"
                           size="sm"

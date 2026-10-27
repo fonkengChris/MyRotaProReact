@@ -134,6 +134,8 @@ export function usePermissions() {
     canManageRotas: isManagement,
     canApproveRequests: isManagement,
     canManageTimeOff: isManagement,
+    // Leave approval/denial is admin-only; key workers can view and cancel but not decide.
+    canApproveTimeOff: user.role === 'admin',
     canViewAllHomes: user.role === 'admin',
     canManageHomes: user.role === 'admin',
     canManageServices: isManagement,
