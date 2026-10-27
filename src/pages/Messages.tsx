@@ -519,9 +519,12 @@ const Messages: React.FC = () => {
   const listPanel = (
     <div
       className={cn(
-        'flex min-h-0 flex-col bg-white dark:bg-neutral-800',
+        'flex min-h-0 min-w-0 flex-col overflow-hidden bg-white dark:bg-neutral-800',
         'lg:rounded-xl lg:border lg:border-neutral-200 lg:shadow-sm dark:lg:border-neutral-700',
-        mobileView === 'thread' ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none lg:w-[min(100%,22rem)] xl:w-80'
+        // The desktop width must apply in both mobile views: without it, opening a thread
+        // let the list grow to its longest (nowrap) preview and squeeze the thread out.
+        'lg:w-[min(100%,22rem)] lg:flex-none xl:w-80',
+        mobileView === 'thread' ? 'hidden lg:flex' : 'flex flex-1'
       )}
     >
       {/* List header */}
