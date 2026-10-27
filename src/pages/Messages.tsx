@@ -652,7 +652,7 @@ const Messages: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4">
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 sm:px-4">
                 {(thread?.messages ?? []).length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center py-12 text-center">
                     <p className="text-sm text-neutral-500">No messages yet. Say hello!</p>
@@ -674,15 +674,19 @@ const Messages: React.FC = () => {
                                 key={m.id}
                                 className={cn('flex', mine ? 'justify-end' : 'justify-start')}
                               >
+                                {/* min-w-0 lets the bubble shrink below its longest word so
+                                    long lines wrap instead of overflowing the thread. */}
                                 <div
                                   className={cn(
-                                    'max-w-[min(85%,20rem)] px-3.5 py-2 shadow-sm',
+                                    'min-w-0 max-w-[85%] sm:max-w-[75%] xl:max-w-[40rem] px-3.5 py-2 shadow-sm',
                                     mine
                                       ? 'rounded-2xl rounded-br-md bg-primary-600 text-white'
                                       : 'rounded-2xl rounded-bl-md border border-neutral-200/80 bg-white text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100'
                                   )}
                                 >
-                                  <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">
+                                  {/* pre-wrap keeps the sender's spaces and line breaks; overflow-wrap:anywhere
+                                      breaks long unspaced strings (URLs, IDs) at the bubble edge. */}
+                                  <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-relaxed">
                                     {m.body}
                                   </p>
                                   <p
