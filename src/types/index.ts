@@ -152,6 +152,9 @@ export interface Message {
   body: string
   read_at: string | null
   created_at: string | null
+  edited_at?: string | null
+  // Set when the sender deleted the message; body is then empty.
+  deleted_at?: string | null
 }
 
 export interface MessageUserBrief {
@@ -166,6 +169,7 @@ export interface MessageConversationSummary {
   last_body: string
   last_at: string
   last_from_me: boolean
+  last_deleted?: boolean
   unread_count: number
 }
 

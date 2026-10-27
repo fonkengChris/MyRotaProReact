@@ -11,7 +11,9 @@ import {
   CheckIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
+  PencilIcon,
   PencilSquareIcon,
+  TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { format, isToday, isYesterday, isSameDay } from 'date-fns'
@@ -96,6 +98,8 @@ const Messages: React.FC = () => {
   const [selectedOtherId, setSelectedOtherId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<'list' | 'thread'>('list')
   const [draft, setDraft] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState('')
   const [search, setSearch] = useState('')
   const [showCompose, setShowCompose] = useState(false)
   const [newRecipientIds, setNewRecipientIds] = useState<string[]>([])
@@ -127,6 +131,27 @@ const Messages: React.FC = () => {
     queryFn: () => messagesApi.getThread(selectedOtherId!),
     enabled: !!user && !!selectedOtherId,
     refetchInterval: 15_000,
+  })
+
+  const refreshAfterChange = () => {
+    queryClient.invalidateQueries({ queryKey: ['messages', 'conversations'] })
+    queryClient.invalidateQueries({ queryKey: ['messages', 'thread', selectedOtherId] })
+  }
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: string }) => messagesApi.edit(id, body),
+    onSuccess: () => {
+      refreshAfterChange()
+      setEditingId(null)
+      setEditDraft('')
+    },
+    onError: (error: any) => toast.error(error?.response?.data?.error || 'Could not edit message'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => messagesApi.remove(id),
+    onSuccess: () => refreshAfterChange(),
+    onError: (error: any) => toast.error(error?.response?.data?.error || 'Could not delete message'),
   })
 
   const sendMutation = useMutation({
@@ -257,6 +282,7 @@ const Messages: React.FC = () => {
     setSelectedOtherId(otherId)
     setMobileView('thread')
     setShowCompose(false)
+    setEditingId(null)
   }
 
   const headerName =
@@ -268,6 +294,28 @@ const Messages: React.FC = () => {
     thread?.other_user?.role ??
     conversationByOtherId.get(selectedOtherId ?? '')?.other_user.role ??
     recipients.find((r) => r.id === selectedOtherId)?.role
+
+  const startEditing = (m: Message) => {
+    setEditingId(m.id)
+    setEditDraft(m.body)
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
+    setEditDraft('')
+  }
+
+  const saveEdit = () => {
+    const body = editDraft.trim()
+    if (!editingId || !body || editMutation.isPending) return
+    editMutation.mutate({ id: editingId, body })
+  }
+
+  const handleDeleteMessage = (m: Message) => {
+    if (!window.confirm('Delete this message? It will be removed for both of you.')) return
+    if (editingId === m.id) cancelEditing()
+    deleteMutation.mutate(m.id)
+  }
 
   const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -544,9 +592,11 @@ const Messages: React.FC = () => {
               const hasUnread = !placeholder && row.unread_count > 0
               const preview = placeholder
                 ? row.last_body
-                : row.last_from_me
-                  ? `You: ${row.last_body}`
-                  : row.last_body
+                : row.last_deleted
+                  ? row.last_from_me ? 'You deleted a message' : 'Message deleted'
+                  : row.last_from_me
+                    ? `You: ${row.last_body}`
+                    : row.last_body
 
               return (
                 <li key={oid}>
@@ -669,11 +719,39 @@ const Messages: React.FC = () => {
                         <div className="space-y-1.5">
                           {group.messages.map((m) => {
                             const mine = m.from_user_id === user.id
+                            const deleted = Boolean(m.deleted_at)
+                            const editing = editingId === m.id
+                            const canChange = mine && !deleted && !editing
                             return (
                               <div
                                 key={m.id}
-                                className="flex min-w-0"
+                                className="group flex min-w-0 items-center gap-1"
                               >
+                                {/* Edit/delete for own messages: always visible on touch screens,
+                                    revealed on hover or keyboard focus on desktop. */}
+                                {canChange && (
+                                  <div className="ml-auto flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditing(m)}
+                                      className="rounded-full p-1.5 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+                                      aria-label="Edit message"
+                                      title="Edit"
+                                    >
+                                      <PencilIcon className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteMessage(m)}
+                                      disabled={deleteMutation.isPending}
+                                      className="rounded-full p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                                      aria-label="Delete message"
+                                      title="Delete"
+                                    >
+                                      <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
                                 {/* min-w-0 lets the bubble shrink below its longest word so
                                     long lines wrap instead of overflowing the thread. Own messages
                                     are right-aligned with ml-auto rather than justify-end: an
@@ -682,25 +760,79 @@ const Messages: React.FC = () => {
                                 <div
                                   className={cn(
                                     'min-w-0 max-w-[85%] sm:max-w-[75%] xl:max-w-[40rem] px-3.5 py-2 shadow-sm',
-                                    mine && 'ml-auto',
-                                    mine
-                                      ? 'rounded-2xl rounded-br-md bg-primary-600 text-white'
-                                      : 'rounded-2xl rounded-bl-md border border-neutral-200/80 bg-white text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100'
+                                    mine && !canChange && 'ml-auto',
+                                    editing && 'w-full',
+                                    deleted
+                                      ? cn(
+                                          'rounded-2xl border border-dashed border-neutral-300 bg-transparent text-neutral-500 shadow-none dark:border-neutral-600 dark:text-neutral-400',
+                                          mine ? 'rounded-br-md' : 'rounded-bl-md'
+                                        )
+                                      : mine
+                                        ? 'rounded-2xl rounded-br-md bg-primary-600 text-white'
+                                        : 'rounded-2xl rounded-bl-md border border-neutral-200/80 bg-white text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100'
                                   )}
                                 >
-                                  {/* pre-wrap keeps the sender's spaces and line breaks; overflow-wrap:anywhere
-                                      breaks long unspaced strings (URLs, IDs) at the bubble edge. */}
-                                  <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-relaxed">
-                                    {m.body}
-                                  </p>
-                                  <p
-                                    className={cn(
-                                      'mt-1 text-right text-[10px]',
-                                      mine ? 'text-primary-200' : 'text-neutral-400'
-                                    )}
-                                  >
-                                    {formatBubbleTime(m.created_at)}
-                                  </p>
+                                  {deleted ? (
+                                    <p className="text-sm italic">This message was deleted</p>
+                                  ) : editing ? (
+                                    <form
+                                      onSubmit={(e) => {
+                                        e.preventDefault()
+                                        saveEdit()
+                                      }}
+                                    >
+                                      <textarea
+                                        value={editDraft}
+                                        onChange={(e) => setEditDraft(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault()
+                                            saveEdit()
+                                          } else if (e.key === 'Escape') {
+                                            cancelEditing()
+                                          }
+                                        }}
+                                        maxLength={8000}
+                                        rows={Math.min(Math.max(editDraft.split('\n').length, 2), 10)}
+                                        autoFocus
+                                        className="w-full resize-y rounded-lg border-0 bg-white/95 px-2.5 py-2 text-[15px] leading-relaxed text-neutral-900 focus:ring-2 focus:ring-white/70"
+                                        aria-label="Edit message text"
+                                      />
+                                      <div className="mt-1.5 flex items-center justify-end gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={cancelEditing}
+                                          className="rounded-full px-3 py-1 text-xs font-medium text-primary-100 hover:bg-white/10"
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          type="submit"
+                                          disabled={!editDraft.trim() || editMutation.isPending}
+                                          className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary-700 hover:bg-primary-50 disabled:opacity-50"
+                                        >
+                                          {editMutation.isPending ? 'Saving…' : 'Save'}
+                                        </button>
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    /* pre-wrap keeps the sender's spaces and line breaks; overflow-wrap:anywhere
+                                       breaks long unspaced strings (URLs, IDs) at the bubble edge. */
+                                    <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-relaxed">
+                                      {m.body}
+                                    </p>
+                                  )}
+                                  {!editing && (
+                                    <p
+                                      className={cn(
+                                        'mt-1 text-right text-[10px]',
+                                        mine && !deleted ? 'text-primary-200' : 'text-neutral-400'
+                                      )}
+                                    >
+                                      {m.edited_at && !deleted && <span className="mr-1 italic">edited ·</span>}
+                                      {formatBubbleTime(m.created_at)}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             )

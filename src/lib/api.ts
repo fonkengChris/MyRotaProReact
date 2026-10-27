@@ -659,6 +659,16 @@ export const messagesApi = {
     return response.data
   },
 
+  edit: async (messageId: string, body: string): Promise<Message> => {
+    const response = await api.patch<Message>(`/messages/${messageId}`, { body })
+    return response.data
+  },
+
+  remove: async (messageId: string): Promise<Message> => {
+    const response = await api.delete<Message>(`/messages/${messageId}`)
+    return response.data
+  },
+
   sendBulk: async (to_user_ids: string[], body: string): Promise<{ sent: number; messages: Message[] }> => {
     const response = await api.post<{ sent: number; messages: Message[] }>('/messages/bulk', { to_user_ids, body })
     return response.data
