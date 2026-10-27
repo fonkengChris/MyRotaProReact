@@ -13,7 +13,7 @@ import {
   SunIcon
 } from '@heroicons/react/24/outline'
 import { availabilityApi, timeOffApi, usersApi } from '@/lib/api'
-import { Availability, TimeOffRequest, extractUserDefaultHomeId } from '@/types'
+import { Availability, TimeOffRequest } from '@/types'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import WeeklyAvailabilitySelector from '@/components/WeeklyAvailabilitySelector'
 import TimeOffRequestForm from '@/components/TimeOffRequestForm'
@@ -44,20 +44,14 @@ const AvailabilityPage: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
-  // Get user's home ID
-  const userHomeId = extractUserDefaultHomeId(user)
-
   // Fetch time-off requests
   const { data: timeOffRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery({
-    queryKey: ['timeOffRequests', user?.id, userHomeId, user?.role],
+    queryKey: ['timeOffRequests', user?.id, user?.role],
     queryFn: async () => {
-      // Different query based on user role
-      if (user?.role === 'admin') {
-        // Admins see all requests
+      // The server scopes results: admins get everything, key workers get staff in
+      // every home they reach through their service users.
+      if (['admin', 'key_worker'].includes(user?.role || '')) {
         return await timeOffApi.getAll()
-      } else if (['key_worker', 'senior_staff'].includes(user?.role || '')) {
-        // Managers see all requests for their home (if they have one)
-        return await timeOffApi.getAll(userHomeId ? { home_id: userHomeId } : {})
       } else {
         // Regular users see only their own requests
         return await timeOffApi.getAll({ user_id: user?.id })
@@ -91,11 +85,10 @@ const AvailabilityPage: React.FC = () => {
 
   // Fetch staff members (for managers)
   const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery({
-    queryKey: ['staff', userHomeId],
-    queryFn: () => usersApi.getAll({ 
-      home_id: userHomeId // Only filter by home if user has one
-    }),
-    enabled: !!user && (!!userHomeId || ['admin', 'key_worker', 'senior_staff'].includes(user.role)) && permissions.canManageTimeOff,
+    // Unfiltered: the server limits non-admins to staff in their homes, matching the requests above.
+    queryKey: ['staff', 'time-off'],
+    queryFn: () => usersApi.getAll(),
+    enabled: !!user && permissions.canManageTimeOff,
     retry: 1,
     retryDelay: 1000,
     select: (data) => Array.isArray(data) ? data : []
