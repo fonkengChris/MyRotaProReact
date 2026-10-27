@@ -15,7 +15,10 @@ import {
   UsersIcon,
   HomeIcon,
   StarIcon,
-  XMarkIcon
+  XMarkIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ArrowsUpDownIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
 import { User, UserRole, Home, CreateUserData, extractHomeId, formatShiftTypeLabel } from '@/types'
@@ -162,6 +165,17 @@ const HomeMultiSelect: React.FC<HomeMultiSelectProps> = ({
 }
 
 // Starting hourly rate (GBP) a new user gets when none is entered. Mirrors
+type StaffSortKey = 'name' | 'role' | 'type'
+
+// Seniority order for role sorting, and contract order for type sorting.
+const ROLE_SORT_ORDER: Record<UserRole, number> = {
+  admin: 0,
+  key_worker: 1,
+  senior_staff: 2,
+  support_worker: 3,
+}
+const TYPE_SORT_ORDER: Record<string, number> = { fulltime: 0, parttime: 1, bank: 2 }
+
 // DEFAULT_ROLE_RATES_GBP in the server's utils/payRates.js.
 const DEFAULT_ROLE_RATES: Record<UserRole, number> = {
   support_worker: 12.71,
@@ -181,6 +195,8 @@ const StaffManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'fulltime' | 'parttime' | 'bank'>('all')
   const [homeFilter, setHomeFilter] = useState<string>('all')
+  const [sortKey, setSortKey] = useState<StaffSortKey>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [selectedUserForHomeAllocation, setSelectedUserForHomeAllocation] = useState<User | null>(null)
   const [showHomeAllocationModal, setShowHomeAllocationModal] = useState(false)
   // Multi-home allocation: tick several homes, optionally star one as the default.
@@ -377,7 +393,32 @@ const StaffManagement: React.FC = () => {
                        })
     
     return matchesSearch && matchesRole && matchesStatus && matchesType && matchesHome
+  }).sort((a, b) => {
+    const byName = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    let primary = 0
+    if (sortKey === 'role') primary = (ROLE_SORT_ORDER[a.role] ?? 99) - (ROLE_SORT_ORDER[b.role] ?? 99)
+    if (sortKey === 'type') primary = (TYPE_SORT_ORDER[a.type] ?? 99) - (TYPE_SORT_ORDER[b.type] ?? 99)
+    if (sortKey === 'name') primary = byName
+    // Within a role/type group, keep names alphabetical regardless of direction.
+    return primary !== 0 ? (sortDir === 'asc' ? primary : -primary) : byName
   })
+
+  // Clicking the active column flips direction; a new column starts ascending.
+  const handleSort = (key: StaffSortKey) => {
+    if (key === sortKey) {
+      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const renderSortIcon = (key: StaffSortKey) => {
+    if (key !== sortKey) return <ArrowsUpDownIcon className="h-3.5 w-3.5 opacity-40" />
+    return sortDir === 'asc'
+      ? <ChevronUpIcon className="h-3.5 w-3.5" />
+      : <ChevronDownIcon className="h-3.5 w-3.5" />
+  }
 
   const handleDeleteUser = (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
@@ -617,7 +658,7 @@ const StaffManagement: React.FC = () => {
       {/* Filters and Search */}
       <Card>
         <CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
@@ -707,6 +748,34 @@ const StaffManagement: React.FC = () => {
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+
+            {/* Sort */}
+            <div>
+              <label className="form-label">
+                Sort by
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value as StaffSortKey)}
+                  className="input flex-1 min-w-0"
+                >
+                  <option value="name">Name (A–Z)</option>
+                  <option value="role">Role</option>
+                  <option value="type">Type</option>
+                </select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'))}
+                  title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+                  aria-label={`Sort ${sortDir === 'asc' ? 'ascending' : 'descending'}`}
+                  className="px-2 shrink-0"
+                >
+                  {sortDir === 'asc' ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -770,19 +839,24 @@ const StaffManagement: React.FC = () => {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
+              {/* Height is capped to the viewport so the horizontal scrollbar stays on screen
+                  for long lists; the header row sticks while scrolling vertically. */}
+              <div className="hidden lg:block overflow-auto max-h-[calc(100vh-10rem)] rounded-md border border-neutral-200 dark:border-neutral-800">
               <table className="min-w-full divide-y divide-neutral-300 dark:divide-neutral-700">
-                <thead className="bg-neutral-100 dark:bg-neutral-800">
+                <thead className="bg-neutral-100 dark:bg-neutral-800 sticky top-0 z-10">
                   <tr>
-                    <th className="table-header-cell">
-                      Staff Member
-                    </th>
-                    <th className="table-header-cell">
-                      Role
-                    </th>
-                    <th className="table-header-cell">
-                      Type
-                    </th>
+                    {([['name', 'Staff Member'], ['role', 'Role'], ['type', 'Type']] as const).map(([key, label]) => (
+                      <th key={key} className="table-header-cell" aria-sort={sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                        <button
+                          type="button"
+                          onClick={() => handleSort(key)}
+                          className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-neutral-900 dark:hover:text-neutral-100"
+                        >
+                          {label}
+                          {renderSortIcon(key)}
+                        </button>
+                      </th>
+                    ))}
                     <th className="table-header-cell">
                       Contact
                     </th>
