@@ -672,13 +672,17 @@ const Messages: React.FC = () => {
                             return (
                               <div
                                 key={m.id}
-                                className={cn('flex', mine ? 'justify-end' : 'justify-start')}
+                                className="flex min-w-0"
                               >
                                 {/* min-w-0 lets the bubble shrink below its longest word so
-                                    long lines wrap instead of overflowing the thread. */}
+                                    long lines wrap instead of overflowing the thread. Own messages
+                                    are right-aligned with ml-auto rather than justify-end: an
+                                    overflowing justify-end item spills off the left edge, where it
+                                    can't be scrolled to, whereas auto margins collapse to zero. */}
                                 <div
                                   className={cn(
                                     'min-w-0 max-w-[85%] sm:max-w-[75%] xl:max-w-[40rem] px-3.5 py-2 shadow-sm',
+                                    mine && 'ml-auto',
                                     mine
                                       ? 'rounded-2xl rounded-br-md bg-primary-600 text-white'
                                       : 'rounded-2xl rounded-bl-md border border-neutral-200/80 bg-white text-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100'
