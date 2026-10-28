@@ -348,7 +348,7 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
             </div>
           ) : (
             <div className="space-y-3">
-              {approvedRequests.slice(0, 5).map((request) => {
+              {approvedRequests.map((request) => {
                 const staffMember = typeof request.user_id === 'string' ? getStaffMember(request.user_id) : request.user_id
                 const approver = typeof request.approved_by === 'string' ? getStaffMember(request.approved_by) : request.approved_by
                 const duration = calculateDuration(request.start_date, request.end_date)
@@ -423,11 +423,6 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                   </div>
                 )
               })}
-              {approvedRequests.length > 5 && (
-                <p className="text-sm font-medium text-success-800 dark:text-success-300 text-center pt-1">
-                  +{approvedRequests.length - 5} more approved request{approvedRequests.length - 5 !== 1 ? 's' : ''}
-                </p>
-              )}
             </div>
           )}
         </CardContent>
