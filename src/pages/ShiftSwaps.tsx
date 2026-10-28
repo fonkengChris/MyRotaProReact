@@ -11,7 +11,6 @@ import {
   UserIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  XCircleIcon,
   PlusIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
@@ -19,8 +18,7 @@ import { shiftSwapsApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import ShiftSwapRequestModal from '@/components/ShiftSwapRequestModal'
 import ShiftSwapResponseModal from '@/components/ShiftSwapResponseModal'
-import { ShiftSwap, AvailableSwap, User } from '@/types'
-import toast from 'react-hot-toast'
+import { ShiftSwap, AvailableSwap } from '@/types'
 
 const ShiftSwaps: React.FC = () => {
   const { user } = useAuth()
@@ -40,7 +38,7 @@ const ShiftSwaps: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pending' | 'sent' | 'received' | 'history'>('pending')
 
   // Fetch pending swap requests (where user needs to respond)
-  const { data: pendingSwaps = [], isLoading: pendingLoading, refetch: refetchPending } = useQuery({
+  const { data: pendingSwaps = [], isLoading: pendingLoading } = useQuery({
     queryKey: ['shift-swaps', 'pending', user?.id],
     queryFn: () => shiftSwapsApi.getPending(),
     enabled: !!user,

@@ -6,7 +6,6 @@ import { format } from 'date-fns'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   XMarkIcon,
   ClockIcon,
@@ -15,7 +14,7 @@ import {
   CheckCircleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { Shift, User, AvailableSwap, ShiftSwapRequest } from '@/types'
+import { User, AvailableSwap, ShiftSwapRequest } from '@/types'
 import { shiftSwapsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -38,9 +37,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
   isOpen,
   onClose,
   onSwapRequested,
-  availableSwap,
-  currentUser,
-  isLoading = false
+  availableSwap
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedSwapper, setSelectedSwapper] = useState<string | null>(null)

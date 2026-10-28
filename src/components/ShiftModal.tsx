@@ -55,7 +55,6 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   date,
   services,
   homeId,
-  isLoading = false,
   canManageOneToOne = false,
   initialShiftType,
 }) => {

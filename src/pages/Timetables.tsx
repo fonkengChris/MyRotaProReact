@@ -11,7 +11,6 @@ import {
   DocumentArrowDownIcon,
   CalendarIcon,
   ClockIcon,
-  UsersIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,

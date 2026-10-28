@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { XMarkIcon, PlusIcon, TrashIcon, ClockIcon, UsersIcon, TagIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { WeeklySchedule, WeeklyScheduleShift, Service, extractServiceId } from '@/types'
@@ -189,18 +189,6 @@ const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const getServiceName = (serviceId: string) => {
-    if (typeof serviceId === 'object' && serviceId.name) {
-      return serviceId.name
-    }
-    const service = services.find(s => s.id === serviceId)
-    return service ? service.name : 'Unknown Service'
-  }
-
-  const formatTime = (time: string) => {
-    return time.substring(0, 5)
   }
 
   if (!isOpen) return null

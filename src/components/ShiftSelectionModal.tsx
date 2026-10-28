@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { format, addDays } from 'date-fns'
+import { format } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -215,7 +215,7 @@ const ShiftSelectionModal: React.FC<ShiftSelectionModalProps> = ({
                                   </span>
                                 </div>
                                 
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="neutral" className="text-xs">
                                   {duration.toFixed(1)}h duration
                                 </Badge>
                                 

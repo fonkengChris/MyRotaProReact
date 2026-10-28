@@ -135,7 +135,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
         
         return [{
-          user: userData || { id: userId, name: 'Unknown User', role: userRole },
+          user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
           totalHours,
           sleepNights,
           paidHours,
@@ -154,7 +154,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
       const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
       
       return [{
-        user: userData || { id: userId, name: 'Unknown User', role: userRole },
+        user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
         totalHours,
         sleepNights,
         paidHours,
@@ -170,7 +170,6 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   const totalSleepNights = useMemo(() => userHours.reduce((sum, uh) => sum + uh.sleepNights, 0), [userHours])
   const totalPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.paidHours, 0), [userHours])
   const totalBreakDeductions = useMemo(() => userHours.reduce((sum, uh) => sum + uh.breakDeductions, 0), [userHours])
-  const totalShifts = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalShifts, 0), [userHours])
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -195,7 +194,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
             There was an error loading your hours data.
           </p>
           <p className="text-sm text-neutral-600">
-            Error: {shiftsError.message || 'Unknown error'}
+            Error: {(shiftsError instanceof Error && shiftsError.message) || 'Unknown error'}
           </p>
         </div>
       </div>

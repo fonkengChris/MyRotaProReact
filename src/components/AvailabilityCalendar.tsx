@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO } from 'date-fns'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { format, startOfWeek, addDays, parseISO } from 'date-fns'
+import { Card, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { 
@@ -38,7 +38,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   // Get current week dates
   const now = new Date()
   const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Monday start
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
 
   // Generate week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -86,7 +85,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   }
 
   // Handle adding new availability
-  const handleAddAvailability = (date: Date, time: string) => {
+  const handleAddAvailability = (date: Date, _time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd')
     if (getApprovedLeaveForDate(dateStr, approvedLeaveRequests)) return
 

@@ -9,7 +9,6 @@ import WeeklyScheduleEditor from '@/components/WeeklyScheduleEditor'
 import { homesApi, servicesApi } from '@/lib/api'
 import { extractHomeId } from '@/types'
 import { 
-  PlusIcon,
   ArrowLeftIcon,
   HomeIcon,
   ClockIcon

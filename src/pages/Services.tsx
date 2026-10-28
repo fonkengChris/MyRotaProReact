@@ -66,13 +66,6 @@ const Services: React.FC = () => {
     ? services.filter(service => service.home_ids.includes(selectedHome))
     : services
 
-  const getHomeNames = (homeIds: string[]) => {
-    return homeIds.map(homeId => {
-      const home = homes.find(h => h.id === homeId)
-      return home ? home.name : 'Unknown Home'
-    }).join(', ')
-  }
-
   const getCategoryLabel = (category: string) => {
     const categoryMap: Record<string, string> = {
       personal_care: 'Personal Care',

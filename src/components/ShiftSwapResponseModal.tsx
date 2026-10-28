@@ -6,7 +6,6 @@ import { format } from 'date-fns'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   XMarkIcon,
   ClockIcon,
@@ -38,8 +37,7 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
   isOpen,
   onClose,
   onSwapResponded,
-  swapRequest,
-  isLoading = false
+  swapRequest
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [action, setAction] = useState<'approve' | 'reject' | null>(null)

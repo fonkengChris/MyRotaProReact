@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import axios from 'axios'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { LoginCredentials, CreateUserData } from '@/types'
 
 // Mock axios - create a shared mock instance
@@ -22,8 +21,6 @@ vi.mock('axios', () => {
   }
 })
 
-const mockedAxios = axios as any
-
 // Store original module to reset between tests
 let apiModule: any
 
@@ -34,7 +31,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 }
-global.localStorage = localStorageMock as any
+globalThis.localStorage = localStorageMock as any
 
 // Mock toast
 vi.mock('react-hot-toast', () => ({

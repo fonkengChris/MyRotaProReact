@@ -82,6 +82,14 @@
   .btn-accent {
     @apply btn bg-accent-600 text-white hover:bg-accent-700 hover:shadow-md focus-visible:ring-accent-500 active:scale-95;
   }
+
+  .btn-success {
+    @apply btn bg-success-600 text-white hover:bg-success-700 hover:shadow-md focus-visible:ring-success-500 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent shadow-none text-neutral-700 hover:bg-neutral-200/70 hover:text-neutral-900 focus-visible:ring-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-50;
+  }
   
   .btn-sm {
     @apply h-9 px-3.5 text-xs rounded-lg min-h-[36px] min-w-[36px];

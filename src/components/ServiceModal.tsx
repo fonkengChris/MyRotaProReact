@@ -162,10 +162,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     setIsLoading(true)
     try {
       if (service) {
-        const result = await servicesApi.update(service.id, formData)
+        await servicesApi.update(service.id, formData)
         toast.success('Service updated successfully')
       } else {
-        const result = await servicesApi.create(formData)
+        await servicesApi.create(formData)
         toast.success('Service created successfully')
       }
       onSuccess()

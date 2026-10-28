@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
@@ -18,7 +19,8 @@ import {
   XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  ArrowsUpDownIcon
+  ArrowsUpDownIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
 import { User, UserRole, Home, CreateUserData, extractHomeId, formatShiftTypeLabel } from '@/types'
@@ -189,6 +191,7 @@ const StaffManagement: React.FC = () => {
   const permissions = usePermissions()
   const queryClient = useQueryClient()
   const isAdmin = currentUser?.role === 'admin'
+  const navigate = useNavigate()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
@@ -593,12 +596,6 @@ const StaffManagement: React.FC = () => {
     return home ? home.name : 'Unknown Home'
   }
 
-  const getHomeName = (homeId: string | undefined) => {
-    if (!homeId || !homes) return 'No home allocated'
-    const home = homes.find(h => h.id === homeId)
-    return home ? `${home.name} - ${home.location.city}` : 'Unknown home'
-  }
-
   const getUserHomes = (user: User) => {
     if (!user.homes || !homes) return []
     return user.homes.map(userHome => {
@@ -978,6 +975,17 @@ const StaffManagement: React.FC = () => {
                           >
                             <PencilIcon className="h-4 w-4" />
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => navigate(`/availability?user=${member.id}`)}
+                              title="Availability"
+                            >
+                              <CalendarDaysIcon className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -1044,6 +1052,17 @@ const StaffManagement: React.FC = () => {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => navigate(`/availability?user=${member.id}`)}
+                          title="Availability"
+                        >
+                          <CalendarDaysIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

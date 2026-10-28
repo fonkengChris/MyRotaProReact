@@ -24,7 +24,6 @@ interface TimeOffRequestListProps {
   onApprove: (requestId: string) => Promise<void>
   onDeny: (requestId: string, reason: string) => Promise<void>
   onViewDetails: (request: TimeOffRequest) => void
-  canManage: boolean
   // Approve/deny and cancelling approved leave are admin-only, separate from general management.
   canApprove?: boolean
   // Staff withdraw their own pending requests; admins cancel approved leave.
@@ -38,7 +37,6 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
   onApprove,
   onDeny,
   onViewDetails,
-  canManage,
   canApprove = false,
   onDelete,
   currentUserId
@@ -204,13 +202,6 @@ const TimeOffRequestList: React.FC<TimeOffRequestListProps> = ({
                           </div>
                           <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{request.reason}</p>
                         </div>
-
-                        {request.notes && (
-                          <div className="mb-3 rounded-lg border border-neutral-200 bg-white/60 px-3 py-2.5 dark:border-neutral-600 dark:bg-neutral-800/50">
-                            <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Notes</p>
-                            <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{request.notes}</p>
-                          </div>
-                        )}
 
                         {request.home_leave_limit_warning && (
                           <div className="mb-3 flex items-start gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-danger-800 dark:border-danger-800/50 dark:bg-danger-950/30 dark:text-danger-200">

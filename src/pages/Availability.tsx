@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -23,29 +24,49 @@ import toast from 'react-hot-toast'
 import { filterApprovedLeave } from '@/utils/timeOff'
 import { summariseLeave } from '@/utils/leave'
 
+const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
+  fulltime: 'Full-time',
+  parttime: 'Part-time',
+  bank: 'Bank'
+}
+
 const AvailabilityPage: React.FC = () => {
   const { user } = useAuth()
   const permissions = usePermissions()
   const queryClient = useQueryClient()
   
-  const [activeTab, setActiveTab] = useState<'calendar' | 'weekly' | 'leave' | 'requests' | 'submit'>('leave')
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState<'calendar' | 'weekly' | 'leave' | 'requests' | 'submit'>(
+    () => (permissions.canManageStaffAvailability && searchParams.get('user') ? 'weekly' : 'leave')
+  )
   const [selectedRequest, setSelectedRequest] = useState<TimeOffRequest | null>(null)
+
+  // Admins can manage any staff member's availability (opened from Staff Management via ?user=<id>).
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(() =>
+    permissions.canManageStaffAvailability ? searchParams.get('user') : null
+  )
+  const targetUserId = selectedUserId || user?.id || ''
+  const isOwnAvailability = targetUserId === user?.id
+  const canEditAvailability = !!(
+    permissions.canManageStaffAvailability ||
+    (isOwnAvailability && permissions.canSelfDeclareAvailability)
+  )
 
   const outlineTabActiveClass =
     'bg-primary-50 border-primary-300 text-primary-900 dark:bg-primary-950/50 dark:border-primary-600 dark:text-primary-200'
 
   // Fetch availability data
   const { data: availabilities = [], isLoading: availabilitiesLoading, error: availabilitiesError } = useQuery({
-    queryKey: ['availabilities', user?.id],
-    queryFn: () => availabilityApi.getAll({ user_id: user?.id }),
-    enabled: !!user?.id,
+    queryKey: ['availabilities', targetUserId],
+    queryFn: () => availabilityApi.getAll({ user_id: targetUserId }),
+    enabled: !!targetUserId,
     retry: 1,
     retryDelay: 1000,
     select: (data) => Array.isArray(data) ? data : []
   })
 
   // Fetch time-off requests
-  const { data: timeOffRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery({
+  const { data: timeOffRequests = [], isLoading: requestsLoading } = useQuery({
     queryKey: ['timeOffRequests', user?.id, user?.role],
     queryFn: async () => {
       // The server scopes results: admins get everything, key workers get staff in
@@ -63,9 +84,14 @@ const AvailabilityPage: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
+  // Leave shown on the availability grids belongs to whoever's availability is being viewed.
   const approvedLeaveRequests = useMemo(
-    () => filterApprovedLeave(timeOffRequests),
-    [timeOffRequests]
+    () =>
+      filterApprovedLeave(timeOffRequests).filter((r) => {
+        const requestUserId = typeof r.user_id === 'string' ? r.user_id : r.user_id?.id
+        return requestUserId === targetUserId
+      }),
+    [timeOffRequests, targetUserId]
   )
 
   // Annual-leave balance for the current user (their own requests only).
@@ -84,11 +110,11 @@ const AvailabilityPage: React.FC = () => {
   )
 
   // Fetch staff members (for managers)
-  const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery({
+  const { data: staff = [], isLoading: staffLoading } = useQuery({
     // Unfiltered: the server limits non-admins to staff in their homes, matching the requests above.
     queryKey: ['staff', 'time-off'],
     queryFn: () => usersApi.getAll(),
-    enabled: !!user && permissions.canManageTimeOff,
+    enabled: !!user && (permissions.canManageTimeOff || permissions.canManageStaffAvailability),
     retry: 1,
     retryDelay: 1000,
     select: (data) => Array.isArray(data) ? data : []
@@ -100,7 +126,7 @@ const AvailabilityPage: React.FC = () => {
       if (data.id) {
         return availabilityApi.update(data.id, data)
       } else {
-        return availabilityApi.create(data)
+        return availabilityApi.create(data as Omit<Availability, 'id' | 'submitted_at' | 'updated_at'>)
       }
     },
     onSuccess: () => {
@@ -279,7 +305,7 @@ const AvailabilityPage: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100 mb-2">Failed to Load Availability</h3>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            {availabilitiesError?.message || 'There was an error loading your availability data.'}
+            {(availabilitiesError instanceof Error && availabilitiesError.message) || 'There was an error loading your availability data.'}
           </p>
           <Button
             variant="primary"
@@ -314,7 +340,37 @@ const AvailabilityPage: React.FC = () => {
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           {/* Availability group */}
-          <div>
+          <div className="flex flex-col gap-3">
+            {permissions.canManageStaffAvailability && (
+              <div>
+                <label
+                  htmlFor="availability-staff"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+                >
+                  Staff member
+                </label>
+                <select
+                  id="availability-staff"
+                  value={targetUserId}
+                  onChange={(e) => {
+                    setSelectedUserId(e.target.value === user?.id ? null : e.target.value)
+                    if (activeTab !== 'calendar' && activeTab !== 'weekly') setActiveTab('weekly')
+                  }}
+                  className="input w-full sm:w-72"
+                >
+                  {user && <option value={user.id}>{user.name} (you)</option>}
+                  {staff
+                    .filter((s) => s.id !== user?.id)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} · {EMPLOYMENT_TYPE_LABELS[s.type] || s.type}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+            <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Availability
             </p>
@@ -338,6 +394,7 @@ const AvailabilityPage: React.FC = () => {
                 <ClockIcon className="h-4 w-4 mr-2" />
                 Weekly Select
               </Button>
+            </div>
             </div>
           </div>
 
@@ -401,7 +458,6 @@ const AvailabilityPage: React.FC = () => {
                   onApprove={handleApproveTimeOff}
                   onDeny={handleDenyTimeOff}
                   onViewDetails={handleViewTimeOffDetails}
-                  canManage={false}
                   onDelete={handleDeleteTimeOff}
                   currentUserId={user?.id}
                 />
@@ -411,25 +467,42 @@ const AvailabilityPage: React.FC = () => {
         </div>
       )}
 
+      {(activeTab === 'calendar' || activeTab === 'weekly') && !canEditAvailability && (
+        <div className="rounded-lg border border-primary-200 bg-primary-50 p-4 text-sm text-primary-800 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-200">
+          Your availability is managed by your admin. Contact them to change it.
+        </div>
+      )}
+
+      {(activeTab === 'calendar' || activeTab === 'weekly') && !isOwnAvailability && (
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Managing availability for{' '}
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
+            {staff.find((s) => s.id === targetUserId)?.name || 'selected staff member'}
+          </span>
+        </p>
+      )}
+
       {activeTab === 'calendar' && (
         <AvailabilityCalendar
-          userId={user?.id || ''}
+          key={targetUserId}
+          userId={targetUserId}
           availabilities={availabilities || []}
           approvedLeaveRequests={approvedLeaveRequests}
           onSaveAvailability={handleSaveAvailability}
           onDeleteAvailability={handleDeleteAvailability}
-          canEdit={true}
+          canEdit={canEditAvailability}
         />
       )}
 
       {activeTab === 'weekly' && (
         <WeeklyAvailabilitySelector
-          userId={user?.id || ''}
+          key={targetUserId}
+          userId={targetUserId}
           availabilities={availabilities || []}
           approvedLeaveRequests={approvedLeaveRequests}
           onSaveAvailability={handleSaveAvailability}
           onDeleteAvailability={handleDeleteAvailability}
-          canEdit={true}
+          canEdit={canEditAvailability}
         />
       )}
 
@@ -449,7 +522,6 @@ const AvailabilityPage: React.FC = () => {
             onApprove={handleApproveTimeOff}
             onDeny={handleDenyTimeOff}
             onViewDetails={handleViewTimeOffDetails}
-            canManage={permissions.canManageTimeOff}
             canApprove={permissions.canApproveTimeOff}
             onDelete={handleDeleteTimeOff}
             currentUserId={user?.id}
@@ -512,13 +584,6 @@ const AvailabilityPage: React.FC = () => {
                       <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Reason</p>
                       <p className="text-sm text-neutral-900 dark:text-neutral-100">{selectedRequest.reason}</p>
                     </div>
-                    
-                    {selectedRequest.notes && (
-                      <div>
-                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Notes</p>
-                        <p className="text-sm text-neutral-900 dark:text-neutral-100">{selectedRequest.notes}</p>
-                      </div>
-                    )}
                     
                     <div>
                       <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Status</p>

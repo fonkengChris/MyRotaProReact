@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { shiftsApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import Button from '@/components/ui/Button'
-import Badge from '@/components/ui/Badge'
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -50,16 +49,24 @@ const AvailableShiftsNotification: React.FC = () => {
   // Show notification when shifts become available
   useEffect(() => {
     if (availableShifts.length > 0 && !hasShownNotification && !isDismissed) {
+      // react-hot-toast has no action option, so the "View Shifts" link is rendered inside the toast.
       toast.success(
-        `${availableShifts.length} new shift${availableShifts.length !== 1 ? 's' : ''} available for selection!`,
-        {
-          duration: 8000,
-          icon: '🔔',
-          action: {
-            label: 'View Shifts',
-            onClick: () => navigate('/shift-selection')
-          }
-        }
+        (t) => (
+          <span className="flex items-center gap-3">
+            {availableShifts.length} new shift{availableShifts.length !== 1 ? 's' : ''} available for selection!
+            <button
+              type="button"
+              className="font-semibold text-primary-700 underline dark:text-primary-300"
+              onClick={() => {
+                toast.dismiss(t.id)
+                navigate('/shift-selection')
+              }}
+            >
+              View Shifts
+            </button>
+          </span>
+        ),
+        { duration: 8000, icon: '🔔' }
       )
       setHasShownNotification(true)
     }

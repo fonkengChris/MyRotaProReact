@@ -15,12 +15,10 @@ import {
 } from '@/lib/push'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import Badge from '@/components/ui/Badge'
 import { 
   UserIcon, 
   KeyIcon, 
   CogIcon,
-  BellIcon,
   ShieldCheckIcon,
   SunIcon,
   MoonIcon,

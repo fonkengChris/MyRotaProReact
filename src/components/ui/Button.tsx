@@ -25,7 +25,9 @@ const Button: React.FC<ButtonProps> = ({
     secondary: 'btn-secondary',
     outline: 'btn-outline',
     danger: 'btn-danger',
-    accent: 'btn-accent'
+    accent: 'btn-accent',
+    success: 'btn-success',
+    ghost: 'btn-ghost'
   }
   
   const sizeClasses = {

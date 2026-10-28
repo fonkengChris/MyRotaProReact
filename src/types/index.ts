@@ -513,6 +513,7 @@ export interface WeeklyScheduleDay {
 
 export interface WeeklySchedule {
   _id: string
+  id: string
   home_id: string | { _id: string; name: string; location: { city: string } }
   schedule: {
     monday: WeeklyScheduleDay
@@ -768,13 +769,13 @@ export interface FormField {
 }
 
 // UI types
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'accent'
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'accent' | 'success' | 'ghost'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'accent' | 'neutral'
 export type LoadingSize = 'sm' | 'md' | 'lg'
 
 // Utility functions
-export const extractHomeId = (homeId: string | { id: string; name: string; location: { city: string } } | undefined): string | undefined => {
+export const extractHomeId = (homeId: string | { id: string; name?: string } | undefined): string | undefined => {
   if (!homeId) return undefined
   if (typeof homeId === 'string') return homeId
   // Handle ObjectId objects by converting to string

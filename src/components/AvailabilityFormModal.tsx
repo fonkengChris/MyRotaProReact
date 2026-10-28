@@ -8,11 +8,9 @@ import Button from '@/components/ui/Button'
 import { 
   XMarkIcon,
   ClockIcon,
-  CalendarIcon,
-  CheckIcon,
-  XMarkIcon as XMarkIcon2
+  CalendarIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType } from '@/types'
+import { Availability } from '@/types'
 
 const availabilitySchema = z.object({
   start_time: z.string().min(1, 'Start time is required'),

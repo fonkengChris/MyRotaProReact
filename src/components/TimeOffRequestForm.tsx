@@ -6,11 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { 
   CalendarIcon,
-  ClockIcon,
-  DocumentTextIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import { TimeOffRequestType } from '@/types'
 
 const timeOffSchema = z.object({
   start_date: z.string().min(1, 'Start date is required'),

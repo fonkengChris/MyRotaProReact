@@ -25,7 +25,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 }
-global.localStorage = localStorageMock as any
+globalThis.localStorage = localStorageMock as any
 
 // Create a wrapper with QueryClient
 const createWrapper = () => {
@@ -67,14 +67,14 @@ describe('useAuth Hook', () => {
     })
 
     it('should check auth if token exists', async () => {
-      const mockUser: User = {
+      const mockUser = {
         id: '1',
         name: 'Test User',
         email: 'test@example.com',
         role: 'support_worker',
         type: 'fulltime',
         is_active: true,
-      }
+      } as User
 
       localStorageMock.getItem.mockReturnValue('test-token')
       ;(authApi.getCurrentUser as any).mockResolvedValue(mockUser)
@@ -110,14 +110,14 @@ describe('useAuth Hook', () => {
 
   describe('Login', () => {
     it('should login successfully', async () => {
-      const mockUser: User = {
+      const mockUser = {
         id: '1',
         name: 'Test User',
         email: 'test@example.com',
         role: 'support_worker',
         type: 'fulltime',
         is_active: true,
-      }
+      } as User
 
       const mockResponse = {
         user: mockUser,
@@ -188,14 +188,14 @@ describe('useAuth Hook', () => {
 
   describe('Logout', () => {
     it('should logout successfully', async () => {
-      const mockUser: User = {
+      const mockUser = {
         id: '1',
         name: 'Test User',
         email: 'test@example.com',
         role: 'support_worker',
         type: 'fulltime',
         is_active: true,
-      }
+      } as User
 
       localStorageMock.getItem.mockReturnValue('test-token')
       ;(authApi.getCurrentUser as any).mockResolvedValue(mockUser)
@@ -237,14 +237,14 @@ describe('useAuth Hook', () => {
 
   describe('Update User', () => {
     it('should update user successfully', async () => {
-      const mockUser: User = {
+      const mockUser = {
         id: '1',
         name: 'Test User',
         email: 'test@example.com',
         role: 'support_worker',
         type: 'fulltime',
         is_active: true,
-      }
+      } as User
 
       const updatedUser: User = {
         ...mockUser,

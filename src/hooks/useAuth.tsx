@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { aiSolverApi, authApi } from '@/lib/api'
 import { setSleepInHours } from '@/lib/shiftHours'
 import { User, LoginCredentials } from '@/types'
@@ -136,6 +136,9 @@ export function usePermissions() {
     canManageTimeOff: isManagement,
     // Leave approval/denial is admin-only; key workers can view and cancel but not decide.
     canApproveTimeOff: user.role === 'admin',
+    // Part-time and bank staff declare their own availability; admins set it for anyone.
+    canSelfDeclareAvailability: ['parttime', 'bank'].includes(user.type),
+    canManageStaffAvailability: user.role === 'admin',
     canViewAllHomes: user.role === 'admin',
     canManageHomes: user.role === 'admin',
     canManageServices: isManagement,

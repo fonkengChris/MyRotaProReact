@@ -542,7 +542,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
               {/* Week Selector */}
               <div className="flex flex-wrap gap-2">
-                {weeklyRotas.map((week, index) => (
+                {weeklyRotas.map((_week, index) => (
                   <Button
                     key={index}
                     variant={selectedWeek === index ? "primary" : "outline"}

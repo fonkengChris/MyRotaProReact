@@ -73,7 +73,6 @@ const RotaEditor: React.FC = () => {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [selectedTime, setSelectedTime] = useState<string>('09:00')
   // Preselected type for a new shift ('one_to_one' when opened via "Add 1-to-1").
   const [newShiftType, setNewShiftType] = useState<string | undefined>(undefined)
   const isAdmin = user?.role === 'admin'
@@ -407,9 +406,8 @@ const RotaEditor: React.FC = () => {
   }
 
   // Shift management handlers
-  const handleAddShift = (date: Date, time: string, shiftType?: string) => {
+  const handleAddShift = (date: Date, _time: string, shiftType?: string) => {
     setSelectedDate(date)
-    setSelectedTime(time)
     setSelectedShift(null)
     setNewShiftType(shiftType)
     setIsShiftModalOpen(true)
@@ -418,7 +416,6 @@ const RotaEditor: React.FC = () => {
   const handleEditShift = (shift: Shift) => {
     setSelectedShift(shift)
             setSelectedDate(new Date(shift.date + 'T00:00:00'))
-    setSelectedTime(shift.start_time.substring(0, 5))
     setIsShiftModalOpen(true)
   }
 
@@ -836,7 +833,7 @@ const RotaEditor: React.FC = () => {
       {isValidHomeId && conflicts && conflicts.totalConflicts > 0 && (
         <ConflictAlert
           conflicts={conflicts.conflicts}
-          onResolveConflict={(conflict) => {
+          onResolveConflict={() => {
             // Navigate to the specific shift or show modal to resolve
             toast.success('Use the shift editor to resolve this conflict')
           }}
