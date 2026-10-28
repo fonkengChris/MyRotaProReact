@@ -26,6 +26,7 @@ import {
   Message,
   MessageConversationSummary,
   MessageThreadResponse,
+  MessageUserBrief,
   PayrollReportResponse,
   OvertimeRequest,
   RestException,
@@ -644,6 +645,11 @@ export const usersApi = {
 
 // Direct messages (1:1)
 export const messagesApi = {
+  getRecipients: async (): Promise<MessageUserBrief[]> => {
+    const response = await api.get<MessageUserBrief[]>('/messages/recipients')
+    return response.data
+  },
+
   getConversations: async (): Promise<MessageConversationSummary[]> => {
     const response = await api.get<MessageConversationSummary[]>('/messages/conversations')
     return response.data

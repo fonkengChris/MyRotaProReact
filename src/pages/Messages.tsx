@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
-import { messagesApi, usersApi } from '@/lib/api'
+import { messagesApi } from '@/lib/api'
 import { Message, MessageConversationSummary, UserRole } from '@/types'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -109,13 +109,10 @@ const Messages: React.FC = () => {
   const composeInputRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: recipients = [], isLoading: recipientsLoading } = useQuery({
-    queryKey: ['users', 'messages-recipients', user?.id],
-    queryFn: () => usersApi.getAll({ is_active: true }),
+    queryKey: ['messages', 'recipients', user?.id],
+    queryFn: () => messagesApi.getRecipients(),
     enabled: !!user,
-    select: (data) =>
-      (Array.isArray(data) ? data : [])
-        .filter((u) => u.is_active && u.id !== user?.id)
-        .sort((a, b) => a.name.localeCompare(b.name)),
+    select: (data) => (Array.isArray(data) ? data : []),
   })
 
   const { data: conversations = [], isLoading: convLoading } = useQuery({
@@ -905,7 +902,7 @@ const Messages: React.FC = () => {
       <header className={cn('mb-4 hidden shrink-0 lg:block', mobileView === 'thread' && '')}>
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Messages</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Direct messages with any active colleague.
+          Direct messages with colleagues in your homes, their key workers and management.
         </p>
       </header>
 
