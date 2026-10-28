@@ -85,7 +85,8 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
         setValue('start_time', availability.start_time.substring(0, 5))
         setValue('end_time', availability.end_time.substring(0, 5))
         setValue('is_available', availability.is_available)
-        setValue('preferred_shift_type', availability.preferred_shift_type || null)
+        // 'none' is stored for "no preference"; show it as the blank option.
+        setValue('preferred_shift_type', availability.preferred_shift_type === 'none' ? '' : availability.preferred_shift_type || null)
         setValue('notes', availability.notes || '')
       } else {
         // Creating new availability
