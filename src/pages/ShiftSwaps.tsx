@@ -64,7 +64,7 @@ const ShiftSwaps: React.FC = () => {
   // Fetch swap history
   const { data: swapHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['shift-swaps', 'history', user?.id],
-    queryFn: () => shiftSwapsApi.getAll({ status: 'completed,approved,rejected,cancelled' }),
+    queryFn: () => shiftSwapsApi.getAll({ status: 'completed,approved,rejected,cancelled,expired' }),
     enabled: !!user,
     select: (data) => Array.isArray(data) ? data : []
   })
@@ -151,7 +151,8 @@ const ShiftSwaps: React.FC = () => {
       approved: { variant: 'success' as const, label: 'Approved' },
       rejected: { variant: 'danger' as const, label: 'Rejected' },
       cancelled: { variant: 'secondary' as const, label: 'Cancelled' },
-      completed: { variant: 'success' as const, label: 'Completed' }
+      completed: { variant: 'success' as const, label: 'Completed' },
+      expired: { variant: 'secondary' as const, label: 'Expired' }
     }
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
@@ -716,8 +717,14 @@ const ShiftSwaps: React.FC = () => {
                     <div className="font-medium text-neutral-800 mb-2">Available Swappers:</div>
                     <div className="flex flex-wrap gap-2">
                       {availableSwap.potential_swappers.map((swapper) => (
-                        <Badge key={swapper.user_id} variant="secondary" className="text-xs">
+                        <Badge
+                          key={swapper.user_id}
+                          variant={swapper.rest_warnings?.length ? 'warning' : 'secondary'}
+                          className="text-xs"
+                          title={swapper.rest_warnings?.join('\n')}
+                        >
                           {swapper.name}
+                          {swapper.rest_warnings?.length ? ' · rest consent needed' : ''}
                         </Badge>
                       ))}
                     </div>

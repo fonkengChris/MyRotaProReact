@@ -17,6 +17,7 @@ import {
 import { User, AvailableSwap, ShiftSwapRequest } from '@/types'
 import { shiftSwapsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
+import RestConsentNotice from '@/components/RestConsentNotice'
 
 const swapRequestSchema = z.object({
   requester_message: z.string().max(500, 'Message cannot exceed 500 characters').optional(),
@@ -41,6 +42,9 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedSwapper, setSelectedSwapper] = useState<string | null>(null)
+  const [restConsent, setRestConsent] = useState(false)
+  // Set when the server reports rest breaches the listed option didn't (rota changed since).
+  const [serverRestWarnings, setServerRestWarnings] = useState<string[] | null>(null)
 
   const {
     register,
@@ -65,6 +69,17 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
     }
   }, [isOpen, reset])
 
+  useEffect(() => {
+    setRestConsent(false)
+    setServerRestWarnings(null)
+  }, [selectedSwapper])
+
+  const restWarnings =
+    serverRestWarnings ??
+    availableSwap?.potential_swappers.find((s) => s.user_id === selectedSwapper)?.rest_warnings ??
+    []
+  const needsConsent = restWarnings.length > 0 && !restConsent
+
   const handleFormSubmit = async (data: SwapRequestFormData) => {
     if (!selectedSwapper) {
       toast.error('Please select a user to swap with')
@@ -80,6 +95,8 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
       const swapRequest: ShiftSwapRequest = {
         requester_shift_id: availableSwap.user_shift.id,
         target_shift_id: targetShift.id,
+        target_user_id: selectedSwapper,
+        rest_consent: restWarnings.length > 0 ? restConsent : undefined,
         requester_message: data.requester_message || undefined
       }
 
@@ -94,7 +111,11 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
       if (error.response?.status === 409) {
         // Conflict error - show detailed conflict information
         const conflictData = error.response.data
-        if (conflictData.conflicts && conflictData.conflicts.length > 0) {
+        if (conflictData.consent_required) {
+          setServerRestWarnings(conflictData.rest_warnings || [])
+          setRestConsent(false)
+          toast.error('This swap breaks the minimum rest rule. Tick the consent box to send it.')
+        } else if (conflictData.conflicts && conflictData.conflicts.length > 0) {
           const conflictMessages = conflictData.conflicts.map((c: any) => c.message).join('; ')
           toast.error(`Swap conflicts detected: ${conflictMessages}`, { duration: 8000 })
         } else {
@@ -274,13 +295,15 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                   </p>
                 </div>
 
+                <RestConsentNotice warnings={restWarnings} checked={restConsent} onChange={setRestConsent} />
+
                 {/* Warning */}
                 <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mt-0.5" />
                     <div className="text-sm text-yellow-800 dark:text-yellow-200">
                       <p className="font-medium">Important:</p>
-                      <p>The system will check for scheduling conflicts before sending the request. The other user will need to approve the swap for it to be completed.</p>
+                      <p>Swaps must be in the same home and week, with equal paid hours. Only colleagues who can take your shift without breaking rota rules (weekly hours, leave, overlaps) are listed; a minimum-rest breach is allowed only if you both consent. Everything is checked again when they accept, and the request expires when the earlier shift starts or after 7 days.</p>
                     </div>
                   </div>
                 </div>
@@ -299,7 +322,7 @@ const ShiftSwapRequestModal: React.FC<ShiftSwapRequestModalProps> = ({
                     type="submit"
                     variant="primary"
                     loading={isSubmitting}
-                    disabled={isSubmitting || !selectedSwapper}
+                    disabled={isSubmitting || !selectedSwapper || needsConsent}
                     onClick={handleSubmit(handleFormSubmit)}
                   >
                     {isSubmitting ? 'Sending Request...' : 'Send Swap Request'}

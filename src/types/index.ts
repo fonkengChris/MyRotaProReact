@@ -441,6 +441,10 @@ export interface ShiftSwap {
   status: ShiftSwapStatus
   requester_message?: string
   response_message?: string
+  /** Minimum-rest breaches this swap causes; both staff must consent to them. */
+  rest_warnings?: string[]
+  requester_rest_consent_at?: string | null
+  target_rest_consent_at?: string | null
   conflict_check: {
     has_conflict: boolean
     conflict_details: Array<{
@@ -465,16 +469,21 @@ export interface ShiftSwap {
   isActive: boolean
 }
 
-export type ShiftSwapStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed'
+export type ShiftSwapStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed' | 'expired'
 
 export interface ShiftSwapRequest {
   requester_shift_id: string
   target_shift_id: string
+  /** Colleague on the target shift to swap with (required when it has several). */
+  target_user_id?: string
+  /** Consent to the swap's minimum-rest breaches (required when it has any). */
+  rest_consent?: boolean
   requester_message?: string
 }
 
 export interface ShiftSwapResponse {
   response_message?: string
+  rest_consent?: boolean
 }
 
 export interface AvailableSwap {
@@ -484,6 +493,8 @@ export interface AvailableSwap {
     user_id: string
     name: string
     email: string
+    /** Minimum-rest breaches swapping with this colleague would cause (needs consent). */
+    rest_warnings?: string[]
   }>
 }
 
@@ -494,6 +505,7 @@ export interface ShiftSwapStats {
   rejected: number
   cancelled: number
   completed: number
+  expired: number
 }
 
 // Weekly Schedule types

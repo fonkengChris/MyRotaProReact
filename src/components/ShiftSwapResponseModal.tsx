@@ -18,6 +18,7 @@ import {
 import { ShiftSwap, ShiftSwapResponse } from '@/types'
 import { shiftSwapsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
+import RestConsentNotice from '@/components/RestConsentNotice'
 
 const swapResponseSchema = z.object({
   response_message: z.string().max(500, 'Message cannot exceed 500 characters').optional(),
@@ -41,6 +42,9 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [action, setAction] = useState<'approve' | 'reject' | null>(null)
+  const [restConsent, setRestConsent] = useState(false)
+  // Updated from the server if the rest breaches changed since the request was sent.
+  const [restWarnings, setRestWarnings] = useState<string[]>(swapRequest?.rest_warnings ?? [])
 
   const {
     register,
@@ -62,15 +66,18 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
     if (isOpen) {
       reset()
       setAction(null)
+      setRestConsent(false)
+      setRestWarnings(swapRequest?.rest_warnings ?? [])
     }
-  }, [isOpen, reset])
+  }, [isOpen, reset, swapRequest])
 
   const handleApprove = async (data: SwapResponseFormData) => {
     try {
       setIsSubmitting(true)
 
       const response: ShiftSwapResponse = {
-        response_message: data.response_message || undefined
+        response_message: data.response_message || undefined,
+        rest_consent: restWarnings.length > 0 ? restConsent : undefined
       }
 
       await shiftSwapsApi.approve(swapRequest._id, response)
@@ -84,7 +91,11 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
       if (error.response?.status === 409) {
         // Conflict error - show detailed conflict information
         const conflictData = error.response.data
-        if (conflictData.conflicts && conflictData.conflicts.length > 0) {
+        if (conflictData.consent_required) {
+          setRestWarnings(conflictData.rest_warnings || [])
+          setRestConsent(false)
+          toast.error('This swap breaks the minimum rest rule. Tick the consent box to approve it.')
+        } else if (conflictData.conflicts && conflictData.conflicts.length > 0) {
           const conflictMessages = conflictData.conflicts.map((c: any) => c.message).join('; ')
           toast.error(`Cannot approve swap due to conflicts: ${conflictMessages}`, { duration: 8000 })
         } else {
@@ -284,6 +295,8 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                   </div>
                 </div>
 
+                <RestConsentNotice warnings={restWarnings} checked={restConsent} onChange={setRestConsent} />
+
                 {/* Conflict Check Results */}
                 {swapRequest.conflict_check.has_conflict && (
                   <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -356,7 +369,11 @@ const ShiftSwapResponseModal: React.FC<ShiftSwapResponseModalProps> = ({
                     type="button"
                     variant="primary"
                     loading={isSubmitting && action === 'approve'}
-                    disabled={isSubmitting || swapRequest.conflict_check.has_conflict}
+                    disabled={
+                      isSubmitting ||
+                      swapRequest.conflict_check.has_conflict ||
+                      (restWarnings.length > 0 && !restConsent)
+                    }
                     onClick={handleSubmit(handleApprove)}
                   >
                     <CheckCircleIcon className="h-4 w-4 mr-2" />
