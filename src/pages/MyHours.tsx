@@ -12,10 +12,16 @@ import {
   MoonIcon,
   CheckBadgeIcon,
 } from '@heroicons/react/24/outline'
-import { shiftsApi, overtimeApi } from '@/lib/api'
+import { shiftsApi, overtimeApi, homesApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { Shift, OvertimeRequest, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, countSleepNights, workedHourBreakdown } from '@/lib/shiftHours'
+import { Shift, OvertimeRequest, BreakPolicy, formatShiftTypeLabel } from '@/types'
+import {
+  computeShiftPaidWithBreaks,
+  countSleepNights,
+  effectiveBreakTiers,
+  shiftHomeId,
+  workedHourBreakdown,
+} from '@/lib/shiftHours'
 import PageHeader from '@/components/common/PageHeader'
 import WeekNavigator from '@/components/common/WeekNavigator'
 import KpiTile from '@/components/common/KpiTile'
@@ -39,6 +45,15 @@ interface PaidHoursData {
     paidWorkBeforeBreak: number
     overtimeHours: number
   }>
+}
+
+/** "1 hour deduction for break", "30 minutes deduction for break", ... */
+function formatBreak(hours: number): string {
+  if (!(hours > 0)) return 'No break deduction'
+  const mins = Math.round(hours * 60)
+  const label =
+    mins % 60 === 0 ? `${mins / 60} hour${mins === 60 ? '' : 's'}` : `${mins} minutes`
+  return `${label} deduction for break`
 }
 
 const MyHours: React.FC = () => {
@@ -68,6 +83,21 @@ const MyHours: React.FC = () => {
     enabled: !!user?.id,
     select: (data) => Array.isArray(data) ? data : [],
   })
+
+  // The user's homes, for each home's break deduction policy (the API scopes
+  // non-admins to their own homes). Payroll deducts breaks per home, so must we.
+  const { data: homes = [] } = useQuery({
+    queryKey: ['homes'],
+    queryFn: () => homesApi.getAll(),
+    enabled: !!user?.id,
+    select: (data) => Array.isArray(data) ? data : [],
+  })
+
+  const breakPolicyByHomeId = useMemo(() => {
+    const map = new Map<string, BreakPolicy | undefined>()
+    for (const h of homes) map.set(String(h.id), h.break_policy)
+    return map
+  }, [homes])
 
   const overtimeByShiftId = useMemo(() => {
     const map = new Map<string, OvertimeRequest>()
@@ -103,7 +133,9 @@ const MyHours: React.FC = () => {
       // (late arrival / early leaving reduce pay; `now` values an in-progress
       // shift by elapsed time); otherwise the rostered estimate.
       // A 1-to-1 only pays time outside the user's background shifts.
-      const c = computeShiftPaidWithBreaks(shift, assignment, now, userShifts)
+      const homeId = shiftHomeId(shift)
+      const breakPolicy = homeId ? breakPolicyByHomeId.get(homeId) : undefined
+      const c = computeShiftPaidWithBreaks(shift, assignment, now, userShifts, breakPolicy)
 
       // Only approved overtime counts toward paid hours (matches the payroll backend).
       const ot = overtimeByShiftId.get(shift.id)
@@ -149,7 +181,7 @@ const MyHours: React.FC = () => {
       sleepNightsWorked,
       shifts: shiftsWithPaidHours
     }
-  }, [shifts, user?.id, overtimeByShiftId])
+  }, [shifts, user?.id, overtimeByShiftId, breakPolicyByHomeId])
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -270,24 +302,54 @@ const MyHours: React.FC = () => {
         <CardHeader>
           <CardTitle>Break Deduction Rules</CardTitle>
           <CardDescription>
-            Understanding how break deductions are calculated for your shifts
+            Break deductions set for your home, based on paid work hours per shift
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <Badge variant="danger" className="text-xs">12+ hours</Badge>
-              <span className="text-sm text-neutral-700">1 hour deduction for break</span>
+          {homes.length === 0 ? (
+            <p className="text-sm text-neutral-600">No home break policy available.</p>
+          ) : (
+            <div className="space-y-5">
+              {homes.map((home) => {
+                const tiers = effectiveBreakTiers(home.break_policy)
+                return (
+                  <div key={home.id} className="space-y-2">
+                    {homes.length > 1 && (
+                      <p className="text-sm font-medium text-neutral-900">{home.name}</p>
+                    )}
+                    {tiers.length === 0 ? (
+                      <div className="flex items-center space-x-3">
+                        <Badge variant="success" className="text-xs">Any length</Badge>
+                        <span className="text-sm text-neutral-700">No break deduction</span>
+                      </div>
+                    ) : (
+                      <>
+                        {[...tiers].reverse().map((tier, i) => {
+                          const next = tiers[tiers.length - i]
+                          return (
+                            <div key={`${tier.min_hours}-${i}`} className="flex items-center space-x-3">
+                              <Badge variant={i === 0 ? 'danger' : 'warning'} className="text-xs">
+                                {next ? `${tier.min_hours}–${next.min_hours} hours` : `${tier.min_hours}+ hours`}
+                              </Badge>
+                              <span className="text-sm text-neutral-700">
+                                {formatBreak(tier.deduction_hours)}
+                              </span>
+                            </div>
+                          )
+                        })}
+                        {tiers[0].min_hours > 0 && (
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="success" className="text-xs">&lt; {tiers[0].min_hours} hours</Badge>
+                            <span className="text-sm text-neutral-700">No break deduction</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="warning" className="text-xs">8-10 hours</Badge>
-              <span className="text-sm text-neutral-700">30 minutes deduction for break</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="success" className="text-xs">&lt; 8 hours</Badge>
-              <span className="text-sm text-neutral-700">No break deduction</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

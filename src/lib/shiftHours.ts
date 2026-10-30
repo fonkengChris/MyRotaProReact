@@ -1,4 +1,4 @@
-import type { Shift } from '@/types'
+import type { BreakDeductionTier, BreakPolicy, Shift } from '@/types'
 
 /**
  * Sleeping-night sleep period is the LAST `getSleepInHours()` hours (default 9, admin-editable on
@@ -236,10 +236,53 @@ export function extraOneToOneHours(oneToOne: TimedShift, userShifts: TimedShift[
   return subtractIntervalsHours(scheduledInstants(oneToOne), backgroundCuts(oneToOne, userShifts))
 }
 
-function breakDeductionFor(work: number): { breakDeduction: number; deductionReason: string } {
-  if (work >= 12) return { breakDeduction: 1, deductionReason: '12+ hour paid work — break' }
-  if (work >= 8) return { breakDeduction: 0.5, deductionReason: '8–12 hour paid work — break' }
-  return { breakDeduction: 0, deductionReason: 'No break deduction (< 8 hours paid work)' }
+/**
+ * Fallback break-deduction bands, used when a home has no configured policy. Mirrors the
+ * server `DEFAULT_BREAK_TIERS` in `utils/shiftHours.js`.
+ */
+export const DEFAULT_BREAK_TIERS: BreakDeductionTier[] = [
+  { min_hours: 8, deduction_hours: 0.5 },
+  { min_hours: 12, deduction_hours: 1 },
+]
+
+/** The tiers a policy actually applies (defaults when none are configured), sorted by threshold. */
+export function effectiveBreakTiers(breakPolicy?: BreakPolicy | null): BreakDeductionTier[] {
+  if (breakPolicy && breakPolicy.enabled === false) return []
+  const tiers = breakPolicy?.tiers?.length ? breakPolicy.tiers : DEFAULT_BREAK_TIERS
+  return [...tiers].sort((a, b) => a.min_hours - b.min_hours)
+}
+
+/** A shift's home id, whether `home_id` is a raw id or a populated home. */
+export function shiftHomeId(shift: { home_id?: unknown }): string | undefined {
+  const h = shift.home_id as string | { id?: string; _id?: string } | undefined
+  if (!h) return undefined
+  return typeof h === 'string' ? h : h.id ?? h._id
+}
+
+/**
+ * Hours of unpaid break deducted from a shift's paid work hours, per the home's break
+ * policy: the highest tier whose `min_hours` is met wins; a disabled policy deducts
+ * nothing. Mirrors the server `computeBreakDeduction`.
+ */
+function breakDeductionFor(
+  work: number,
+  breakPolicy?: BreakPolicy | null
+): { breakDeduction: number; deductionReason: string } {
+  if (breakPolicy && breakPolicy.enabled === false) {
+    return { breakDeduction: 0, deductionReason: 'No break deduction (disabled for this home)' }
+  }
+  const tiers = breakPolicy?.tiers?.length ? breakPolicy.tiers : DEFAULT_BREAK_TIERS
+  let tier: BreakDeductionTier | undefined
+  for (const t of tiers) {
+    if (work >= t.min_hours && (!tier || t.min_hours > tier.min_hours)) tier = t
+  }
+  if (!tier || !(tier.deduction_hours > 0)) {
+    return { breakDeduction: 0, deductionReason: 'No break deduction' }
+  }
+  return {
+    breakDeduction: tier.deduction_hours,
+    deductionReason: `${tier.min_hours}+ hour paid work — break`,
+  }
 }
 
 /** Actual worked hours from clock times, or null when the pair is incomplete/invalid. */
@@ -321,12 +364,16 @@ export function getShiftHourBreakdown(
  * For a `one_to_one` shift, pass `userShifts` (the staff member's other shifts) so only
  * the time outside their background shifts is paid, as payroll does. A 1-to-1 fully
  * inside a background shift is `coveredByBackground` and pays 0.
+ *
+ * Pass the shift's home `breakPolicy` so deductions match payroll; without it the default
+ * bands apply.
  */
 export function computeShiftPaidWithBreaks(
   shift: Shift,
   assignment?: { clock_in_time?: string | null; clock_out_time?: string | null },
   nowMs?: number,
-  userShifts?: Shift[]
+  userShifts?: Shift[],
+  breakPolicy?: BreakPolicy | null
 ): {
   rosteredHours: number
   sleepInHours: number
@@ -348,7 +395,7 @@ export function computeShiftPaidWithBreaks(
       (assignment && effectiveWorkedWindow(shift, assignment, nowMs)) || scheduledInstants(shift)
     work = coveredByBackground ? 0 : subtractIntervalsHours(window, backgroundCuts(shift, userShifts))
   }
-  const { breakDeduction, deductionReason } = breakDeductionFor(work)
+  const { breakDeduction, deductionReason } = breakDeductionFor(work, breakPolicy)
 
   return {
     rosteredHours: rosteredBr.duration_hours,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -30,6 +31,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
   onSuccess
 }) => {
   const permissions = usePermissions()
+  const queryClient = useQueryClient()
   const isAdmin = permissions.isAdmin
   const [isLoading, setIsLoading] = useState(false)
   const [managers, setManagers] = useState<User[]>([])
@@ -253,6 +255,8 @@ const HomeModal: React.FC<HomeModalProps> = ({
         await homesApi.create(payload)
         toast.success('Home created successfully')
       }
+      // Cached home lists carry break_policy, used by My Hours / hours summaries.
+      queryClient.invalidateQueries({ queryKey: ['homes'] })
       onSuccess()
       onClose()
     } catch (error: any) {

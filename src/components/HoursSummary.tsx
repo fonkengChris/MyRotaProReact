@@ -12,12 +12,12 @@ import {
   ChevronRightIcon,
   MoonIcon,
 } from '@heroicons/react/24/outline'
-import { shiftsApi, usersApi } from '@/lib/api'
+import { shiftsApi, usersApi, homesApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { Shift, User, formatShiftTypeLabel } from '@/types'
-import { computeShiftPaidWithBreaks, countSleepNights, getShiftHourBreakdown, isCoveredByBackground } from '@/lib/shiftHours'
+import { BreakPolicy, Shift, User, formatShiftTypeLabel } from '@/types'
+import { computeShiftPaidWithBreaks, countSleepNights, getShiftHourBreakdown, isCoveredByBackground, shiftHomeId } from '@/lib/shiftHours'
 
-function aggregateUserShiftHours(userShifts: Shift[]) {
+function aggregateUserShiftHours(userShifts: Shift[], breakPolicyByHomeId: Map<string, BreakPolicy | undefined>) {
   const totalHours = userShifts.reduce(
     (sum, shift) => sum + getShiftHourBreakdown(shift).duration_hours,
     0
@@ -27,7 +27,9 @@ function aggregateUserShiftHours(userShifts: Shift[]) {
   let totalBreakDeductions = 0
   userShifts.forEach((shift) => {
     // A 1-to-1 only pays time outside this user's background shifts.
-    const c = computeShiftPaidWithBreaks(shift, undefined, undefined, userShifts)
+    const homeId = shiftHomeId(shift)
+    const breakPolicy = homeId ? breakPolicyByHomeId.get(homeId) : undefined
+    const c = computeShiftPaidWithBreaks(shift, undefined, undefined, userShifts, breakPolicy)
     paidHours += c.paidHours
     totalBreakDeductions += c.breakDeduction
   })
@@ -98,6 +100,19 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
 
 
+  // Each home's break deduction policy, so deductions match payroll.
+  const { data: homes = [] } = useQuery({
+    queryKey: ['homes'],
+    queryFn: () => homesApi.getAll(),
+    select: (data) => Array.isArray(data) ? data : [],
+  })
+
+  const breakPolicyByHomeId = useMemo(() => {
+    const map = new Map<string, BreakPolicy | undefined>()
+    for (const h of homes) map.set(String(h.id), h.break_policy)
+    return map
+  }, [homes])
+
   // Calculate hours for each user
   const calculateUserHours = useMemo((): UserHours[] => {
     if (isAdminView) {
@@ -108,7 +123,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
         
         return {
           user: staffMember,
@@ -132,7 +147,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
           )
         )
         
-        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
         
         return [{
           user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
@@ -151,7 +166,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         )
       )
       
-      const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts)
+      const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
       
       return [{
         user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
@@ -163,7 +178,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         shifts: userShifts
       }]
     }
-  }, [isAdminView, staff, shifts, userId, homeId, userData, userRole])
+  }, [isAdminView, staff, shifts, userId, homeId, userData, userRole, breakPolicyByHomeId])
 
   const userHours = calculateUserHours
   const totalHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalHours, 0), [userHours])
