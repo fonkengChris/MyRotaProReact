@@ -179,6 +179,7 @@ export function usePermissions() {
     canManageHomes: user.role === 'admin',
     canManageServices: isManagement,
     canManageServiceUsers: user.role === 'admin',
+    canViewAllServiceUsers: isAdmin || (isKeyWorker && user.access?.service_users === 'all'),
     canAllocateHomes: canManageUsers,
     canUseAISolver: canManageRotas,
     isAdmin,

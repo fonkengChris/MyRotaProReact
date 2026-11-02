@@ -47,8 +47,25 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium text-neutral-600 dark:t
 const homeName = (home: ServiceUser['home_id']) => (typeof home === 'string' ? '—' : home?.name || '—')
 
 const ServiceUsers: React.FC = () => {
-  const { isAdmin } = usePermissions()
-  return isAdmin ? <AdminServiceUsers /> : <KeyWorkerCaseload />
+  const { isAdmin, canViewAllServiceUsers } = usePermissions()
+  const [view, setView] = useState<'mine' | 'all'>('mine')
+
+  if (isAdmin) return <AdminServiceUsers />
+  if (!canViewAllServiceUsers) return <KeyWorkerCaseload />
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2">
+        <Button size="sm" variant={view === 'mine' ? 'primary' : 'outline'} onClick={() => setView('mine')}>
+          My service users
+        </Button>
+        <Button size="sm" variant={view === 'all' ? 'primary' : 'outline'} onClick={() => setView('all')}>
+          All service users
+        </Button>
+      </div>
+      {view === 'mine' ? <KeyWorkerCaseload /> : <AdminServiceUsers readOnly />}
+    </div>
+  )
 }
 
 interface OneToOneSummary {
@@ -109,8 +126,9 @@ const OneToOneCell: React.FC<{ serviceUser: ServiceUser; summary?: OneToOneSumma
   )
 }
 
-// Admin view: manage every service user and who their key workers are.
-const AdminServiceUsers: React.FC = () => {
+// Admin view: manage every service user and who their key workers are. Key workers get the
+// same list read-only.
+const AdminServiceUsers: React.FC<{ readOnly?: boolean }> = ({ readOnly = false }) => {
   const queryClient = useQueryClient()
   const [homeFilter, setHomeFilter] = useState('')
   const [keyWorkerFilter, setKeyWorkerFilter] = useState('')
@@ -158,10 +176,12 @@ const AdminServiceUsers: React.FC = () => {
         title="Service Users"
         subtitle="People we support, where they live, and their key workers"
         actions={
-          <Button onClick={() => openModal(null)}>
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Add Service User
-          </Button>
+          readOnly ? undefined : (
+            <Button onClick={() => openModal(null)}>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Add Service User
+            </Button>
+          )
         }
       />
 
@@ -201,13 +221,13 @@ const AdminServiceUsers: React.FC = () => {
                   <th className={thClass}>Key Workers</th>
                   <th className={thClass}>1-to-1 scheduled / allocated</th>
                   <th className={thClass}>Status</th>
-                  <th className={`${thClass} text-right`}>Actions</th>
+                  {!readOnly && <th className={`${thClass} text-right`}>Actions</th>}
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
                 {serviceUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
+                    <td colSpan={readOnly ? 5 : 6} className="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
                       No service users found
                     </td>
                   </tr>
@@ -232,7 +252,7 @@ const AdminServiceUsers: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={su.is_active ? 'success' : 'neutral'}>{su.is_active ? 'Active' : 'Inactive'}</Badge>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {!readOnly && <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex justify-end gap-2">
                           <Button
                             size="sm"
@@ -251,7 +271,7 @@ const AdminServiceUsers: React.FC = () => {
                             <TrashIcon className="h-4 w-4" />
                           </Button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   ))
                 )}

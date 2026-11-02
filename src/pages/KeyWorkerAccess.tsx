@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 
 const ALWAYS_ADMIN_ONLY = [
   'Pay rates',
+  'Adding, editing or deleting service users',
   'Granting the admin or key worker role, or changing the role of an admin or key worker',
   'Changing admin accounts, or removing a key worker',
   'Overriding rest and weekly-hours rules',

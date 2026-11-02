@@ -41,6 +41,7 @@ export interface KeyWorkerAccess {
   shift_selection: KeyWorkerPageVisibility
   shift_swaps: KeyWorkerPageVisibility
   my_hours: KeyWorkerPageVisibility
+  service_users: 'all' | 'own'
   home_scope: 'all' | 'own'
 }
 

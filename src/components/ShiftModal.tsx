@@ -89,7 +89,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
   const shiftType = watch('shift_type')
   const selectedHomeId = watch('home_id')
   const isOneToOne = shiftType === 'one_to_one'
-  // Only admins create/edit 1-to-1s; a non-admin opening one sees it read-only.
+  // Only those with full rota access create/edit 1-to-1s; anyone else sees it read-only.
   const readOnlyOneToOne = !canManageOneToOne && (isOneToOne || shift?.shift_type === 'one_to_one')
 
   const { data: homeServiceUsers = [], isLoading: serviceUsersLoading } = useQuery({
