@@ -877,7 +877,7 @@ export interface WeeklyRota {
   total_shifts: number
   total_hours: number
   total_assignments: number
-  employment_distribution: EmploymentDistribution
+  employment_distribution?: EmploymentDistribution
 }
 
 export interface TimetableShift {

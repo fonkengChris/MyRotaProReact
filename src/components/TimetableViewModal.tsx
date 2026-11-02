@@ -111,6 +111,7 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
   const safeWeekIndex =
     weeklyRotas.length === 0 ? 0 : Math.min(Math.max(0, selectedWeek), weeklyRotas.length - 1)
   const currentWeek = weeklyRotas[safeWeekIndex]
+  const employmentDistribution = currentWeek?.employment_distribution
 
   const weekShifts = currentWeek?.shifts ?? []
   // Filter shifts based on user filter
@@ -573,27 +574,29 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Employment Distribution */}
-                  <div className="mb-6">
-                    <h5 className="text-sm font-medium text-neutral-950 dark:text-neutral-100 mb-3">Employment Distribution</h5>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-primary-900 dark:text-white">Full-time</p>
-                        <p className="text-lg font-bold text-primary-900 dark:text-white">{currentWeek.employment_distribution.fulltime.staff_count}</p>
-                        <p className="text-xs text-primary-700 dark:text-white">{(Number(currentWeek.employment_distribution.fulltime.total_hours) || 0).toFixed(1)}h total</p>
-                      </div>
-                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-green-900 dark:text-green-100">Part-time</p>
-                        <p className="text-lg font-bold text-green-900 dark:text-green-100">{currentWeek.employment_distribution.parttime.staff_count}</p>
-                        <p className="text-xs text-green-700 dark:text-green-300">{(Number(currentWeek.employment_distribution.parttime.total_hours) || 0).toFixed(1)}h total</p>
-                      </div>
-                      <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Bank</p>
-                        <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{currentWeek.employment_distribution.bank.staff_count}</p>
-                        <p className="text-xs text-purple-700 dark:text-purple-300">{(Number(currentWeek.employment_distribution.bank.total_hours) || 0).toFixed(1)}h total</p>
+                  {/* Employment Distribution (omitted by the API for non-admins, whose view is scoped to their homes) */}
+                  {employmentDistribution && (
+                    <div className="mb-6">
+                      <h5 className="text-sm font-medium text-neutral-950 dark:text-neutral-100 mb-3">Employment Distribution</h5>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-primary-900 dark:text-white">Full-time</p>
+                          <p className="text-lg font-bold text-primary-900 dark:text-white">{employmentDistribution.fulltime.staff_count}</p>
+                          <p className="text-xs text-primary-700 dark:text-white">{(Number(employmentDistribution.fulltime.total_hours) || 0).toFixed(1)}h total</p>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-green-900 dark:text-green-100">Part-time</p>
+                          <p className="text-lg font-bold text-green-900 dark:text-green-100">{employmentDistribution.parttime.staff_count}</p>
+                          <p className="text-xs text-green-700 dark:text-green-300">{(Number(employmentDistribution.parttime.total_hours) || 0).toFixed(1)}h total</p>
+                        </div>
+                        <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Bank</p>
+                          <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{employmentDistribution.bank.staff_count}</p>
+                          <p className="text-xs text-purple-700 dark:text-purple-300">{(Number(employmentDistribution.bank.total_hours) || 0).toFixed(1)}h total</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Conditional Rendering: Grid View or List View */}
                   {viewMode === 'grid' ? (
