@@ -1,4 +1,4 @@
-/* MyRotaPro service worker — handles Web Push notifications. */
+/* SchedulerRCS service worker — handles Web Push notifications. */
 
 self.addEventListener('push', (event) => {
   let data = {}
@@ -8,7 +8,7 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' }
   }
 
-  const title = data.title || 'MyRotaPro'
+  const title = data.title || 'SchedulerRCS'
   const options = {
     body: data.body || '',
     icon: '/logo.png',

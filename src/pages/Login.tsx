@@ -69,11 +69,11 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 flex items-center justify-center">
-            <img src="/logo-light.png" alt="MyRotaPro Logo" className="h-full w-full object-contain dark:hidden" />
-            <img src="/logo-dark.png" alt="MyRotaPro Logo" className="h-full w-full object-contain hidden dark:block" />
+            <img src="/logo-light.png" alt="SchedulerRCS Logo" className="h-full w-full object-contain dark:hidden" />
+            <img src="/logo-dark.png" alt="SchedulerRCS Logo" className="h-full w-full object-contain hidden dark:block" />
           </div>
           <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl lg:text-3xl font-bold text-heading-accent font-display">
-            Sign in to MyRotaPro
+            Sign in to SchedulerRCS
           </h2>
           <p className="mt-1 sm:mt-2 text-center text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
             Professional rota management for care settings
@@ -152,22 +152,6 @@ const Login: React.FC = () => {
                 </Button>
               </div>
             </form>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-neutral-300 dark:border-neutral-600" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">Demo Credentials</span>
-                </div>
-              </div>
-              <div className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-1">
-                <p><strong>Admin:</strong> admin@myrotapro.com / password123</p>
-                <p><strong>Manager:</strong> manager@myrotapro.com / password123</p>
-                <p><strong>Staff:</strong> staff@myrotapro.com / password123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

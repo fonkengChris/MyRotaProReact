@@ -187,7 +187,7 @@ const ThemeShowcase: React.FC = () => {
                 Theme studio
               </p>
               <h1 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
-                Choose how MyRotaPro looks
+                Choose how SchedulerRCS looks
               </h1>
             </div>
 

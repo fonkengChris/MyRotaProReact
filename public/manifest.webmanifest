@@ -1,6 +1,6 @@
 {
-  "name": "MyRotaPro",
-  "short_name": "MyRotaPro",
+  "name": "SchedulerRCS",
+  "short_name": "SchedulerRCS",
   "description": "Professional rota management system for care settings",
   "id": "/",
   "start_url": "/",

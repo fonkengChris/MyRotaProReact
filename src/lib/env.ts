@@ -26,7 +26,7 @@ export const getAppConfig = (): AppConfig => {
 
   return {
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-    appName: import.meta.env.VITE_APP_NAME || 'MyRotaPro',
+    appName: import.meta.env.VITE_APP_NAME || 'SchedulerRCS',
     appVersion: import.meta.env.VITE_APP_VERSION || '1.0.0',
     environment: (import.meta.env.VITE_ENVIRONMENT as AppConfig['environment']) || 'development',
     debug: import.meta.env.VITE_DEBUG === 'true' || import.meta.env.MODE === 'development'

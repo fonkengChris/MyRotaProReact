@@ -87,8 +87,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="fixed inset-y-0 left-0 flex w-72 sm:w-80 flex-col bg-white dark:bg-neutral-800 shadow-2xl">
           <div className="flex h-16 items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center space-x-3">
-              <img src="/logo-light.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain sm:h-12 dark:hidden" />
-              <img src="/logo-dark.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain sm:h-12 hidden dark:block" />
+              <img src="/logo-light.png" alt="SchedulerRCS Logo" className="h-10 w-auto object-contain sm:h-12 dark:hidden" />
+              <img src="/logo-dark.png" alt="SchedulerRCS Logo" className="h-10 w-auto object-contain sm:h-12 hidden dark:block" />
               <h1 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Scheduler RCS</h1>
             </div>
             <Button
@@ -148,8 +148,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex flex-col flex-grow bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 shadow-sm">
           <div className="flex h-16 items-center px-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center space-x-3">
-              <img src="/logo-light.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain dark:hidden" />
-              <img src="/logo-dark.png" alt="MyRotaPro Logo" className="h-10 w-auto object-contain hidden dark:block" />
+              <img src="/logo-light.png" alt="SchedulerRCS Logo" className="h-10 w-auto object-contain dark:hidden" />
+              <img src="/logo-dark.png" alt="SchedulerRCS Logo" className="h-10 w-auto object-contain hidden dark:block" />
               <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 font-display">Scheduler RCS</h1>
             </div>
           </div>
@@ -212,7 +212,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
               <h2 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 font-display truncate">
-                {navigation.find(item => item.current)?.name || 'MyRotaPro'}
+                {navigation.find(item => item.current)?.name || 'SchedulerRCS'}
               </h2>
             </div>
           </div>

@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
       {/* Welcome Section */}
       <PageHeader
         title={<>Welcome back, {user?.name}! 👋</>}
-        subtitle={`Here's what's happening this week at ${userHomeId ? 'your care home' : 'MyRotaPro'}`}
+        subtitle={`Here's what's happening this week at ${userHomeId ? 'your care home' : 'SchedulerRCS'}`}
       />
 
       {/* Overtime approvals — admin only (only admins may approve/deny overtime) */}

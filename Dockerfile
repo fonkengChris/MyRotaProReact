@@ -17,7 +17,7 @@ COPY . .
 # Set production environment variables
 ENV NODE_ENV=production
 ENV VITE_API_BASE_URL=/api
-ENV VITE_APP_NAME=MyRotaPro
+ENV VITE_APP_NAME=SchedulerRCS
 ENV VITE_APP_VERSION=1.0.0
 ENV VITE_ENVIRONMENT=production
 
