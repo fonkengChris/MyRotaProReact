@@ -15,7 +15,7 @@ import WeekNavigator from '@/components/common/WeekNavigator'
 import ClockInOutCard from '@/components/ClockInOutCard'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
-import { extractUserDefaultHomeId, Shift, StaffAssignment, extractServiceId, formatShiftTypeLabel } from '@/types'
+import { extractUserDefaultHomeId, Location, Shift, StaffAssignment, extractServiceId, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 
 // How early (minutes) staff may clock in — mirrors ClockInOutCard / server EARLY_CLOCK_IN_MINUTES.
@@ -110,13 +110,16 @@ const MySchedule: React.FC = () => {
     select: (data) => Array.isArray(data) ? data : []
   })
 
+  const formatHomeAddress = (location?: Partial<Location>) =>
+    [location?.address, location?.city, location?.postcode].filter(Boolean).join(', ')
+
   // Get home information from shift data
   const getHomeFromShift = (shift: Shift) => {
     // If home_id is already a populated object
     if (shift.home_id && typeof shift.home_id === 'object' && shift.home_id.name) {
       return {
         name: shift.home_id.name,
-        location: { city: shift.home_id.location.city }
+        address: formatHomeAddress(shift.home_id.location)
       }
     }
     
@@ -126,7 +129,7 @@ const MySchedule: React.FC = () => {
       if (home) {
         return {
           name: home.name,
-          location: { city: home.location.city }
+          address: formatHomeAddress(home.location)
         }
       }
     }
@@ -347,7 +350,7 @@ const MySchedule: React.FC = () => {
                                       <div className="text-sm text-primary-900">
                                         <div className="font-medium">{getHomeFromShift(shift)?.name}</div>
                                         <div className="text-primary-700">
-                                          {getHomeFromShift(shift)?.location.city}
+                                          {getHomeFromShift(shift)?.address}
                                         </div>
                                       </div>
                                     </div>
