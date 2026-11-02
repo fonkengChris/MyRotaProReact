@@ -61,6 +61,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(() => new Date())
 
+  // Admins and key workers see every home they can reach; the server applies a key worker's
+  // home scope, so they don't need a home of their own.
+  const seesAcrossHomes = userRole === 'admin' || userRole === 'key_worker'
+
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 })
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 })
 
@@ -68,12 +72,12 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   const { data: shifts = [], isLoading: shiftsLoading, error: shiftsError } = useQuery({
     queryKey: ['shifts', 'hours-summary', format(weekStart, 'yyyy-MM-dd'), homeId, userId, userRole],
     queryFn: () => shiftsApi.getAll({
-      home_id: userRole === 'admin' ? undefined : homeId, // Admin can see all shifts, others need homeId
+      home_id: seesAcrossHomes ? undefined : homeId, // Others need homeId
       user_id: !isAdminView ? userId : undefined, // For individual users, filter by user_id
       start_date: format(weekStart, 'yyyy-MM-dd'),
       end_date: format(weekEnd, 'yyyy-MM-dd')
     }),
-    enabled: userRole === 'admin' || isAdminView || (!!userId && !!homeId), // Admin can always view, or if admin view, or if individual user with homeId
+    enabled: seesAcrossHomes || isAdminView || (!!userId && !!homeId), // Always for those who see across homes, or if admin view, or if individual user with homeId
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -81,9 +85,9 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   const { data: staff = [], isLoading: staffLoading } = useQuery({
     queryKey: ['staff', 'hours-summary', homeId, userRole],
     queryFn: () => usersApi.getAll({ 
-      home_id: userRole === 'admin' ? undefined : homeId // Admin can see all users, others need homeId
+      home_id: seesAcrossHomes ? undefined : homeId // Others need homeId
     }),
-    enabled: userRole === 'admin' || isAdminView, // Admin can always view, or if admin view
+    enabled: seesAcrossHomes || isAdminView, // Always for those who see across homes, or if admin view
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -91,10 +95,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['user', 'hours-summary', userId],
     queryFn: () => usersApi.getById(userId!),
-    enabled: !!userId && !isAdminView && userRole !== 'admin' // Only for individual users, not admin view
+    enabled: !!userId && !isAdminView && !seesAcrossHomes // Only for individual users, not admin view
   })
 
-  const isLoading = shiftsLoading || staffLoading || (userLoading && !isAdminView && userRole !== 'admin')
+  const isLoading = shiftsLoading || staffLoading || (userLoading && !isAdminView && !seesAcrossHomes)
 
 
 
@@ -217,7 +221,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   }
 
   // Show message if no home is selected (only for non-admin users)
-  if (isAdminView && !homeId && userRole !== 'admin') {
+  if (isAdminView && !homeId && !seesAcrossHomes) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -249,7 +253,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
 
   // Show message if no home or user ID is provided (but not for admin users)
-  if (!homeId && !userId && userRole !== 'admin') {
+  if (!homeId && !userId && !seesAcrossHomes) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -266,7 +270,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   }
 
   // Show message if user doesn't have a home assigned (for individual view) - check this before loading
-  if (!isAdminView && !homeId && userRole !== 'admin') {
+  if (!isAdminView && !homeId && !seesAcrossHomes) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
