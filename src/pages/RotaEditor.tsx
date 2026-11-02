@@ -75,7 +75,6 @@ const RotaEditor: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   // Preselected type for a new shift ('one_to_one' when opened via "Add 1-to-1").
   const [newShiftType, setNewShiftType] = useState<string | undefined>(undefined)
-  const isAdmin = user?.role === 'admin'
 
   // Admin override prompt: shown when an assignment hits overridable rules (not overlap).
   const [overridePrompt, setOverridePrompt] = useState<{
@@ -682,14 +681,16 @@ const RotaEditor: React.FC = () => {
         
         {permissions.canManageRotas && (
           <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/weekly-schedules')}
-            >
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Weekly Schedules
-            </Button>
+            {permissions.canViewWeeklySchedules && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/weekly-schedules')}
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Weekly Schedules
+              </Button>
+            )}
             <Button
               variant="primary"
               size="sm"
@@ -700,7 +701,7 @@ const RotaEditor: React.FC = () => {
               <CogIcon className="h-4 w-4 mr-2" />
               AI Generate
             </Button>
-            {user?.role === 'admin' && homes.length > 1 && (
+            {permissions.canUseMultiHomeAI && homes.length > 1 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -818,8 +819,8 @@ const RotaEditor: React.FC = () => {
         </Card>
       )}
 
-      {/* Multi-Home Selector for AI Generation - Only show for admin users */}
-      {showMultiHomeSelector && user?.role === 'admin' && homes.length > 1 && (
+      {/* Multi-Home Selector for AI Generation */}
+      {showMultiHomeSelector && permissions.canUseMultiHomeAI && homes.length > 1 && (
         <MultiHomeSelector
           homes={homes}
           selectedHomes={selectedHomesForAI}
@@ -923,7 +924,7 @@ const RotaEditor: React.FC = () => {
               </div>
               {permissions.canManageRotas && (
                 <div className="flex gap-2">
-                  {isAdmin && (
+                  {permissions.canManageOneToOne && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -1067,7 +1068,7 @@ const RotaEditor: React.FC = () => {
           services={services || []}
           homeId={selectedHomeId}
           isLoading={false}
-          canManageOneToOne={isAdmin}
+          canManageOneToOne={permissions.canManageOneToOne}
           initialShiftType={newShiftType}
         />
       )}

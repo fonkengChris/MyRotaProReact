@@ -12,6 +12,10 @@ export interface User {
   default_home_id?: string
   // Homes reached through the key worker's service users (from /auth/me).
   service_user_home_ids?: string[]
+  // Effective key worker access (from /auth/me and login). Absent for other roles.
+  access?: KeyWorkerAccess
+  // Per-person access exceptions. Only returned to admins.
+  key_worker_access?: Partial<KeyWorkerAccess>
   type: 'fulltime' | 'parttime' | 'bank'
   min_hours_per_week: number
   annual_leave_entitlement_days?: number
@@ -26,6 +30,24 @@ export interface User {
 }
 
 export type UserRole = 'admin' | 'key_worker' | 'senior_staff' | 'support_worker'
+
+export type KeyWorkerAccessLevel = 'hidden' | 'view' | 'full'
+export type KeyWorkerPageVisibility = 'hidden' | 'visible'
+
+export interface KeyWorkerAccess {
+  staff: KeyWorkerAccessLevel
+  weekly_schedules: KeyWorkerAccessLevel
+  rota: KeyWorkerAccessLevel
+  shift_selection: KeyWorkerPageVisibility
+  shift_swaps: KeyWorkerPageVisibility
+  my_hours: KeyWorkerPageVisibility
+  home_scope: 'all' | 'own'
+}
+
+export interface KeyWorkerAccessResponse {
+  settings: KeyWorkerAccess
+  defaults: KeyWorkerAccess
+}
 
 // A person supported by the organisation. Lives in one home; supported by key workers,
 // who gain access to that home (and its staff) through them.

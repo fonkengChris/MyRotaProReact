@@ -25,7 +25,8 @@ import {
   UserCircleIcon,
   HeartIcon,
   HomeModernIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline'
 
 interface LayoutProps {
@@ -47,28 +48,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       ? [{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon, current: location.pathname === '/dashboard' }]
       : [{ name: 'Profile', href: '/profile', icon: UserCircleIcon, current: location.pathname === '/profile' }]
     ),
-    ...(permissions.canManageRotas
-      ? [
-          { name: 'Rota', href: '/rota', icon: TableCellsIcon, current: location.pathname.startsWith('/rota') },
-          { name: 'Weekly Schedules', href: '/weekly-schedules', icon: QueueListIcon, current: location.pathname === '/weekly-schedules' }
-        ]
-      : []
-    ),
+    ...(permissions.canViewRotas ? [{ name: 'Rota', href: '/rota', icon: TableCellsIcon, current: location.pathname.startsWith('/rota') }] : []),
+    ...(permissions.canViewWeeklySchedules ? [{ name: 'Weekly Schedules', href: '/weekly-schedules', icon: QueueListIcon, current: location.pathname === '/weekly-schedules' }] : []),
     ...(permissions.isAdmin ? [{ name: 'Timetables', href: '/timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/timetables' }] : []),
     ...(permissions.isAdmin ? [{ name: 'AI Solver Rules', href: '/solver-settings', icon: AdjustmentsHorizontalIcon, current: location.pathname === '/solver-settings' }] : []),
+    ...(permissions.isAdmin ? [{ name: 'Key Worker Access', href: '/key-worker-access', icon: ShieldCheckIcon, current: location.pathname === '/key-worker-access' }] : []),
     ...(!permissions.isAdmin
       ? [
           { name: 'My Schedule', href: '/my-schedule', icon: CalendarDaysIcon, current: location.pathname === '/my-schedule' },
-          { name: 'My Timetables', href: '/my-timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/my-timetables' },
-          { name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' },
-          { name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' }
+          { name: 'My Timetables', href: '/my-timetables', icon: ClipboardDocumentListIcon, current: location.pathname === '/my-timetables' }
         ]
       : []),
+    ...(permissions.canUseShiftSelection ? [{ name: 'Shift Selection', href: '/shift-selection', icon: HandRaisedIcon, current: location.pathname === '/shift-selection' }] : []),
+    ...(permissions.canUseShiftSwaps ? [{ name: 'Shift Swaps', href: '/shift-swaps', icon: ArrowsRightLeftIcon, current: location.pathname === '/shift-swaps' }] : []),
     { name: 'Messages', href: '/messages', icon: ChatBubbleLeftRightIcon, current: location.pathname === '/messages' },
-    ...(!permissions.isAdmin ? [{ name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' }] : []),
+    ...(permissions.canViewMyHours ? [{ name: 'My Hours', href: '/my-hours', icon: ChartBarIcon, current: location.pathname === '/my-hours' }] : []),
     { name: 'Availability/Leave', href: '/availability', icon: CheckCircleIcon, current: location.pathname === '/availability' },
     ...(permissions.isAdmin ? [{ name: 'Clock-In Analysis', href: '/clock-in-analysis', icon: ClockIcon, current: location.pathname === '/clock-in-analysis' }] : []),
-    ...(permissions.canManageUsers ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
+    ...(permissions.canViewStaff ? [{ name: 'Staff', href: '/staff', icon: UsersIcon, current: location.pathname === '/staff' }] : []),
     ...(permissions.canManageHomes ? [{ name: 'Homes', href: '/homes', icon: BuildingOfficeIcon, current: location.pathname === '/homes' }] : []),
     ...(permissions.isAdmin || permissions.isKeyWorker
       ? [{ name: permissions.isAdmin ? 'Service Users' : 'My Service Users', href: '/service-users', icon: HeartIcon, current: location.pathname === '/service-users' }]
@@ -230,7 +227,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
       
       {/* Shift Swap Notifications */}
-      {!permissions.isAdmin && <ShiftSwapNotification />}
+      {permissions.canUseShiftSwaps && <ShiftSwapNotification />}
     </div>
   )
 }

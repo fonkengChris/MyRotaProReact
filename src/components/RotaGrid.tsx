@@ -406,8 +406,8 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                         {dayShifts.map((shift) => {
                           const shiftAssignments = getAssignmentsForShift(shift.id)
                           const oneToOne = isOneToOneShift(shift)
-                          // 1-to-1 shifts are created, edited and assigned by admins only.
-                          const canEditShift = canEdit && (!oneToOne || currentUser?.role === 'admin')
+                          // Rota editors also manage 1-to-1 shifts; canEdit covers both.
+                          const canEditShift = canEdit
                           // A staff member's shifts in this rota, for 1-to-1 coverage checks.
                           const shiftsOf = (userId: string) =>
                             shifts.filter((s) => s.assigned_staff?.some((a) => a.user_id === userId))

@@ -26,6 +26,7 @@ import SolverSettings from '@/pages/SolverSettings'
 import UserTimetables from '@/pages/UserTimetables'
 import Messages from '@/pages/Messages'
 import ThemeShowcase from '@/pages/ThemeShowcase'
+import KeyWorkerAccess from '@/pages/KeyWorkerAccess'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 // Restricts management-only pages (dashboard, staff, rota, etc.) to admins and
@@ -41,11 +42,16 @@ function RequireAdmin({ children }: { children: React.ReactElement }) {
   return isAdmin ? children : <Navigate to="/my-schedule" replace />
 }
 
-// Personal rostered-staff pages (My Schedule, Shift Selection/Swaps, My Hours);
+// Personal rostered-staff pages (My Schedule, My Timetables);
 // admins are redirected to their landing page.
 function RequireNonAdmin({ children, fallback }: { children: React.ReactElement; fallback: string }) {
   const { isAdmin } = usePermissions()
   return isAdmin ? <Navigate to={fallback} replace /> : children
+}
+
+// Pages a key worker's access settings can turn off; they fall back to their landing page.
+function RequirePermission({ allowed, fallback, children }: { allowed?: boolean; fallback: string; children: React.ReactElement }) {
+  return allowed ? children : <Navigate to={fallback} replace />
 }
 
 // Key Worker Home is the key-worker landing page (task prompts + caseload).
@@ -95,11 +101,12 @@ function App() {
 
           {/* Management-only pages */}
           <Route path="/dashboard" element={<RequireManagement><Dashboard /></RequireManagement>} />
-          <Route path="/rota/:weekStart?" element={<RequireManagement><RotaEditor /></RequireManagement>} />
-          <Route path="/weekly-schedules" element={<RequireManagement><WeeklySchedules /></RequireManagement>} />
+          <Route path="/rota/:weekStart?" element={<RequireManagement><RequirePermission allowed={permissions.canViewRotas} fallback={landingPath(permissions)}><RotaEditor /></RequirePermission></RequireManagement>} />
+          <Route path="/weekly-schedules" element={<RequireManagement><RequirePermission allowed={permissions.canViewWeeklySchedules} fallback={landingPath(permissions)}><WeeklySchedules /></RequirePermission></RequireManagement>} />
           <Route path="/timetables" element={<RequireAdmin><Timetables /></RequireAdmin>} />
           <Route path="/solver-settings" element={<RequireAdmin><SolverSettings /></RequireAdmin>} />
-          <Route path="/staff" element={<RequireManagement><StaffManagement /></RequireManagement>} />
+          <Route path="/key-worker-access" element={<RequireAdmin><KeyWorkerAccess /></RequireAdmin>} />
+          <Route path="/staff" element={<RequireManagement><RequirePermission allowed={permissions.canViewStaff} fallback={landingPath(permissions)}><StaffManagement /></RequirePermission></RequireManagement>} />
           <Route path="/services" element={<RequireManagement><Services /></RequireManagement>} />
           <Route path="/clock-in-analysis" element={<RequireAdmin><ClockInAnalysis /></RequireAdmin>} />
 
@@ -110,11 +117,11 @@ function App() {
           {/* Personal pages (available to all authenticated users) */}
           <Route path="/key-worker-home" element={<RequireKeyWorker><KeyWorkerHome /></RequireKeyWorker>} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/shift-selection" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSelection /></RequireNonAdmin>} />
-          <Route path="/shift-swaps" element={<RequireNonAdmin fallback={landingPath(permissions)}><ShiftSwaps /></RequireNonAdmin>} />
+          <Route path="/shift-selection" element={<RequirePermission allowed={permissions.canUseShiftSelection} fallback={landingPath(permissions)}><ShiftSelection /></RequirePermission>} />
+          <Route path="/shift-swaps" element={<RequirePermission allowed={permissions.canUseShiftSwaps} fallback={landingPath(permissions)}><ShiftSwaps /></RequirePermission>} />
           <Route path="/my-timetables" element={<RequireNonAdmin fallback={landingPath(permissions)}><UserTimetables /></RequireNonAdmin>} />
           <Route path="/my-schedule" element={<RequireNonAdmin fallback={landingPath(permissions)}><MySchedule /></RequireNonAdmin>} />
-          <Route path="/my-hours" element={<RequireNonAdmin fallback={landingPath(permissions)}><MyHours /></RequireNonAdmin>} />
+          <Route path="/my-hours" element={<RequirePermission allowed={permissions.canViewMyHours} fallback={landingPath(permissions)}><MyHours /></RequirePermission>} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />

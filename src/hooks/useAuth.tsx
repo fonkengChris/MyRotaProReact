@@ -39,6 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Pick up access changes made by an admin when the user comes back to the app.
+  const signedIn = !!user
+  useEffect(() => {
+    if (!signedIn) return
+    const refresh = () => {
+      authApi.getCurrentUser().then(setUser).catch(() => {
+        // keep the current user; a real auth failure is handled by the API layer
+      })
+    }
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [signedIn])
+
   const checkAuth = async () => {
     try {
       const userData = await authApi.getCurrentUser()
@@ -90,8 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateUser = async (data: Partial<User>) => {
-    const updatedUser = await authApi.updateProfile(data)
-    setUser(updatedUser)
+    const updatedUser = await authApi.updateProfile({ id: user?.id, ...data })
+    // The update response doesn't carry what /auth/me adds (access, service-user homes).
+    setUser((current) => ({ ...current, ...updatedUser }))
   }
 
   const value = {
@@ -127,26 +141,48 @@ export function usePermissions() {
   // to their own home(s). senior_staff and support_worker are regular users
   // limited to their own data.
   const isManagement = ['admin', 'key_worker'].includes(user.role)
+  const isAdmin = user.role === 'admin'
+  const isKeyWorker = user.role === 'key_worker'
+
+  // Key workers' access is set by admins (see KeyWorkerAccessSettings on the server).
+  const areaLevel = (area: 'staff' | 'weekly_schedules' | 'rota') =>
+    isAdmin ? 'full' : isKeyWorker ? user.access?.[area] ?? 'hidden' : 'hidden'
+  const canViewArea = (area: 'staff' | 'weekly_schedules' | 'rota') => areaLevel(area) !== 'hidden'
+  const canManageUsers = areaLevel('staff') === 'full'
+  const canManageRotas = areaLevel('rota') === 'full'
+  // Personal pages: every rostered role, except key workers it's been turned off for.
+  const personalPage = (page: 'shift_selection' | 'shift_swaps' | 'my_hours') =>
+    !isAdmin && (!isKeyWorker || user.access?.[page] === 'visible')
 
   return {
     isManagement,
-    canManageUsers: isManagement,
-    canManageRotas: isManagement,
+    canViewStaff: canViewArea('staff'),
+    canManageUsers,
+    canViewRotas: canViewArea('rota'),
+    canManageRotas,
+    canViewWeeklySchedules: canViewArea('weekly_schedules'),
+    canManageWeeklySchedules: areaLevel('weekly_schedules') === 'full',
+    canManageOneToOne: canManageRotas,
+    canUseMultiHomeAI: canManageRotas,
+    canUseShiftSelection: personalPage('shift_selection'),
+    canUseShiftSwaps: personalPage('shift_swaps'),
+    canViewMyHours: personalPage('my_hours'),
     canApproveRequests: isManagement,
     canManageTimeOff: isManagement,
     // Leave approval/denial is admin-only; key workers can view and cancel but not decide.
     canApproveTimeOff: user.role === 'admin',
-    // Part-time and bank staff declare their own availability; admins set it for anyone.
+    // Part-time and bank staff declare their own availability; admins and key workers with
+    // full staff access set it for others.
     canSelfDeclareAvailability: ['parttime', 'bank'].includes(user.type),
-    canManageStaffAvailability: user.role === 'admin',
+    canManageStaffAvailability: canManageUsers,
     canViewAllHomes: user.role === 'admin',
     canManageHomes: user.role === 'admin',
     canManageServices: isManagement,
     canManageServiceUsers: user.role === 'admin',
-    canAllocateHomes: isManagement,
-    canUseAISolver: isManagement,
-    isAdmin: user.role === 'admin',
-    isKeyWorker: user.role === 'key_worker',
+    canAllocateHomes: canManageUsers,
+    canUseAISolver: canManageRotas,
+    isAdmin,
+    isKeyWorker,
     isSeniorStaff: user.role === 'senior_staff',
     isSupportWorker: user.role === 'support_worker',
   }

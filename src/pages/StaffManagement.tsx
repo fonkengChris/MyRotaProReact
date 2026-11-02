@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
+import KeyWorkerAccessOverrides from '@/components/KeyWorkerAccessOverrides'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -248,7 +249,7 @@ const StaffManagement: React.FC = () => {
   const { data: homes = [] } = useQuery({
     queryKey: ['homes'],
     queryFn: () => homesApi.getAll(),
-    enabled: permissions.canAllocateHomes,
+    enabled: permissions.canViewStaff,
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -617,7 +618,13 @@ const StaffManagement: React.FC = () => {
     return homes.filter(home => !userHomeIds.includes(home.id))
   }
 
-  if (!permissions.canManageUsers) {
+  // Key workers can't manage admins or their own record here, and removing another key
+  // worker stays with admins. The server enforces the same rules.
+  const canEditMember = (member: User) =>
+    !!permissions.canManageUsers && (isAdmin || (member.role !== 'admin' && member.id !== currentUser?.id))
+  const canRemoveMember = (member: User) => canEditMember(member) && (isAdmin || member.role !== 'key_worker')
+
+  if (!permissions.canViewStaff) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-heading-accent mb-4">Access Denied</h2>
@@ -643,7 +650,7 @@ const StaffManagement: React.FC = () => {
         title="Staff Management"
         subtitle="Manage staff members, roles, and permissions"
         actions={
-          isAdmin ? (
+          permissions.canManageUsers ? (
             <Button onClick={handleOpenAddModal}>
               <UserPlusIcon className="h-5 w-5 mr-2" />
               Add Staff
@@ -921,7 +928,7 @@ const StaffManagement: React.FC = () => {
                                 {userHome.is_default && (
                                   <StarIcon className="h-4 w-4 text-yellow-500" title="Default home" />
                                 )}
-                                {permissions.canAllocateHomes && (
+                                {permissions.canAllocateHomes && canEditMember(member) && (
                                   <div className="flex space-x-1">
                                     {!userHome.is_default && (
                                       <Button
@@ -951,7 +958,7 @@ const StaffManagement: React.FC = () => {
                           {getUserHomes(member).length === 0 && (
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">No homes allocated</span>
                           )}
-                          {permissions.canAllocateHomes && (
+                          {permissions.canAllocateHomes && canEditMember(member) && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -966,16 +973,18 @@ const StaffManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEditUser(member)}
-                            title="Edit"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </Button>
-                          {isAdmin && (
+                          {canEditMember(member) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleEditUser(member)}
+                              title="Edit"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {permissions.canManageStaffAvailability && canEditMember(member) && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -986,16 +995,18 @@ const StaffManagement: React.FC = () => {
                               <CalendarDaysIcon className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleToggleStatus(member.id, member.is_active)}
-                            title={member.is_active ? 'Deactivate' : 'Activate'}
-                          >
-                            {member.is_active ? '🚫' : '✅'}
-                          </Button>
-                          {isAdmin && member.id !== currentUser?.id && (
+                          {canRemoveMember(member) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleToggleStatus(member.id, member.is_active)}
+                              title={member.is_active ? 'Deactivate' : 'Activate'}
+                            >
+                              {member.is_active ? '🚫' : '✅'}
+                            </Button>
+                          )}
+                          {canRemoveMember(member) && member.id !== currentUser?.id && (
                             <Button
                               variant="danger"
                               size="sm"
@@ -1043,16 +1054,18 @@ const StaffManagement: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex space-x-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleEditUser(member)}
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                      {isAdmin && (
+                      {canEditMember(member) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEditUser(member)}
+                          title="Edit"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {permissions.canManageStaffAvailability && canEditMember(member) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -1063,16 +1076,18 @@ const StaffManagement: React.FC = () => {
                           <CalendarDaysIcon className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleToggleStatus(member.id, member.is_active)}
-                        title={member.is_active ? 'Deactivate' : 'Activate'}
-                      >
-                        {member.is_active ? '🚫' : '✅'}
-                      </Button>
-                      {isAdmin && member.id !== currentUser?.id && (
+                      {canRemoveMember(member) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleToggleStatus(member.id, member.is_active)}
+                          title={member.is_active ? 'Deactivate' : 'Activate'}
+                        >
+                          {member.is_active ? '🚫' : '✅'}
+                        </Button>
+                      )}
+                      {canRemoveMember(member) && member.id !== currentUser?.id && (
                         <Button
                           variant="danger"
                           size="sm"
@@ -1115,7 +1130,7 @@ const StaffManagement: React.FC = () => {
                               <StarIcon className="h-3 w-3 text-yellow-500" title="Default home" />
                             )}
                           </div>
-                          {permissions.canAllocateHomes && (
+                          {permissions.canAllocateHomes && canEditMember(member) && (
                             <div className="flex space-x-1">
                               {!userHome.is_default && (
                                 <Button
@@ -1146,7 +1161,7 @@ const StaffManagement: React.FC = () => {
                           No homes allocated
                         </div>
                       )}
-                      {permissions.canAllocateHomes && (
+                      {permissions.canAllocateHomes && canEditMember(member) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -1362,9 +1377,14 @@ const StaffManagement: React.FC = () => {
                       onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
                       className="input w-full"
                       required
+                      disabled={!isAdmin && selectedUserForEdit.role === 'key_worker'}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="key_worker">Key Worker</option>
+                      {(isAdmin || selectedUserForEdit.role === 'key_worker') && (
+                        <>
+                          {isAdmin && <option value="admin">Admin</option>}
+                          <option value="key_worker">Key Worker</option>
+                        </>
+                      )}
                       <option value="senior_staff">Senior Staff</option>
                       <option value="support_worker">Support Worker</option>
                     </select>
@@ -1518,6 +1538,12 @@ const StaffManagement: React.FC = () => {
               </div>
             </div>
 
+            {isAdmin && selectedUserForEdit.role === 'key_worker' && (
+              <div className="mt-6">
+                <KeyWorkerAccessOverrides key={selectedUserForEdit.id} user={selectedUserForEdit} />
+              </div>
+            )}
+
             <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
               <Button
                 variant="outline"
@@ -1537,7 +1563,7 @@ const StaffManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Add Staff Modal (admin only) */}
+      {/* Add Staff Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-neutral-900/50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-4 sm:top-10 mx-auto p-4 sm:p-6 border border-neutral-300 dark:border-neutral-700 w-[95vw] max-w-[600px] shadow-lg rounded-md bg-white dark:bg-neutral-900 max-h-[90vh] overflow-y-auto">
@@ -1614,8 +1640,8 @@ const StaffManagement: React.FC = () => {
                     >
                       <option value="support_worker">Support Worker</option>
                       <option value="senior_staff">Senior Staff</option>
-                      <option value="key_worker">Key Worker</option>
-                      <option value="admin">Admin</option>
+                      {isAdmin && <option value="key_worker">Key Worker</option>}
+                      {isAdmin && <option value="admin">Admin</option>}
                     </select>
                   </div>
                   <div>
@@ -1648,25 +1674,27 @@ const StaffManagement: React.FC = () => {
                       Leave blank to use the UK statutory default for the employment type.
                     </p>
                   </div>
-                  <div>
-                    <label className="form-label">Hourly Rate (GBP)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={addFormData.hourly_rate ?? ''}
-                      onChange={(e) => setAddFormData(prev => ({
-                        ...prev,
-                        hourly_rate: e.target.value === '' ? undefined : parseFloat(e.target.value)
-                      }))}
-                      className="input w-full"
-                      placeholder={`Default ${DEFAULT_ROLE_RATES[addFormData.role].toFixed(2)}`}
-                    />
-                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                      Leave blank to use the current rate for the role.
-                    </p>
-                  </div>
+                  {isAdmin && (
+                    <div>
+                      <label className="form-label">Hourly Rate (GBP)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={addFormData.hourly_rate ?? ''}
+                        onChange={(e) => setAddFormData(prev => ({
+                          ...prev,
+                          hourly_rate: e.target.value === '' ? undefined : parseFloat(e.target.value)
+                        }))}
+                        className="input w-full"
+                        placeholder={`Default ${DEFAULT_ROLE_RATES[addFormData.role].toFixed(2)}`}
+                      />
+                      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        Leave blank to use the current rate for the role.
+                      </p>
+                    </div>
+                  )}
                   {addFormData.role !== 'admin' && (
                     <div className="sm:col-span-2">
                       <label className="form-label">Care Homes (optional)</label>

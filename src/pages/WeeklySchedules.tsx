@@ -101,14 +101,16 @@ const WeeklySchedules: React.FC = () => {
         </div>
         
         <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/rota')}
-          >
-            <ClockIcon className="h-4 w-4 mr-2" />
-            Rota Editor
-          </Button>
+          {permissions.canViewRotas && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/rota')}
+            >
+              <ClockIcon className="h-4 w-4 mr-2" />
+              Rota Editor
+            </Button>
+          )}
           {permissions.canManageHomes && (
             <Button
               variant="primary"
@@ -238,7 +240,7 @@ const WeeklySchedules: React.FC = () => {
               homeId={selectedHomeId}
               services={services}
               onScheduleChange={handleScheduleChange}
-              canEdit={permissions.canManageRotas}
+              canEdit={permissions.canManageWeeklySchedules}
             />
           </CardContent>
         </Card>

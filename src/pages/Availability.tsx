@@ -41,14 +41,14 @@ const AvailabilityPage: React.FC = () => {
   )
   const [selectedRequest, setSelectedRequest] = useState<TimeOffRequest | null>(null)
 
-  // Admins can manage any staff member's availability (opened from Staff Management via ?user=<id>).
+  // Admins and key workers with full staff access manage other staff's availability (opened from Staff Management via ?user=<id>).
   const [selectedUserId, setSelectedUserId] = useState<string | null>(() =>
     permissions.canManageStaffAvailability ? searchParams.get('user') : null
   )
   const targetUserId = selectedUserId || user?.id || ''
   const isOwnAvailability = targetUserId === user?.id
   const canEditAvailability = !!(
-    permissions.canManageStaffAvailability ||
+    (permissions.canManageStaffAvailability && (permissions.isAdmin || !isOwnAvailability)) ||
     (isOwnAvailability && permissions.canSelfDeclareAvailability)
   )
 

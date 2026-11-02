@@ -130,7 +130,7 @@ const Dashboard: React.FC = () => {
   if (pendingRequests > 0) {
     attentionItems.push({ label: 'Time-off requests to review', to: '/availability', cta: 'Review', count: pendingRequests })
   }
-  if (!permissions.isSupportWorker && weekRota && weekRota.status !== 'published') {
+  if (permissions.canViewRotas && weekRota && weekRota.status !== 'published') {
     attentionItems.push({ label: "This week's rota is still a draft", to: `/rota/${weekStart.toISOString()}`, cta: 'Open' })
   }
   if (!permissions.isSupportWorker && !weekRota && permissions.canManageRotas) {
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Available Shifts Notification */}
-      {!permissions.isAdmin && <AvailableShiftsNotification />}
+      {permissions.canUseShiftSelection && <AvailableShiftsNotification />}
 
       {/* Welcome Section */}
       <PageHeader
@@ -224,8 +224,8 @@ const Dashboard: React.FC = () => {
           {/* Two-column: primary content + attention rail */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              {/* Current Week Rota - Only show for non-regular users */}
-              {!permissions.isSupportWorker && (
+              {/* Current Week Rota - Only show to those with rota access */}
+              {permissions.canViewRotas && (
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -344,7 +344,7 @@ const Dashboard: React.FC = () => {
                       </Link>
                     )}
 
-                    {!permissions.isAdmin && (
+                    {permissions.canViewMyHours && (
                       <Link to="/my-hours">
                         <Button
                           variant="outline"

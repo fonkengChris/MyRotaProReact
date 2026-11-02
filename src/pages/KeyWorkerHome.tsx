@@ -18,7 +18,7 @@ import {
   ChatBubbleLeftRightIcon,
   ArrowRightIcon,
 } from '@heroicons/react/24/outline'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import PageHeader from '@/components/common/PageHeader'
@@ -41,6 +41,10 @@ const formatHours = (hours: number) => `${Number.isInteger(hours) ? hours : hour
 // 1:1 hours, the homes they support people in, and help/emergency numbers.
 const KeyWorkerHome: React.FC = () => {
   const { user } = useAuth()
+  const permissions = usePermissions()
+  const quickLinks = QUICK_LINKS.filter(({ href }) =>
+    href === '/rota' ? permissions.canViewRotas : href === '/staff' ? permissions.canViewStaff : true
+  )
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['organizationSettings'],
@@ -92,7 +96,7 @@ const KeyWorkerHome: React.FC = () => {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {QUICK_LINKS.map(({ label, href, icon: Icon }) => (
+        {quickLinks.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             to={href}

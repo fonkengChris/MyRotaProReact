@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { 
+import { KeyWorkerAccess, KeyWorkerAccessResponse, 
   User,
   LoginCredentials,
   CreateUserData,
@@ -213,6 +213,28 @@ export const organizationSettingsApi = {
   update: async (data: Partial<OrganizationSettings>): Promise<OrganizationSettings> => {
     const response = await api.put<OrganizationSettings>('/organization-settings', data)
     return response.data
+  },
+}
+
+// Key worker access: what key workers can reach, set by admins
+export const keyWorkerAccessApi = {
+  get: async (): Promise<KeyWorkerAccessResponse> => {
+    const response = await api.get<KeyWorkerAccessResponse>('/key-worker-access')
+    return response.data
+  },
+
+  update: async (settings: KeyWorkerAccess): Promise<KeyWorkerAccessResponse> => {
+    const response = await api.put<KeyWorkerAccessResponse>('/key-worker-access', settings)
+    return response.data
+  },
+
+  reset: async (): Promise<KeyWorkerAccessResponse> => {
+    const response = await api.post<KeyWorkerAccessResponse>('/key-worker-access/reset')
+    return response.data
+  },
+
+  setForUser: async (userId: string, overrides: Partial<KeyWorkerAccess>): Promise<void> => {
+    await api.put(`/users/${userId}/key-worker-access`, overrides)
   },
 }
 
