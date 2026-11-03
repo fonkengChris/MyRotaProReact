@@ -375,7 +375,7 @@ const MySchedule: React.FC = () => {
                                       className="w-full"
                                       onClick={() => toggleClockCard(shift.id)}
                                     >
-                                      {openCardShiftId === shift.id ? 'Hide clock out' : 'Clock out'}
+                                      {openCardShiftId === shift.id ? 'Hide clock out' : 'Open clock out'}
                                     </Button>
                                   ) : attendance === 'clocked_out' ? (
                                     <Button variant="outline" className="w-full" disabled>
@@ -395,7 +395,7 @@ const MySchedule: React.FC = () => {
                                         ? `Clock-in opens ${format(clockWindowOpen, 'HH:mm')}`
                                         : openCardShiftId === shift.id
                                         ? 'Hide clock in'
-                                        : 'Clock in'}
+                                        : 'Open clock in'}
                                     </Button>
                                   )}
                                 </div>
