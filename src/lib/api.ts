@@ -268,6 +268,22 @@ export const servicesApi = {
 }
 
 // Shifts API
+export interface DuplicateWeekResult {
+  target_week_start: string
+  source_shifts: number
+  shifts_created: number
+  shifts_updated: number
+  assignments_copied: number
+  skipped: {
+    date: string
+    start_time: string
+    end_time: string
+    shift_type: string
+    staff_name: string | null
+    reason: string
+  }[]
+}
+
 export const shiftsApi = {
   getAll: async (params?: {
     home_id?: string
@@ -342,6 +358,12 @@ export const shiftsApi = {
   // What selecting each shift for yourself would do (same rules as assignStaff).
   previewSelection: async (shiftIds: string[]): Promise<Record<string, SelectionPreview>> => {
     const response = await api.post<Record<string, SelectionPreview>>('/shifts/assign-preview', { shift_ids: shiftIds })
+    return response.data
+  },
+
+  // Copy a week's allocated shifts and staff to the following week.
+  duplicateWeek: async (homeId: string, weekStart: string): Promise<DuplicateWeekResult> => {
+    const response = await api.post<DuplicateWeekResult>('/shifts/duplicate-week', { home_id: homeId, week_start: weekStart })
     return response.data
   },
 

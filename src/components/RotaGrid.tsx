@@ -10,7 +10,8 @@ import {
   UserIcon,
   ClockIcon,
   ArrowPathIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline'
 import { Shift, User, StaffAssignment, extractServiceName, WeeklySchedule, isOneToOneShift, shiftServiceUserName, isAwaitingApproval } from '@/types'
 import { isCoveredByBackground } from '@/lib/shiftHours'
@@ -33,6 +34,7 @@ interface RotaGridProps {
   onCreateShiftsFromSchedule?: () => Promise<void> // Add callback for creating shifts
   onResetWeek: () => Promise<void> // Add callback for resetting week
   onDeleteWeek: () => Promise<void> // Add callback for deleting week
+  onDuplicateWeek: () => Promise<void> // Add callback for copying the week's allocated shifts to next week
 }
 
 const RotaGrid: React.FC<RotaGridProps> = ({
@@ -50,10 +52,12 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   homeId,
   onCreateShiftsFromSchedule,
   onResetWeek,
-  onDeleteWeek
+  onDeleteWeek,
+  onDuplicateWeek
 }) => {
-  
+
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
+  const [isDuplicating, setIsDuplicating] = useState(false)
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule | null>(null)
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
   const [isCreatingShifts, setIsCreatingShifts] = useState(false)
@@ -289,6 +293,27 @@ const RotaGrid: React.FC<RotaGridProps> = ({
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isDuplicating}
+              onClick={async () => {
+                if (window.confirm(`Copy this week's allocated shifts and staff to next week (w/c ${format(addDays(weekStart, 7), 'd MMM')})? Staff will be notified. Anyone who would break a scheduling rule next week is left off and listed for you.`)) {
+                  setIsDuplicating(true)
+                  try {
+                    await onDuplicateWeek()
+                  } catch (error) {
+                    console.error('Failed to copy week:', error)
+                  } finally {
+                    setIsDuplicating(false)
+                  }
+                }
+              }}
+              className="flex items-center space-x-2"
+            >
+              <DocumentDuplicateIcon className="h-4 w-4" />
+              <span>{isDuplicating ? 'Copying…' : 'Copy to Next Week'}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

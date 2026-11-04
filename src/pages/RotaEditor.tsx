@@ -16,7 +16,7 @@ import {
   CalendarIcon,
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline'
-import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi, weeklySchedulesApi } from '@/lib/api'
+import { rotasApi, aiSolverApi, shiftsApi, usersApi, servicesApi, homesApi, weeklySchedulesApi, DuplicateWeekResult } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import toast from 'react-hot-toast'
 import RotaGrid from '@/components/RotaGrid'
@@ -83,6 +83,9 @@ const RotaEditor: React.FC = () => {
     conflicts: { conflictType: string; message: string }[]
   } | null>(null)
   const [isOverriding, setIsOverriding] = useState(false)
+
+  // Outcome of "Copy to Next Week", including anyone who couldn't be copied.
+  const [duplicateResult, setDuplicateResult] = useState<DuplicateWeekResult | null>(null)
 
   // Fetch all homes for selector
   const { data: homes = [], isLoading: homesLoading } = useQuery({
@@ -640,6 +643,25 @@ const RotaEditor: React.FC = () => {
     }
   }
 
+  // Copy this week's allocated shifts and staff to next week
+  const handleDuplicateWeek = async () => {
+    try {
+      const result = await shiftsApi.duplicateWeek(
+        ensureStringHomeId(selectedHomeId),
+        format(currentWeekStart, 'yyyy-MM-dd')
+      )
+      if (result.source_shifts === 0) {
+        toast.error('No shifts with staff allocated this week to copy')
+        return
+      }
+      setDuplicateResult(result)
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['conflicts'] })
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to copy this week')
+    }
+  }
+
   // Check if user has permissions to access rota editor
   if (!user) {
     return (
@@ -960,6 +982,7 @@ const RotaEditor: React.FC = () => {
                 onUnassignStaff={handleUnassignStaff}
                 onResetWeek={handleResetWeek}
                 onDeleteWeek={handleDeleteWeek}
+                onDuplicateWeek={handleDuplicateWeek}
                 canEdit={permissions.canManageRotas || false}
                 conflicts={conflicts?.conflicts || []}
                 homeId={selectedHomeId}
@@ -1071,6 +1094,62 @@ const RotaEditor: React.FC = () => {
           canManageOneToOne={permissions.canManageOneToOne}
           initialShiftType={newShiftType}
         />
+      )}
+
+      {/* Outcome of copying the week to next week */}
+      {duplicateResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-lg w-full mx-4 border border-neutral-200 dark:border-neutral-700">
+            <div className="px-6 py-4 border-b border-neutral-300 dark:border-neutral-700">
+              <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-100">
+                Copied to w/c {format(new Date(`${duplicateResult.target_week_start}T00:00:00`), 'd MMM')}
+              </h2>
+            </div>
+            <div className="px-6 py-4 space-y-3">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                {duplicateResult.shifts_created} shift{duplicateResult.shifts_created !== 1 ? 's' : ''} created
+                {duplicateResult.shifts_updated > 0 && `, ${duplicateResult.shifts_updated} existing filled`}
+                {' '}and {duplicateResult.assignments_copied} staff assignment{duplicateResult.assignments_copied !== 1 ? 's' : ''} copied.
+              </p>
+              {duplicateResult.skipped.length > 0 && (
+                <>
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                    {duplicateResult.skipped.length} couldn't be copied. Check these next week:
+                  </p>
+                  <ul className="space-y-2 max-h-64 overflow-y-auto">
+                    {duplicateResult.skipped.map((item, i) => (
+                      <li
+                        key={i}
+                        className="text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2"
+                      >
+                        <span className="font-medium">
+                          {format(new Date(`${item.date}T00:00:00`), 'EEE d MMM')}, {item.start_time}–{item.end_time}
+                          {item.staff_name && ` · ${item.staff_name}`}
+                        </span>
+                        <br />
+                        {item.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-neutral-300 dark:border-neutral-700 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDuplicateResult(null)}>
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setDuplicateResult(null)
+                  goToNextWeek()
+                }}
+              >
+                View next week
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Admin override confirmation — overlap is never offered here (backend hard-blocks it). */}
