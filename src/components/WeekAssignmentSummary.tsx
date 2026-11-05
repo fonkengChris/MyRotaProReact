@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import Button from '@/components/ui/Button'
 import { Home, Shift } from '@/types'
 import { shiftHomeId } from '@/lib/shiftHours'
 import { cn } from '@/utils/cn'
@@ -43,6 +45,8 @@ interface WeekAssignmentSummaryProps {
   onSelectHome: (homeId: string) => void
 }
 
+const HIDDEN_STORAGE_KEY = 'rota.assignmentAnalysis.hidden'
+
 /** Week-wide assigned/unassigned shift counts across every home the user can reach. */
 const WeekAssignmentSummary: React.FC<WeekAssignmentSummaryProps> = ({
   homes,
@@ -51,6 +55,25 @@ const WeekAssignmentSummary: React.FC<WeekAssignmentSummaryProps> = ({
   selectedHomeId,
   onSelectHome,
 }) => {
+  const [isHidden, setIsHidden] = useState(() => {
+    try {
+      return localStorage.getItem(HIDDEN_STORAGE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  const toggleHidden = () => {
+    setIsHidden((hidden) => {
+      try {
+        localStorage.setItem(HIDDEN_STORAGE_KEY, hidden ? '0' : '1')
+      } catch {
+        // Storage unavailable; the toggle still works for this visit.
+      }
+      return !hidden
+    })
+  }
+
   const { overall, byHome } = useMemo(() => {
     const overall = emptyCounts()
     const byHome = new Map<string, AssignmentCounts>()
@@ -80,11 +103,20 @@ const WeekAssignmentSummary: React.FC<WeekAssignmentSummaryProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Assignment Analysis — All Homes</CardTitle>
-        <CardDescription>
-          Shifts this week and how many have staff assigned, across every home
-        </CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle>Assignment Analysis — All Homes</CardTitle>
+            <CardDescription>
+              Shifts this week and how many have staff assigned, across every home
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={toggleHidden} aria-expanded={!isHidden}>
+            {isHidden ? <ChevronDownIcon className="h-4 w-4 mr-1" /> : <ChevronUpIcon className="h-4 w-4 mr-1" />}
+            {isHidden ? 'Show' : 'Hide'}
+          </Button>
+        </div>
       </CardHeader>
+      {!isHidden && (
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-6">
@@ -160,6 +192,7 @@ const WeekAssignmentSummary: React.FC<WeekAssignmentSummaryProps> = ({
           </div>
         )}
       </CardContent>
+      )}
     </Card>
   )
 }
