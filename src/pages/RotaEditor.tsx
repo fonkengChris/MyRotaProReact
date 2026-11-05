@@ -23,6 +23,7 @@ import RotaGrid from '@/components/RotaGrid'
 import ShiftModal from '@/components/ShiftModal'
 import ConflictAlert from '@/components/ConflictAlert'
 import MultiHomeSelector from '@/components/MultiHomeSelector'
+import WeekAssignmentSummary from '@/components/WeekAssignmentSummary'
 import { Shift, extractUserDefaultHomeId } from '@/types'
 
 const RotaEditor: React.FC = () => {
@@ -119,6 +120,18 @@ const RotaEditor: React.FC = () => {
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
     enabled: !!user && !!selectedHomeId && selectedHomeId !== 'null' && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
+    select: (data) => Array.isArray(data) ? data : []
+  })
+
+  // Shifts for the week across every home the user can reach (server applies key worker scope),
+  // for the all-homes assignment analysis.
+  const { data: allHomesShifts = [], isLoading: allHomesShiftsLoading } = useQuery({
+    queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), 'all-homes'],
+    queryFn: () => shiftsApi.getAll({
+      start_date: format(currentWeekStart, 'yyyy-MM-dd'),
+      end_date: format(currentWeekEnd, 'yyyy-MM-dd')
+    }),
+    enabled: !!user && ['admin', 'key_worker', 'senior_staff'].includes(user.role),
     select: (data) => Array.isArray(data) ? data : []
   })
 
@@ -759,8 +772,8 @@ const RotaEditor: React.FC = () => {
                 </select>
               </div>
 
-              {/* Week navigation - only when a valid home is selected */}
-              {isValidHomeId && (
+              {/* Week navigation */}
+              {(
                 <div className="flex items-center justify-between gap-2 lg:justify-end">
                   <Button variant="outline" size="sm" onClick={goToPreviousWeek} aria-label="Previous week">
                     <ChevronLeftIcon className="h-4 w-4" />
@@ -796,6 +809,17 @@ const RotaEditor: React.FC = () => {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* All-homes assignment analysis for the week */}
+      {!homesLoading && homes.length > 0 && (
+        <WeekAssignmentSummary
+          homes={homes}
+          shifts={allHomesShifts}
+          isLoading={allHomesShiftsLoading}
+          selectedHomeId={selectedHomeId}
+          onSelectHome={setSelectedHomeId}
+        />
       )}
 
       {/* No Home Selected Message */}
