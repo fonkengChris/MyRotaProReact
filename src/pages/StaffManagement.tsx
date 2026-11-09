@@ -21,7 +21,8 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   ArrowsUpDownIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  KeyIcon
 } from '@heroicons/react/24/outline'
 import { usersApi, homesApi } from '@/lib/api'
 import { User, UserRole, Home, CreateUserData, extractHomeId, formatShiftTypeLabel } from '@/types'
@@ -229,6 +230,10 @@ const StaffManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [addFormData, setAddFormData] = useState(emptyAddForm)
 
+  // Admin password reset (for staff who can't use the emailed reset link)
+  const [selectedUserForPasswordReset, setSelectedUserForPasswordReset] = useState<User | null>(null)
+  const [temporaryPassword, setTemporaryPassword] = useState('')
+
   // Fetch staff data
   const { data: staff = [], isLoading } = useQuery({
     queryKey: ['staff', currentUser?.role, currentUser?.default_home_id],
@@ -274,6 +279,18 @@ const StaffManagement: React.FC = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to update status')
+    }
+  })
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
+      usersApi.resetPassword(userId, newPassword),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Password reset')
+      handleClosePasswordResetModal()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to reset password')
     }
   })
 
@@ -435,6 +452,32 @@ const StaffManagement: React.FC = () => {
     if (window.confirm(`Are you sure you want to ${action} this staff member?`)) {
       toggleStatusMutation.mutate(userId)
     }
+  }
+
+  const handleOpenPasswordResetModal = (user: User) => {
+    setSelectedUserForPasswordReset(user)
+    setTemporaryPassword('')
+  }
+
+  const handleClosePasswordResetModal = () => {
+    setSelectedUserForPasswordReset(null)
+    setTemporaryPassword('')
+  }
+
+  // Readable temporary password (no 0/O/1/l look-alikes) to read out or text to the person.
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+    const values = crypto.getRandomValues(new Uint32Array(10))
+    setTemporaryPassword(Array.from(values, v => chars[v % chars.length]).join(''))
+  }
+
+  const handleResetPassword = () => {
+    if (!selectedUserForPasswordReset) return
+    if (temporaryPassword.length < 8) {
+      toast.error('Temporary password must be at least 8 characters')
+      return
+    }
+    resetPasswordMutation.mutate({ userId: selectedUserForPasswordReset.id, newPassword: temporaryPassword })
   }
 
   const handleHomeAllocation = (user: User) => {
@@ -1008,6 +1051,17 @@ const StaffManagement: React.FC = () => {
                           )}
                           {canRemoveMember(member) && member.id !== currentUser?.id && (
                             <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleOpenPasswordResetModal(member)}
+                              title="Reset password"
+                            >
+                              <KeyIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canRemoveMember(member) && member.id !== currentUser?.id && (
+                            <Button
                               variant="danger"
                               size="sm"
                               className="h-8 w-8 p-0"
@@ -1085,6 +1139,17 @@ const StaffManagement: React.FC = () => {
                           title={member.is_active ? 'Deactivate' : 'Activate'}
                         >
                           {member.is_active ? '🚫' : '✅'}
+                        </Button>
+                      )}
+                      {canRemoveMember(member) && member.id !== currentUser?.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleOpenPasswordResetModal(member)}
+                          title="Reset password"
+                        >
+                          <KeyIcon className="h-4 w-4" />
                         </Button>
                       )}
                       {canRemoveMember(member) && member.id !== currentUser?.id && (
@@ -1762,6 +1827,63 @@ const StaffManagement: React.FC = () => {
                 disabled={createUserMutation.isPending}
               >
                 {createUserMutation.isPending ? 'Creating...' : 'Create Staff Member'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {selectedUserForPasswordReset && (
+        <div className="fixed inset-0 bg-neutral-900/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-4 sm:top-20 mx-auto p-4 sm:p-6 border border-neutral-300 dark:border-neutral-700 w-[95vw] max-w-[480px] shadow-lg rounded-md bg-white dark:bg-neutral-900">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-neutral-950 dark:text-neutral-100">
+                Reset Password: {selectedUserForPasswordReset.name}
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleClosePasswordResetModal}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+              Set a temporary password and share it with {selectedUserForPasswordReset.name} directly. They will be
+              asked to choose their own password when they next sign in, and will be signed out of any other devices.
+            </p>
+
+            <label htmlFor="temporaryPassword" className="form-label">
+              Temporary password
+            </label>
+            <div className="mt-1 flex gap-2">
+              <input
+                id="temporaryPassword"
+                type="text"
+                autoComplete="off"
+                className="input flex-1 font-mono"
+                value={temporaryPassword}
+                onChange={(e) => setTemporaryPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+              <Button variant="outline" onClick={generateTemporaryPassword}>
+                Generate
+              </Button>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={handleClosePasswordResetModal}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleResetPassword}
+                disabled={resetPasswordMutation.isPending || temporaryPassword.length < 8}
+              >
+                {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
               </Button>
             </div>
           </div>

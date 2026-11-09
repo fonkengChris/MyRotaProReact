@@ -1,10 +1,12 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import Layout from '@/components/Layout'
 import PushNotificationSetup from '@/components/PushNotificationSetup'
 import Login from '@/pages/Login'
 import Setup from '@/pages/Setup'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
 import Dashboard from '@/pages/Dashboard'
 import RotaEditor from '@/pages/RotaEditor'
 import MySchedule from '@/pages/MySchedule'
@@ -70,6 +72,7 @@ function landingPath(permissions: ReturnType<typeof usePermissions>) {
 function App() {
   const { user, isLoading } = useAuth()
   const permissions = usePermissions()
+  const location = useLocation()
 
   if (isLoading) {
     return (
@@ -85,6 +88,8 @@ function App() {
         <Routes>
           <Route path="/setup" element={<Setup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/theme" element={<ThemeShowcase />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
@@ -96,6 +101,10 @@ function App() {
     <ThemeProvider>
       <Layout>
         <PushNotificationSetup />
+        {/* After an admin password reset, keep the user on Settings › Password until they choose their own. */}
+        {user.must_change_password && location.pathname !== '/settings' && (
+          <Navigate to="/settings?tab=password" replace />
+        )}
         <Routes>
           <Route path="/" element={<Navigate to={landingPath(permissions)} replace />} />
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -136,6 +136,14 @@ const Login: React.FC = () => {
                   {errors.password && (
                     <p className="form-error">{errors.password.message}</p>
                   )}
+                </div>
+                <div className="mt-2 text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </div>
 

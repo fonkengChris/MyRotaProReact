@@ -25,6 +25,8 @@ export interface User {
   skills: Skill[]
   preferred_shift_types: ShiftType[]
   max_hours_per_week: number
+  // Set after an admin password reset; the user is sent to Settings › Password.
+  must_change_password?: boolean
   created_at: string
   updated_at: string
 }

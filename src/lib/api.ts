@@ -93,7 +93,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only redirect if we're not on a public page AND we have a token
       const currentPath = window.location.pathname
-      const publicPaths = ['/login', '/setup']
+      const publicPaths = ['/login', '/setup', '/forgot-password', '/reset-password']
       const hasToken = localStorage.getItem('token')
       
       if (!publicPaths.includes(currentPath) && hasToken) {
@@ -123,10 +123,22 @@ export const authApi = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>('/auth/change-password', {
+    const response = await api.post<{ message: string; token?: string }>('/auth/change-password', {
       currentPassword,
       newPassword,
     })
+    // Changing the password revokes older tokens, so keep this session on the new one.
+    if (response.data.token) localStorage.setItem('token', response.data.token)
+    return response.data
+  },
+
+  forgotPassword: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>('/auth/forgot-password', { email })
+    return response.data
+  },
+
+  resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>('/auth/reset-password', { token, newPassword })
     return response.data
   },
 
@@ -655,6 +667,12 @@ export const usersApi = {
 
   deactivate: async (id: string): Promise<User> => {
     const response = await api.post<User>(`/users/${id}/deactivate`)
+    return response.data
+  },
+
+  // Set a temporary password; the user must choose their own at next sign-in.
+  resetPassword: async (id: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>(`/users/${id}/reset-password`, { newPassword })
     return response.data
   },
 

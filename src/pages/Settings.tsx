@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,10 +48,14 @@ type ProfileFormData = z.infer<typeof profileSchema>
 type PasswordFormData = z.infer<typeof passwordSchema>
 
 const Settings: React.FC = () => {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, refreshUser } = useAuth()
   const { isAdmin } = usePermissions()
   const { theme, toggleTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'organization'>('profile')
+  const [searchParams] = useSearchParams()
+  const mustChangePassword = !!user?.must_change_password
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'organization'>(
+    mustChangePassword || searchParams.get('tab') === 'password' ? 'password' : 'profile'
+  )
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
@@ -189,6 +194,7 @@ const Settings: React.FC = () => {
       await authApi.changePassword(data.currentPassword, data.newPassword)
       toast.success('Password changed successfully!')
       resetPassword()
+      if (mustChangePassword) await refreshUser()
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to change password')
     } finally {
@@ -212,6 +218,13 @@ const Settings: React.FC = () => {
           Manage your account settings and preferences
         </p>
       </div>
+
+      {mustChangePassword && (
+        <div className="p-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg text-sm text-neutral-800 dark:text-neutral-200">
+          Your password was reset by an administrator. Please choose a new password to continue.
+          Use the temporary password you were given as your current password.
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b border-neutral-200 dark:border-neutral-700">
