@@ -366,7 +366,6 @@ const SolverSettingsPage: React.FC = () => {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-3">
             {num(['scoring', 'non_preferred_shift_type_penalty'], { label: 'Not a preferred shift type', unit: 'pts', min: 0, max: 1000, step: 1 })}
-            {num(['scoring', 'outside_available_hours_penalty'], { label: 'Starts outside available hours', unit: 'pts', min: 0, max: 1000, step: 1 })}
             {num(['scoring', 'default_home_sort_boost'], { label: 'Default home tie-break boost', unit: 'pts', min: 0, max: 1000, step: 1 })}
           </div>
         </CardContent>

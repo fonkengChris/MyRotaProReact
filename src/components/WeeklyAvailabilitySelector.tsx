@@ -10,7 +10,14 @@ import {
   XMarkIcon,
   CalendarDaysIcon
 } from '@heroicons/react/24/outline'
-import { Availability, ShiftType, TimeOffRequest, formatShiftTypeLabel } from '@/types'
+import { Availability, AvailabilityStatus, ShiftType, TimeOffRequest, formatShiftTypeLabel } from '@/types'
+import {
+  AVAILABILITY_STATUS_OPTIONS,
+  availabilityBadgeVariant,
+  availabilityStatusOf,
+  formatAvailabilityWindow,
+  windowRunsPastMidnight
+} from '@/utils/availability'
 import { getApprovedLeaveForDate, getTimeOffTypeLabel } from '@/utils/timeOff'
 import { approvedLeaveBadgeClass, approvedLeaveDayCardClass } from '@/utils/timeOffDisplay'
 import toast from 'react-hot-toast'
@@ -26,9 +33,9 @@ interface WeeklyAvailabilitySelectorProps {
 
 interface DayAvailability {
   date: string
-  isAvailable: boolean
-  startTime: string
-  endTime: string
+  status: AvailabilityStatus
+  startTime?: string
+  endTime?: string
   preferredShiftType: ShiftType | null
   notes?: string
 }
@@ -43,9 +50,10 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
 }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set())
+  const [defaultStatus, setDefaultStatus] = useState<AvailabilityStatus>('available')
   const [defaultStartTime, setDefaultStartTime] = useState('09:00')
   const [defaultEndTime, setDefaultEndTime] = useState('17:00')
-  const [defaultShiftType, setDefaultShiftType] = useState<ShiftType>('morning')
+  const [defaultShiftType, setDefaultShiftType] = useState<ShiftType>('none')
   const [defaultNotes, setDefaultNotes] = useState('')
 
   // Generate week days
@@ -63,7 +71,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
       if (dayAvailability) {
         weekAvailability[dateStr] = {
           date: dateStr,
-          isAvailable: dayAvailability.is_available,
+          status: availabilityStatusOf(dayAvailability),
           startTime: dayAvailability.start_time,
           endTime: dayAvailability.end_time,
           preferredShiftType: dayAvailability.preferred_shift_type as ShiftType,
@@ -107,88 +115,31 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
     setSelectedDays(newSelectedDays)
   }
 
-  // Handle applying availability to selected days
-  const handleApplyAvailability = async () => {
+  // Apply the chosen status (and, for partial days, the time slot) to every selected day.
+  // Posting replaces any existing entry for that day.
+  const handleApply = async () => {
     if (!canEdit || selectedDays.size === 0) return
-
-    try {
-      const promises = Array.from(selectedDays).map(async (dateStr) => {
-        const existingAvailability = weekAvailability[dateStr]
-        
-        if (existingAvailability) {
-          // Update existing availability
-          return await onSaveAvailability({
-            id: availabilities.find(a => a.date === dateStr)?.id,
-            user_id: userId,
-            date: dateStr,
-            start_time: defaultStartTime,
-            end_time: defaultEndTime,
-            is_available: true,
-            preferred_shift_type: defaultShiftType,
-            notes: defaultNotes
-          })
-        } else {
-          // Create new availability
-          return await onSaveAvailability({
-            user_id: userId,
-            date: dateStr,
-            start_time: defaultStartTime,
-            end_time: defaultEndTime,
-            is_available: true,
-            preferred_shift_type: defaultShiftType,
-            notes: defaultNotes
-          })
-        }
-      })
-
-      await Promise.all(promises)
-      setSelectedDays(new Set())
-      // Show success message
-    } catch (error) {
-      console.error('Error applying availability:', error)
+    if (defaultStatus === 'partial' && (!defaultStartTime || !defaultEndTime || defaultStartTime === defaultEndTime)) {
+      toast.error('Set a start and end time for partial availability')
+      return
     }
-  }
-
-  // Handle marking days as unavailable
-  const handleMarkUnavailable = async () => {
-    if (!canEdit || selectedDays.size === 0) return
 
     try {
-      const promises = Array.from(selectedDays).map(async (dateStr) => {
-        const existingAvailability = weekAvailability[dateStr]
-        
-        if (existingAvailability) {
-          // Update existing availability
-          return await onSaveAvailability({
-            id: availabilities.find(a => a.date === dateStr)?.id,
-            user_id: userId,
-            date: dateStr,
-            start_time: existingAvailability.startTime,
-            end_time: existingAvailability.endTime,
-            is_available: false,
-            preferred_shift_type: 'none',
-            notes: existingAvailability.notes
-          })
-        } else {
-          // Create new availability as unavailable
-          return await onSaveAvailability({
-            user_id: userId,
-            date: dateStr,
-            start_time: '08:00',
-            end_time: '17:00',
-            is_available: false,
-            preferred_shift_type: 'none',
-            notes: 'Marked as unavailable'
-          })
-        }
-      })
-
-      await Promise.all(promises)
+      await Promise.all(Array.from(selectedDays).map((dateStr) =>
+        onSaveAvailability({
+          id: availabilities.find(a => a.date === dateStr)?.id,
+          user_id: userId,
+          date: dateStr,
+          status: defaultStatus,
+          ...(defaultStatus === 'partial' && { start_time: defaultStartTime, end_time: defaultEndTime }),
+          preferred_shift_type: defaultStatus === 'unavailable' ? 'none' : defaultShiftType,
+          notes: defaultNotes
+        })
+      ))
       setSelectedDays(new Set())
     } catch (error: any) {
-      console.error('Error marking days as unavailable:', error)
-      console.error('Server response:', error.response?.data)
-      toast.error(error.response?.data?.error || 'Failed to mark days as unavailable')
+      console.error('Error applying availability:', error)
+      toast.error(error.response?.data?.details || error.response?.data?.error || 'Failed to save availability')
     }
   }
 
@@ -225,7 +176,7 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
         <div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Weekly Day Availability</h3>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Select available days for the week and apply default availability settings
+            Select days, then mark them available, partially available (set times) or unavailable
           </p>
         </div>
         
@@ -324,23 +275,25 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                   {!approvedLeave && dayAvailability && (
                     <div className="space-y-2">
                       <Badge 
-                        variant={dayAvailability.isAvailable ? 'success' : 'danger'}
+                        variant={availabilityBadgeVariant[dayAvailability.status]}
                         className="text-xs w-full justify-center"
                       >
-                        {dayAvailability.isAvailable ? 'Available' : 'Unavailable'}
+                        {AVAILABILITY_STATUS_OPTIONS.find(o => o.value === dayAvailability.status)?.label}
                       </Badge>
+
+                      {dayAvailability.status === 'partial' && (
+                        <div className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">
+                          {formatAvailabilityWindow(dayAvailability.startTime, dayAvailability.endTime)}
+                        </div>
+                      )}
                       
-                      {dayAvailability.preferredShiftType && (
+                      {dayAvailability.status !== 'unavailable' && dayAvailability.preferredShiftType && dayAvailability.preferredShiftType !== 'none' && (
                         <div className="text-xs">
                           <span className={`inline-block px-2 py-1 rounded w-full text-center ${getShiftTypeColor(dayAvailability.preferredShiftType)}`}>
                             {formatShiftTypeLabel(dayAvailability.preferredShiftType)}
                           </span>
                         </div>
                       )}
-                      
-                      <div className="text-xs text-neutral-600 dark:text-neutral-400 text-center">
-                        {dayAvailability.startTime} - {dayAvailability.endTime}
-                      </div>
                       
                       {canEdit && (
                         <Button
@@ -377,50 +330,76 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                 Apply to {selectedDays.size} selected day{selectedDays.size !== 1 ? 's' : ''}:
               </h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={defaultStartTime}
-                    onChange={(e) => setDefaultStartTime(e.target.value)}
-                    className="input text-sm"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                    End Time
-                  </label>
-                  <input
-                    type="time"
-                    value={defaultEndTime}
-                    onChange={(e) => setDefaultEndTime(e.target.value)}
-                    className="input text-sm"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                    Shift Type
-                  </label>
-                  <select
-                    value={defaultShiftType}
-                    onChange={(e) => setDefaultShiftType(e.target.value as ShiftType)}
-                    className="input text-sm"
+              <div role="radiogroup" aria-label="Availability" className="flex flex-wrap gap-2">
+                {AVAILABILITY_STATUS_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={defaultStatus === option.value}
+                    variant={defaultStatus === option.value ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setDefaultStatus(option.value)}
                   >
-                    <option value="morning">Morning</option>
-                    <option value="day">Day</option>
-                    <option value="afternoon">Afternoon</option>
-                    <option value="evening">Evening</option>
-                    <option value="night-wake">Waking night</option>
-                    <option value="night-sleep">Sleeping night</option>
-                    <option value="overtime">Overtime</option>
-                    <option value="long_day">Long Day</option>
-                  </select>
-                </div>
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {defaultStatus === 'partial' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        Available from
+                      </label>
+                      <input
+                        type="time"
+                        value={defaultStartTime}
+                        onChange={(e) => setDefaultStartTime(e.target.value)}
+                        className="input text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                        Available until
+                      </label>
+                      <input
+                        type="time"
+                        value={defaultEndTime}
+                        onChange={(e) => setDefaultEndTime(e.target.value)}
+                        className="input text-sm"
+                      />
+                      {windowRunsPastMidnight(defaultStartTime, defaultEndTime) && (
+                        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Runs past midnight</p>
+                      )}
+                    </div>
+                  </>
+                )}
+                
+                {defaultStatus !== 'unavailable' && (
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                      Preferred shift
+                    </label>
+                    <select
+                      value={defaultShiftType}
+                      onChange={(e) => setDefaultShiftType(e.target.value as ShiftType)}
+                      className="input text-sm"
+                    >
+                      <option value="none">No preference</option>
+                      <option value="morning">Morning</option>
+                      <option value="day">Day</option>
+                      <option value="afternoon">Afternoon</option>
+                      <option value="evening">Evening</option>
+                      <option value="night-wake">Waking night</option>
+                      <option value="night-sleep">Sleeping night</option>
+                      <option value="overtime">Overtime</option>
+                      <option value="long_day">Long Day</option>
+                    </select>
+                  </div>
+                )}
                 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
@@ -435,24 +414,21 @@ const WeeklyAvailabilitySelector: React.FC<WeeklyAvailabilitySelectorProps> = ({
                   />
                 </div>
               </div>
+
+              {defaultStatus === 'partial' && (
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Only shifts that start and finish inside these times can be given to this person.
+                </p>
+              )}
               
               <div className="flex space-x-2">
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={handleApplyAvailability}
+                  onClick={handleApply}
                 >
                   <CheckIcon className="h-4 w-4 mr-2" />
-                  Mark as Available
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleMarkUnavailable}
-                >
-                  <XMarkIcon className="h-4 w-4 mr-2" />
-                  Mark as Unavailable
+                  Apply
                 </Button>
                 
                 <Button

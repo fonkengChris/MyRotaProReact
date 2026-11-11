@@ -10,14 +10,27 @@ import {
   ClockIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
-import { Availability } from '@/types'
+import { Availability, AvailabilityStatus } from '@/types'
+import {
+  AVAILABILITY_STATUS_OPTIONS,
+  availabilityStatusOf,
+  availabilityWindowHours,
+  windowRunsPastMidnight
+} from '@/utils/availability'
 
 const availabilitySchema = z.object({
-  start_time: z.string().min(1, 'Start time is required'),
-  end_time: z.string().min(1, 'End time is required'),
-  is_available: z.boolean(),
+  status: z.enum(['available', 'unavailable', 'partial']),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
   preferred_shift_type: z.string().nullable().optional(),
   notes: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.status !== 'partial') return
+  if (!data.start_time) ctx.addIssue({ code: 'custom', path: ['start_time'], message: 'Start time is required' })
+  if (!data.end_time) ctx.addIssue({ code: 'custom', path: ['end_time'], message: 'End time is required' })
+  if (data.start_time && data.start_time === data.end_time) {
+    ctx.addIssue({ code: 'custom', path: ['end_time'], message: 'End time must differ from start time' })
+  }
 })
 
 type AvailabilityFormData = z.infer<typeof availabilitySchema>
@@ -28,7 +41,14 @@ interface AvailabilityFormModalProps {
   onSubmit: (data: AvailabilityFormData) => Promise<void>
   availability?: Availability | null
   date: Date
-  time: string
+  /** Start time suggested for a new partial day. */
+  time?: string
+}
+
+const statusSelectedClass: Record<AvailabilityStatus, string> = {
+  available: 'border-success-500 bg-success-50 dark:bg-success-900/20',
+  partial: 'border-warning-500 bg-warning-50 dark:bg-warning-900/20',
+  unavailable: 'border-danger-500 bg-danger-50 dark:bg-danger-900/20',
 }
 
 const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
@@ -37,7 +57,7 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
   onSubmit,
   availability,
   date,
-  time
+  time = '09:00'
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -51,59 +71,47 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
   } = useForm<AvailabilityFormData>({
     resolver: zodResolver(availabilitySchema),
     defaultValues: {
+      status: 'available',
       start_time: time,
       end_time: '17:00',
-      is_available: true,
       preferred_shift_type: null,
       notes: '',
     }
   })
 
+  const status = watch('status')
   const startTime = watch('start_time')
   const endTime = watch('end_time')
-  const isAvailable = watch('is_available')
-
-  // Calculate duration
-  const calculateDuration = () => {
-    if (startTime && endTime) {
-      const start = new Date(`2000-01-01T${startTime}`)
-      const end = new Date(`2000-01-01T${endTime}`)
-      const diffMs = end.getTime() - start.getTime()
-      const diffHours = diffMs / (1000 * 60 * 60)
-      return Math.max(0, diffHours)
-    }
-    return 0
-  }
-
-  const duration = calculateDuration()
+  const duration = status === 'partial' && startTime && endTime && startTime !== endTime
+    ? availabilityWindowHours(startTime, endTime)
+    : 0
 
   // Reset form when modal opens/closes or availability changes
   useEffect(() => {
-    if (isOpen) {
-      if (availability && availability.start_time && availability.end_time) {
-        // Editing existing availability
-        setValue('start_time', availability.start_time.substring(0, 5))
-        setValue('end_time', availability.end_time.substring(0, 5))
-        setValue('is_available', availability.is_available)
+    if (!isOpen) return
+    if (availability) {
+      reset({
+        status: availabilityStatusOf(availability),
+        start_time: availability.start_time?.substring(0, 5) || time,
+        end_time: availability.end_time?.substring(0, 5) || '17:00',
         // 'none' is stored for "no preference"; show it as the blank option.
-        setValue('preferred_shift_type', availability.preferred_shift_type === 'none' ? '' : availability.preferred_shift_type || null)
-        setValue('notes', availability.notes || '')
-      } else {
-        // Creating new availability
-        reset()
-        setValue('start_time', time)
-        setValue('end_time', '17:00')
-        setValue('is_available', true)
-        setValue('preferred_shift_type', null)
-        setValue('notes', '')
-      }
+        preferred_shift_type: availability.preferred_shift_type === 'none' ? '' : availability.preferred_shift_type || null,
+        notes: availability.notes || '',
+      })
+    } else {
+      reset({ status: 'available', start_time: time, end_time: '17:00', preferred_shift_type: null, notes: '' })
     }
-  }, [isOpen, availability, setValue, reset, time])
+  }, [isOpen, availability, reset, time])
 
   const handleFormSubmit = async (data: AvailabilityFormData) => {
     try {
       setIsSubmitting(true)
-      await onSubmit(data)
+      // Times only mean something on a partial day; the server drops them otherwise.
+      await onSubmit({
+        ...data,
+        ...(data.status !== 'partial' && { start_time: undefined, end_time: undefined }),
+        ...(data.status === 'unavailable' && { preferred_shift_type: 'none' }),
+      })
       onClose()
     } catch (error) {
       console.error('Error submitting availability:', error)
@@ -142,67 +150,86 @@ const AvailabilityFormModal: React.FC<AvailabilityFormModalProps> = ({
 
             <CardContent>
               <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-                {/* Availability Toggle */}
-                <div className="flex items-center justify-between p-4 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CalendarIcon className="h-5 w-5 text-neutral-700 dark:text-neutral-400" />
-                    <div>
-                      <p className="text-sm font-medium text-neutral-950 dark:text-neutral-100">Available</p>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Set your availability for this time</p>
+                {/* Status */}
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-2">
+                    <CalendarIcon className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                    Availability
+                  </p>
+                  <div role="radiogroup" aria-label="Availability" className="grid grid-cols-3 gap-2">
+                    {AVAILABILITY_STATUS_OPTIONS.map((option) => {
+                      const selected = status === option.value
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setValue('status', option.value as AvailabilityStatus, { shouldValidate: true })}
+                          className={`rounded-lg border-2 px-3 py-2 text-left transition-colors ${
+                            selected
+                              ? statusSelectedClass[option.value]
+                              : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                          }`}
+                        >
+                          <span className="block text-sm font-medium text-neutral-950 dark:text-neutral-100">{option.label}</span>
+                          <span className="block text-xs text-neutral-600 dark:text-neutral-400">{option.hint}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Time slot (partial days only) */}
+                {status === 'partial' && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                          Available from
+                        </label>
+                        <input
+                          {...register('start_time')}
+                          type="time"
+                          className="input w-full"
+                        />
+                        {errors.start_time && (
+                          <p className="mt-1 text-sm text-danger-600">{errors.start_time.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                          Available until
+                        </label>
+                        <input
+                          {...register('end_time')}
+                          type="time"
+                          className="input w-full"
+                        />
+                        {errors.end_time && (
+                          <p className="mt-1 text-sm text-danger-600">{errors.end_time.message}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={isAvailable}
-                      onChange={(e) => setValue('is_available', e.target.checked)}
-                    />
-                    <div className="w-11 h-6 bg-neutral-400 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-400 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                  </label>
-                </div>
 
-                {/* Time Selection */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                      Start Time
-                    </label>
-                    <input
-                      {...register('start_time')}
-                      type="time"
-                      className="input w-full"
-                    />
-                    {errors.start_time && (
-                      <p className="mt-1 text-sm text-danger-600">{errors.start_time.message}</p>
-                    )}
+                    <div className="bg-neutral-100 dark:bg-neutral-700 p-3 rounded-md">
+                      <div className="flex items-center space-x-2 text-sm text-neutral-700 dark:text-neutral-400">
+                        <ClockIcon className="h-4 w-4" />
+                        <span>
+                          {duration.toFixed(1)} hours
+                          {windowRunsPastMidnight(startTime, endTime) && ' · runs past midnight into the next day'}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                      Only shifts that start and finish inside these times can be given to this person.
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                      End Time
-                    </label>
-                    <input
-                      {...register('end_time')}
-                      type="time"
-                      className="input w-full"
-                    />
-                    {errors.end_time && (
-                      <p className="mt-1 text-sm text-danger-600">{errors.end_time.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Duration Display */}
-                <div className="bg-neutral-100 dark:bg-neutral-700 p-3 rounded-md">
-                  <div className="flex items-center space-x-2 text-sm text-neutral-700 dark:text-neutral-400">
-                    <ClockIcon className="h-4 w-4" />
-                    <span>Duration: {duration.toFixed(1)} hours</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Preferred Shift Type */}
-                {isAvailable && (
+                {status !== 'unavailable' && (
                   <div>
                     <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                       Preferred Shift Type

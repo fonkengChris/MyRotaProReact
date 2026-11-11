@@ -591,12 +591,17 @@ export interface Rota {
 export type RotaStatus = 'draft' | 'published' | 'archived'
 
 // Availability types
+// available = any time; unavailable = not at all; partial = only start_time–end_time.
+export type AvailabilityStatus = 'available' | 'unavailable' | 'partial'
+
 export interface Availability {
   id: string
   user_id: string
   date: string
-  start_time: string
-  end_time: string
+  status: AvailabilityStatus
+  // Set only on partial days. An end at or before the start runs past midnight.
+  start_time?: string
+  end_time?: string
   is_available: boolean
   preferred_shift_type?: ShiftType
   notes?: string
@@ -715,7 +720,6 @@ export interface SolverSettings {
   manual_assign_cap: { fulltime_hours: number; approver_roles: string[] }
   scoring: {
     non_preferred_shift_type_penalty: number
-    outside_available_hours_penalty: number
     default_home_sort_boost: number
   }
   fairness: {

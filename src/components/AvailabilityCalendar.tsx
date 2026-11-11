@@ -10,6 +10,12 @@ import {
   CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 import { Availability, ShiftType, TimeOffRequest, formatShiftTypeLabel } from '@/types'
+import {
+  AVAILABILITY_STATUS_OPTIONS,
+  availabilityBadgeVariant,
+  availabilityStatusOf,
+  formatAvailabilityWindow
+} from '@/utils/availability'
 import { getApprovedLeaveForDate, getTimeOffTypeLabel } from '@/utils/timeOff'
 import { approvedLeaveBadgeClass, approvedLeaveSlotClass } from '@/utils/timeOffDisplay'
 import AvailabilityFormModal from './AvailabilityFormModal'
@@ -32,6 +38,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   canEdit
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
   const [isAddingAvailability, setIsAddingAvailability] = useState(false)
   const [editingAvailability, setEditingAvailability] = useState<Availability | null>(null)
   
@@ -50,46 +57,49 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     '21:00', '22:00', '23:00'
   ]
 
-  // Filter out invalid availability records
-  const validAvailabilities = availabilities.filter(availability => 
-    availability && 
-    availability.date && 
-    availability.start_time && 
-    availability.end_time
-  )
-
-
-
-  // Get availability for a specific date and time
-  const getAvailabilityForSlot = (date: Date, time: string) => {
+  const availabilityOn = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd')
-    return validAvailabilities.find(availability => {
-      const availabilityDate = format(parseISO(availability.date), 'yyyy-MM-dd')
-      // Add safety check for start_time
-      if (!availability.start_time) return false
-      const availabilityStart = availability.start_time.substring(0, 5)
-      return availabilityDate === dateStr && availabilityStart === time
-    })
+    return availabilities.find(a => a?.date && format(parseISO(a.date), 'yyyy-MM-dd') === dateStr)
   }
 
-  // Check if a time slot is available
-  const isTimeSlotAvailable = (date: Date, time: string) => {
-    const availability = getAvailabilityForSlot(date, time)
-    return availability?.is_available || false
+  // The hour slot a day's entry is labelled in: its start hour on a partial day, otherwise the first row.
+  const labelSlotFor = (availability: Availability) =>
+    availabilityStatusOf(availability) === 'partial' && availability.start_time
+      ? `${availability.start_time.substring(0, 2)}:00`
+      : timeSlots[0]
+
+  // Whether the hour starting at `time` overlaps the day's available hours. A partial window that
+  // runs past midnight is shaded on its own day up to midnight.
+  const slotIsAvailable = (availability: Availability, time: string) => {
+    const status = availabilityStatusOf(availability)
+    if (status !== 'partial') return status === 'available'
+    if (!availability.start_time || !availability.end_time) return false
+    const toMin = (t: string) => Number(t.substring(0, 2)) * 60 + Number(t.substring(3, 5))
+    const start = toMin(availability.start_time)
+    let end = toMin(availability.end_time)
+    if (end <= start) end = 24 * 60
+    const slot = toMin(time)
+    return slot < end && slot + 60 > start
   }
 
-  // Get preferred shift type for a time slot
-  const getPreferredShiftType = (date: Date, time: string) => {
-    const availability = getAvailabilityForSlot(date, time)
-    return availability?.preferred_shift_type || null
+  const slotClass = (availability: Availability, time: string) => {
+    if (!slotIsAvailable(availability, time)) {
+      return availabilityStatusOf(availability) === 'unavailable'
+        ? 'bg-danger-50 dark:bg-danger-900/20'
+        : 'bg-neutral-50 dark:bg-neutral-800/60'
+    }
+    return availabilityStatusOf(availability) === 'partial'
+      ? 'bg-warning-50 dark:bg-warning-900/20'
+      : 'bg-success-50 dark:bg-success-900/20'
   }
 
   // Handle adding new availability
-  const handleAddAvailability = (date: Date, _time: string) => {
+  const handleAddAvailability = (date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd')
     if (getApprovedLeaveForDate(dateStr, approvedLeaveRequests)) return
 
     setSelectedDate(date)
+    setSelectedTime(time)
     setIsAddingAvailability(true)
     setEditingAvailability(null)
   }
@@ -159,7 +169,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         <div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Weekly Availability</h3>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Set your preferred availability for the week
+            Each day is available, partially available (between set times) or unavailable
           </p>
         </div>
         {canEdit && (
@@ -168,6 +178,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
             size="sm"
             onClick={() => {
               setSelectedDate(now)
+              setSelectedTime(undefined)
               setIsAddingAvailability(true)
               setEditingAvailability(null)
             }}
@@ -225,9 +236,10 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   {weekDays.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd')
                     const approvedLeave = getApprovedLeaveForDate(dateStr, approvedLeaveRequests)
-                    const availability = getAvailabilityForSlot(day, time)
-                    const isAvailable = isTimeSlotAvailable(day, time)
-                    const preferredShiftType = getPreferredShiftType(day, time)
+                    const availability = availabilityOn(day)
+                    const status = availability && availabilityStatusOf(availability)
+                    const showLabel = !!availability && labelSlotFor(availability) === time
+                    const preferredShiftType = availability?.preferred_shift_type
                     const isLeaveDay = !!approvedLeave
                     const showLeaveInSlot = isLeaveDay && time === '09:00'
                     
@@ -235,7 +247,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                       <div
                         key={`${day.toISOString()}-${time}`}
                         className={`min-h-[60px] border-b border-r relative ${
-                          isLeaveDay ? approvedLeaveSlotClass : ''
+                          isLeaveDay ? approvedLeaveSlotClass : availability ? slotClass(availability, time) : ''
                         }`}
                       >
                         {showLeaveInSlot ? (
@@ -251,51 +263,63 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                         ) : isLeaveDay ? (
                           <div className="h-full min-h-[60px]" aria-hidden />
                         ) : availability ? (
-                          // Show existing availability
-                          <div className="p-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <Badge 
-                                variant={isAvailable ? 'success' : 'danger'}
-                                className="text-xs"
-                              >
-                                {isAvailable ? 'Available' : 'Unavailable'}
-                              </Badge>
-                              {canEdit && (
-                                <div className="flex space-x-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-5 w-5 p-0"
-                                    onClick={() => handleEditAvailability(availability)}
-                                  >
-                                    <CalendarIcon className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="danger"
-                                    size="sm"
-                                    className="h-5 w-5 p-0"
-                                    onClick={() => handleDeleteAvailability(availability.id)}
-                                  >
-                                    <XMarkIcon className="h-3 w-3" />
-                                  </Button>
+                          // The day's entry is labelled once; other hours are shaded only.
+                          showLabel ? (
+                            <div className="p-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <Badge
+                                  variant={availabilityBadgeVariant[status!]}
+                                  className="text-xs"
+                                >
+                                  {AVAILABILITY_STATUS_OPTIONS.find(o => o.value === status)?.label}
+                                </Badge>
+                                {canEdit && (
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      aria-label="Edit availability"
+                                      onClick={() => handleEditAvailability(availability)}
+                                    >
+                                      <CalendarIcon className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="danger"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      aria-label="Delete availability"
+                                      onClick={() => handleDeleteAvailability(availability.id)}
+                                    >
+                                      <XMarkIcon className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {status === 'partial' && (
+                                <div className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
+                                  {formatAvailabilityWindow(availability.start_time, availability.end_time)}
+                                </div>
+                              )}
+                              
+                              {status !== 'unavailable' && preferredShiftType && preferredShiftType !== 'none' && (
+                                <div className="text-xs mt-1">
+                                  <span className={`inline-block px-2 py-1 rounded ${getShiftTypeColor(preferredShiftType)}`}>
+                                    {formatShiftTypeLabel(preferredShiftType)}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {availability.notes && (
+                                <div className="text-xs text-neutral-700 dark:text-neutral-300 mt-1 truncate">
+                                  {availability.notes}
                                 </div>
                               )}
                             </div>
-                            
-                            {preferredShiftType && (
-                              <div className="text-xs">
-                                <span className={`inline-block px-2 py-1 rounded ${getShiftTypeColor(preferredShiftType)}`}>
-                                  {formatShiftTypeLabel(preferredShiftType)}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {availability.notes && (
-                              <div className="text-xs text-neutral-700 mt-1 truncate">
-                                {availability.notes}
-                              </div>
-                            )}
-                          </div>
+                          ) : (
+                            <div className="h-full min-h-[60px]" aria-hidden />
+                          )
                         ) : (
                           // Empty slot - show add button if can edit
                           canEdit && (
@@ -331,7 +355,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           onSubmit={handleSaveAvailability}
           availability={editingAvailability}
           date={selectedDate}
-          time={timeSlots[0]}
+          time={selectedTime}
         />
       )}
     </div>
