@@ -21,10 +21,11 @@ import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'dat
 import toast from 'react-hot-toast'
 import RotaGrid from '@/components/RotaGrid'
 import ShiftModal from '@/components/ShiftModal'
+import CopyShiftModal from '@/components/CopyShiftModal'
 import ConflictAlert from '@/components/ConflictAlert'
 import MultiHomeSelector from '@/components/MultiHomeSelector'
 import WeekAssignmentSummary from '@/components/WeekAssignmentSummary'
-import { Shift, extractUserDefaultHomeId } from '@/types'
+import { Shift, extractUserDefaultHomeId, shiftServiceUserId } from '@/types'
 
 // The Multi-Home AI button is hidden for now.
 const SHOW_MULTI_HOME_AI = false
@@ -76,6 +77,7 @@ const RotaEditor: React.FC = () => {
   // Modal state
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
+  const [copyingShift, setCopyingShift] = useState<Shift | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   // Preselected type for a new shift ('one_to_one' when opened via "Add 1-to-1").
   const [newShiftType, setNewShiftType] = useState<string | undefined>(undefined)
@@ -442,6 +444,74 @@ const RotaEditor: React.FC = () => {
     setSelectedShift(shift)
             setSelectedDate(new Date(shift.date + 'T00:00:00'))
     setIsShiftModalOpen(true)
+  }
+
+  // Replicates a shift's template (not its staff) onto other dates, skipping dates that already
+  // have an identical shift for this home.
+  const handleCopyShift = async (shift: Shift, dates: string[]) => {
+    if (dates.length === 0) return
+    const homeId = ensureStringHomeId(selectedHomeId)
+    const serviceId = typeof shift.service_id === 'string' ? shift.service_id : shift.service_id.id
+    const serviceUserId = shiftServiceUserId(shift)
+    const sorted = [...dates].sort()
+    try {
+      const existing = await shiftsApi.getAll({
+        home_id: homeId,
+        start_date: sorted[0],
+        end_date: sorted[sorted.length - 1]
+      })
+      const isDuplicate = (date: string) =>
+        (Array.isArray(existing) ? existing : []).some((s) =>
+          s.date === date &&
+          s.start_time.substring(0, 5) === shift.start_time.substring(0, 5) &&
+          s.end_time.substring(0, 5) === shift.end_time.substring(0, 5) &&
+          s.shift_type === shift.shift_type &&
+          (typeof s.service_id === 'string' ? s.service_id : s.service_id.id) === serviceId &&
+          shiftServiceUserId(s) === serviceUserId
+        )
+
+      let created = 0
+      let skipped = 0
+      const failed: string[] = []
+      for (const date of sorted) {
+        if (isDuplicate(date)) {
+          skipped++
+          continue
+        }
+        try {
+          await shiftsApi.create({
+            home_id: homeId,
+            service_id: serviceId,
+            date,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+            shift_type: shift.shift_type,
+            ...(serviceUserId ? { service_user_id: serviceUserId } : {}),
+            required_staff_count: shift.required_staff_count,
+            notes: shift.notes || '',
+            is_active: true,
+            assigned_staff: [],
+            is_urgent: shift.is_urgent,
+            status: 'unassigned' as const,
+            duration_hours: 0
+          })
+          created++
+        } catch (error: any) {
+          failed.push(`${format(new Date(`${date}T00:00:00`), 'EEE d MMM')}: ${error.response?.data?.error || 'failed'}`)
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      const parts = [`Copied to ${created} day${created !== 1 ? 's' : ''}`]
+      if (skipped > 0) parts.push(`${skipped} skipped (already exists)`)
+      if (failed.length > 0) {
+        toast.error(`${parts.join(', ')}. ${failed.length} failed — ${failed.join('; ')}`, { duration: 8000 })
+      } else {
+        toast.success(parts.join(', '))
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to copy shift')
+    }
   }
 
   const handleDeleteShift = async (shiftId: string) => {
@@ -1014,6 +1084,7 @@ const RotaEditor: React.FC = () => {
                 currentUser={user}
                 onAddShift={handleAddShift}
                 onEditShift={handleEditShift}
+                onCopyShift={setCopyingShift}
                 onDeleteShift={handleDeleteShift}
                 onAssignStaff={handleAssignStaff}
                 onUnassignStaff={handleUnassignStaff}
@@ -1134,6 +1205,13 @@ const RotaEditor: React.FC = () => {
       )}
 
       {/* Outcome of copying the week to next week */}
+      <CopyShiftModal
+        shift={copyingShift}
+        weekStart={currentWeekStart}
+        onClose={() => setCopyingShift(null)}
+        onCopy={handleCopyShift}
+      />
+
       {duplicateResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl max-w-lg w-full mx-4 border border-neutral-200 dark:border-neutral-700">

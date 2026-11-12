@@ -24,6 +24,7 @@ interface RotaGridProps {
   currentUser: User
   onAddShift: (date: Date, time: string) => void
   onEditShift: (shift: Shift) => void
+  onCopyShift: (shift: Shift) => void
   onDeleteShift: (shiftId: string) => void
   onAssignStaff: (shiftId: string, userId: string) => Promise<{ success: boolean; error?: string }>
   onUnassignStaff: (shiftId: string, userId: string) => void
@@ -44,6 +45,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   currentUser,
   onAddShift,
   onEditShift,
+  onCopyShift,
   onDeleteShift,
   onAssignStaff,
   onUnassignStaff,
@@ -475,6 +477,15 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                       onClick={() => onEditShift(shift)}
                                     >
                                       <PencilIcon className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      title="Copy to other days"
+                                      onClick={() => onCopyShift(shift)}
+                                    >
+                                      <DocumentDuplicateIcon className="h-3 w-3" />
                                     </Button>
                                     <Button
                                       variant="danger"
