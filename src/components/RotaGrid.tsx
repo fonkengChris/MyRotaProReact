@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { format, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -36,6 +36,7 @@ interface RotaGridProps {
   onResetWeek: () => Promise<void> // Add callback for resetting week
   onDeleteWeek: () => Promise<void> // Add callback for deleting week
   onDuplicateWeek: () => Promise<void> // Add callback for copying the week's allocated shifts to next week
+  highlightShiftId?: string // Shift to scroll to and briefly highlight (deep link)
 }
 
 const RotaGrid: React.FC<RotaGridProps> = ({
@@ -55,7 +56,8 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   onCreateShiftsFromSchedule,
   onResetWeek,
   onDeleteWeek,
-  onDuplicateWeek
+  onDuplicateWeek,
+  highlightShiftId
 }) => {
 
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
@@ -63,6 +65,20 @@ const RotaGrid: React.FC<RotaGridProps> = ({
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule | null>(null)
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
   const [isCreatingShifts, setIsCreatingShifts] = useState(false)
+  const [flashShiftId, setFlashShiftId] = useState<string | null>(null)
+  const scrolledToShiftRef = useRef<string | null>(null)
+
+  // Scroll a deep-linked shift into view once it renders, and highlight it for a few seconds.
+  useEffect(() => {
+    if (!highlightShiftId || scrolledToShiftRef.current === highlightShiftId) return
+    const el = document.getElementById(`rota-shift-${highlightShiftId}`)
+    if (!el) return
+    scrolledToShiftRef.current = highlightShiftId
+    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+    setFlashShiftId(highlightShiftId)
+    const timer = setTimeout(() => setFlashShiftId(null), 4000)
+    return () => clearTimeout(timer)
+  }, [highlightShiftId, shifts])
 
   // Load weekly schedule when homeId changes
   useEffect(() => {
@@ -442,7 +458,10 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                           return (
                             <div
                               key={shift.id}
-                              className={`rounded-lg p-2 text-xs shadow-sm ${
+                              id={`rota-shift-${shift.id}`}
+                              className={`rounded-lg p-2 text-xs shadow-sm transition-shadow ${
+                                flashShiftId === shift.id ? 'ring-2 ring-warning-500 ring-offset-2 ring-offset-background ' : ''
+                              }${
                                 hasShiftConflicts(shift.id)
                                   ? 'bg-danger-50 border border-danger-300 border-l-4 border-l-danger-500 dark:bg-danger-950/30'
                                   : oneToOne

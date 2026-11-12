@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -60,6 +62,7 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
   userRole = 'support_worker'
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(() => new Date())
+  const { canViewRotas } = usePermissions()
 
   // Admins and key workers see every home they can reach; the server applies a key worker's
   // home scope, so they don't need a home of their own.
@@ -575,11 +578,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {userHour.shifts.map((shift) => {
                           const br = getShiftHourBreakdown(shift)
-                          return (
-                          <div
-                            key={shift.id}
-                            className="rounded p-2 text-sm bg-primary-100 border border-primary-300 dark:bg-primary-900/25 dark:border-primary-800"
-                          >
+                          const cardClass = "block rounded p-2 text-sm bg-primary-100 border border-primary-300 dark:bg-primary-900/25 dark:border-primary-800"
+                          const rotaHomeId = shiftHomeId(shift)
+                          const rotaLink = canViewRotas && rotaHomeId
+                            ? `/rota/${format(startOfWeek(new Date(`${shift.date}T00:00:00`), { weekStartsOn: 1 }), 'yyyy-MM-dd')}?home=${rotaHomeId}&shift=${shift.id}`
+                            : null
+                          const content = (
+                          <>
                             <div className="flex items-center justify-between gap-2">
                               <div className="min-w-0">
                                 <p className="font-medium text-neutral-950 dark:text-neutral-100">
@@ -608,7 +613,19 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                 )}
                               </div>
                             </div>
-                          </div>
+                          </>
+                          )
+                          return rotaLink ? (
+                            <Link
+                              key={shift.id}
+                              to={rotaLink}
+                              title="View on the rota"
+                              className={`${cardClass} transition-colors hover:border-primary-500 hover:bg-primary-200/70 dark:hover:bg-primary-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500`}
+                            >
+                              {content}
+                            </Link>
+                          ) : (
+                            <div key={shift.id} className={cardClass}>{content}</div>
                           )
                         })}
                       </div>

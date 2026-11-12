@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
@@ -32,6 +32,10 @@ const SHOW_MULTI_HOME_AI = false
 
 const RotaEditor: React.FC = () => {
   const { weekStart: weekStartParam } = useParams()
+  // Deep links (e.g. from the dashboard's Hours Summary) can pick the home and a shift to highlight.
+  const [searchParams] = useSearchParams()
+  const homeParam = searchParams.get('home')
+  const highlightShiftId = searchParams.get('shift') || undefined
   const navigate = useNavigate()
   const { user } = useAuth()
   const permissions = usePermissions()
@@ -49,7 +53,7 @@ const RotaEditor: React.FC = () => {
   // Parse week start date from URL or use current week
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     if (weekStartParam) {
-      return new Date(weekStartParam)
+      return new Date(`${weekStartParam}T00:00:00`)
     }
     return startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday start
   })
@@ -57,7 +61,7 @@ const RotaEditor: React.FC = () => {
   const currentWeekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 })
 
   // Home selection state
-  const [selectedHomeId, setSelectedHomeId] = useState<string>('')
+  const [selectedHomeId, setSelectedHomeId] = useState<string>(() => homeParam || '')
   const [selectedHomesForAI, setSelectedHomesForAI] = useState<string[]>([])
   const [showMultiHomeSelector, setShowMultiHomeSelector] = useState(false)
   const isValidHomeId = !!selectedHomeId && selectedHomeId !== 'null'
@@ -1085,6 +1089,7 @@ const RotaEditor: React.FC = () => {
                 onAddShift={handleAddShift}
                 onEditShift={handleEditShift}
                 onCopyShift={setCopyingShift}
+                highlightShiftId={highlightShiftId}
                 onDeleteShift={handleDeleteShift}
                 onAssignStaff={handleAssignStaff}
                 onUnassignStaff={handleUnassignStaff}
