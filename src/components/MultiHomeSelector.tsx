@@ -48,7 +48,7 @@ const MultiHomeSelector: React.FC<MultiHomeSelectorProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-neutral-700 mb-2">
-                Select homes for AI rota generation. Staff can be assigned across multiple homes.
+                Select homes to auto generate a rota for. Staff can be assigned across multiple homes.
               </p>
               <p className="text-sm text-neutral-600">
                 Selected: {selectedHomes.length} of {homes.length} homes

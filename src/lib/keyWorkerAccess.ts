@@ -33,7 +33,7 @@ export const KEY_WORKER_ACCESS_GROUPS: Array<{
     fields: [
       { key: 'staff', label: 'Staff', help: 'Full access: add, edit, deactivate and delete staff, allocate homes and set availability.', options: LEVELS },
       { key: 'weekly_schedules', label: 'Weekly Schedules', help: 'Full access: create, edit and delete weekly schedules.', options: LEVELS },
-      { key: 'rota', label: 'Rota', help: 'Full access: edit rotas and shifts, including 1-to-1 shifts and Multi-Home AI.', options: LEVELS },
+      { key: 'rota', label: 'Rota', help: 'Full access: edit rotas and shifts, including 1-to-1 shifts.', options: LEVELS },
       {
         key: 'service_users',
         label: 'Service Users',

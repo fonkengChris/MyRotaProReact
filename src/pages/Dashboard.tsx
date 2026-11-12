@@ -397,7 +397,7 @@ const Dashboard: React.FC = () => {
                           <div className="h-8 w-8 rounded-lg bg-primary-100 flex items-center justify-center mb-2 group-hover:bg-primary-200 transition-colors">
                             <PlusIcon className="h-5 w-5 text-primary-600" />
                           </div>
-                          <span className="font-medium">AI Generate Rota</span>
+                          <span className="font-medium">Auto Generate Rota</span>
                         </Button>
                       </Link>
                     )}

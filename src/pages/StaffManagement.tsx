@@ -650,7 +650,10 @@ const StaffManagement: React.FC = () => {
         home: home,
         name: home ? `${home.name} - ${home.location.city}` : 'Unknown home'
       }
-    }).filter(userHome => userHome.home) // Only return homes that exist
+    })
+      .filter(userHome => userHome.home) // Only return homes that exist
+      // Same order as the homes list (by service, then name).
+      .sort((a, b) => homes.indexOf(a.home!) - homes.indexOf(b.home!))
   }
 
   const getAvailableHomes = (user: User) => {

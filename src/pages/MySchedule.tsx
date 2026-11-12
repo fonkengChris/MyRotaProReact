@@ -203,14 +203,6 @@ const MySchedule: React.FC = () => {
         subtitle="View your weekly work schedule and assigned shifts"
       />
 
-      {/* Clock in / out card — hidden until staff tap a shift's Clock in/out button. */}
-      {openCardShiftId && (
-        <ClockInOutCard
-          shiftId={openCardShiftId}
-          onClockInSuccess={() => setOpenCardShiftId(null)}
-        />
-      )}
-
       {/* Week Navigation */}
       <WeekNavigator
         weekStart={currentWeekStart}
@@ -399,6 +391,17 @@ const MySchedule: React.FC = () => {
                                     </Button>
                                   )}
                                 </div>
+
+                                {/* Clock in / out card, shown under the shift that opened it. It closes
+                                    itself after a successful clock-in; "Open clock out" reopens it. */}
+                                {openCardShiftId === shift.id && (
+                                  <div className="pt-4">
+                                    <ClockInOutCard
+                                      shiftId={shift.id}
+                                      onClockInSuccess={() => setOpenCardShiftId(null)}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )})}
                         </div>

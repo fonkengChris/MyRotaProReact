@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
@@ -25,6 +25,9 @@ import ConflictAlert from '@/components/ConflictAlert'
 import MultiHomeSelector from '@/components/MultiHomeSelector'
 import WeekAssignmentSummary from '@/components/WeekAssignmentSummary'
 import { Shift, extractUserDefaultHomeId } from '@/types'
+
+// The Multi-Home AI button is hidden for now.
+const SHOW_MULTI_HOME_AI = false
 
 const RotaEditor: React.FC = () => {
   const { weekStart: weekStartParam } = useParams()
@@ -84,6 +87,13 @@ const RotaEditor: React.FC = () => {
     conflicts: { conflictType: string; message: string }[]
   } | null>(null)
   const [isOverriding, setIsOverriding] = useState(false)
+  // Settles the pending handleAssignStaff call once the admin approves (true) or cancels
+  // (false) the override prompt, so the grid can close its staff dropdown on approval.
+  const overrideResolver = useRef<((approved: boolean) => void) | null>(null)
+  const settleOverride = (approved: boolean) => {
+    overrideResolver.current?.(approved)
+    overrideResolver.current = null
+  }
 
   // Outcome of "Copy to Next Week", including anyone who couldn't be copied.
   const [duplicateResult, setDuplicateResult] = useState<DuplicateWeekResult | null>(null)
@@ -213,7 +223,7 @@ const RotaEditor: React.FC = () => {
         if (shouldCreateShifts) {
           await createShiftsFromWeeklySchedule()
         } else {
-          toast.error('Please create shifts first before using AI generation.')
+          toast.error('Please create shifts first before using auto generate.')
           return
         }
       }
@@ -226,7 +236,7 @@ const RotaEditor: React.FC = () => {
       // const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
       // const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
       
-      toast.loading(`Generating rota with AI for ${selectedHomeId}...`)
+      toast.loading(`Auto generating rota for ${selectedHomeId}...`)
       
       const result = await aiSolverApi.generateRota({
         week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
@@ -240,7 +250,7 @@ const RotaEditor: React.FC = () => {
       
       if (result.data?.success) {
         // Show success message with employment type distribution if available
-        let successMessage = 'AI rota generated successfully!'
+        let successMessage = 'Rota auto generated successfully!'
         
         if (result.summary) {
           successMessage += ` ${result.summary}`
@@ -297,7 +307,7 @@ const RotaEditor: React.FC = () => {
       // const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 })
       // const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 })
       
-      toast.loading(`Generating rota with AI for ${selectedHomesForAI.length} home(s)...`)
+      toast.loading(`Auto generating rota for ${selectedHomesForAI.length} home(s)...`)
       
       const result = await aiSolverApi.generateRota({
         week_start_date: format(currentWeekStart, 'yyyy-MM-dd'),
@@ -311,7 +321,7 @@ const RotaEditor: React.FC = () => {
       
       if (result.data?.success) {
         // Show success message with employment type distribution if available
-        let successMessage = `AI rota generated successfully for ${selectedHomesForAI.length} home(s)!`
+        let successMessage = `Rota auto generated successfully for ${selectedHomesForAI.length} home(s)!`
         
         if (result.summary) {
           successMessage += ` ${result.summary}`
@@ -495,6 +505,8 @@ const RotaEditor: React.FC = () => {
         // Admin hit overridable rules (never overlap): offer an override confirmation instead
         // of a hard error.
         if (conflictData.overridable && Array.isArray(conflictData.overridableConflicts)) {
+          settleOverride(false)
+          const approved = new Promise<boolean>((resolve) => { overrideResolver.current = resolve })
           setOverridePrompt({
             shiftId,
             userId,
@@ -503,7 +515,7 @@ const RotaEditor: React.FC = () => {
               message: c.message,
             })),
           })
-          return { success: false, error: 'override_required' }
+          return (await approved) ? { success: true } : { success: false, error: 'override_cancelled' }
         }
         if (conflictData.conflict) {
           const conflict = conflictData.conflict
@@ -582,6 +594,7 @@ const RotaEditor: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] })
       queryClient.invalidateQueries({ queryKey: ['conflicts'] })
       setOverridePrompt(null)
+      settleOverride(true)
     } catch (error: any) {
       // Overlap (or any still-blocking rule) cannot be overridden.
       toast.error(error.response?.data?.message || error.response?.data?.error || 'Override failed')
@@ -734,9 +747,9 @@ const RotaEditor: React.FC = () => {
               title="Generates a rota for the selected week. Only support workers are auto-assigned — admins, key workers and senior staff are added manually."
             >
               <CogIcon className="h-4 w-4 mr-2" />
-              AI Generate
+              Auto Generate
             </Button>
-            {permissions.canUseMultiHomeAI && homes.length > 1 && (
+            {SHOW_MULTI_HOME_AI && permissions.canUseMultiHomeAI && homes.length > 1 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -1053,7 +1066,7 @@ const RotaEditor: React.FC = () => {
                       disabled={!permissions.canUseAISolver}
                     >
                       <CogIcon className="h-4 w-4 mr-2" />
-                      AI Generate
+                      Auto Generate
                     </Button>
                   </div>
                 )}
@@ -1204,7 +1217,7 @@ const RotaEditor: React.FC = () => {
               </p>
             </div>
             <div className="px-6 py-4 border-t border-neutral-300 dark:border-neutral-700 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setOverridePrompt(null)} disabled={isOverriding}>
+              <Button variant="outline" onClick={() => { setOverridePrompt(null); settleOverride(false) }} disabled={isOverriding}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={confirmOverride} disabled={isOverriding}>
