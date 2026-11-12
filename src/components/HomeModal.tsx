@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Home, User, BreakPolicy, extractManagerId } from '@/types'
+import { Home, HomeServiceType, User, BreakPolicy, extractManagerId } from '@/types'
 import { homesApi, usersApi } from '@/lib/api'
 import { usePermissions } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -23,6 +23,12 @@ const DEFAULT_BREAK_POLICY: BreakPolicy = {
     { min_hours: 12, deduction_hours: 1 },
   ],
 }
+
+const SERVICE_TYPE_OPTIONS: { value: HomeServiceType; label: string }[] = [
+  { value: 'supported_living', label: 'Supported living' },
+  { value: 'community_outreach', label: 'Community outreach' },
+  { value: 'day_centre', label: 'Day centre' },
+]
 
 const HomeModal: React.FC<HomeModalProps> = ({
   isOpen,
@@ -53,6 +59,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
       end: '18:00'
     },
     break_policy: DEFAULT_BREAK_POLICY as BreakPolicy,
+    service_type: 'supported_living' as HomeServiceType,
     is_active: true
   })
 
@@ -84,6 +91,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
                 tiers: (home.break_policy.tiers || []).map((t) => ({ ...t })),
               }
             : { ...DEFAULT_BREAK_POLICY, tiers: DEFAULT_BREAK_POLICY.tiers.map((t) => ({ ...t })) },
+          service_type: home.service_type || 'supported_living',
           is_active: home.is_active
         })
       } else {
@@ -105,6 +113,7 @@ const HomeModal: React.FC<HomeModalProps> = ({
             end: '18:00'
           },
           break_policy: { ...DEFAULT_BREAK_POLICY, tiers: DEFAULT_BREAK_POLICY.tiers.map((t) => ({ ...t })) },
+          service_type: 'supported_living',
           is_active: true
         })
       }
@@ -241,10 +250,11 @@ const HomeModal: React.FC<HomeModalProps> = ({
     setIsLoading(true)
     
     try {
-      // Break policy is admin-only; non-admins never send it (server also enforces this).
-      let payload: typeof formData | Omit<typeof formData, 'break_policy'> = formData
+      // Break policy and service type are admin-only; non-admins never send them (server
+      // also enforces this).
+      let payload: typeof formData | Omit<typeof formData, 'break_policy' | 'service_type'> = formData
       if (!isAdmin) {
-        const { break_policy, ...rest } = formData
+        const { break_policy, service_type, ...rest } = formData
         payload = rest
       }
 
@@ -448,6 +458,28 @@ const HomeModal: React.FC<HomeModalProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Service type — admins only. Community outreach homes use the shorter
+                  outreach rest gap between their shifts (Solver settings). */}
+              {isAdmin && (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-800 dark:text-neutral-300 mb-1">
+                    Service Type
+                  </label>
+                  <select
+                    value={formData.service_type}
+                    onChange={(e) => handleInputChange('service_type', e.target.value)}
+                    className="w-full rounded-md border border-neutral-400 dark:border-neutral-600 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white dark:bg-neutral-700 text-neutral-950 dark:text-neutral-100"
+                  >
+                    {SERVICE_TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    Between two community outreach shifts, staff only need the shorter outreach rest gap instead of the normal minimum rest.
+                  </p>
+                </div>
+              )}
 
               {/* Break deductions — admins only. Governs unpaid break hours removed
                   from payable time for this home. */}

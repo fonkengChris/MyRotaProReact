@@ -204,6 +204,8 @@ export interface MessageThreadResponse {
 }
 
 // Home types
+export type HomeServiceType = 'supported_living' | 'community_outreach' | 'day_centre'
+
 export interface Home {
   id: string
   name: string
@@ -213,6 +215,7 @@ export interface Home {
   capacity: number
   operating_hours: OperatingHours
   break_policy?: BreakPolicy
+  service_type?: HomeServiceType
   is_active: boolean
   created_at: string
   updated_at: string
@@ -712,6 +715,7 @@ export interface SolverHoursRule {
 export interface SolverSettings {
   auto_assignable_roles: string[]
   min_rest_hours: number
+  outreach_min_rest_hours: number
   consecutive_days_enabled: boolean
   max_consecutive_days: number
   same_shift_limit_enabled: boolean

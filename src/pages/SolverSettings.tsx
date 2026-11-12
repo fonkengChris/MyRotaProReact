@@ -254,12 +254,13 @@ const SolverSettingsPage: React.FC = () => {
         <CardHeader>
           <CardTitle>Rest and working pattern</CardTitle>
           <CardDescription>
-            Minimum rest also applies when shifts are assigned by hand. Admins can override it there, and staff who self-select are flagged for review.
+            Minimum rest also applies when shifts are assigned by hand. Admins can override it there, and staff who self-select are flagged for review. Between two shifts at community outreach homes (set per home), the outreach rest applies instead.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2">
             {num(['min_rest_hours'], { label: 'Minimum rest between shifts', unit: 'h', min: 0, max: 24, step: 0.5 })}
+            {num(['outreach_min_rest_hours'], { label: 'Minimum rest between outreach shifts', unit: 'h', min: 0, max: 24, step: 0.25 })}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                 <input
