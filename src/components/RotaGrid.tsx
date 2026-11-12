@@ -451,25 +451,25 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                               }`}
                             >
                               {/* Shift header */}
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center space-x-1">
-                                  <ClockIcon className="h-3 w-3 text-primary-600" />
+                              <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                                <div className="flex flex-wrap items-center gap-1 min-w-0">
+                                  <ClockIcon className="h-3 w-3 text-primary-600 shrink-0" />
                                   <span className="font-mono tabular-nums font-medium text-primary-900 dark:text-primary-200">
                                     {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                   </span>
                                   {hasShiftConflicts(shift.id) && (
-                                    <Badge variant="danger" className="text-xs ml-2">
+                                    <Badge variant="danger" className="text-xs">
                                       Conflict
                                     </Badge>
                                   )}
                                   {oneToOne && (
-                                    <Badge variant="secondary" className="text-xs ml-2">
+                                    <Badge variant="secondary" className="text-xs">
                                       1-to-1
                                     </Badge>
                                   )}
                                 </div>
                                 {canEditShift && (
-                                  <div className="flex space-x-1">
+                                  <div className="flex gap-1 shrink-0 ml-auto">
                                     <Button
                                       variant="outline"
                                       size="sm"
