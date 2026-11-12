@@ -549,6 +549,15 @@ export const timeOffApi = {
     return response.data
   },
 
+  // Admin only: creates the leave already approved for the given staff member.
+  book: async (data: Record<string, unknown>, overrideHomeLeaveLimit = false): Promise<TimeOffRequest> => {
+    const response = await api.post<TimeOffRequest>(
+      '/timeoff/book',
+      overrideHomeLeaveLimit ? { ...data, override_home_leave_limit: true } : data
+    )
+    return response.data
+  },
+
   update: async (id: string, data: Partial<TimeOffRequest>): Promise<TimeOffRequest> => {
     const response = await api.put<TimeOffRequest>(`/timeoff/${id}`, data)
     return response.data

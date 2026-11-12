@@ -8,8 +8,11 @@ import {
   CalendarIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { User } from '@/types'
 
 const timeOffSchema = z.object({
+  // Empty: the signed-in user's own request. Otherwise the staff member an admin is booking for.
+  user_id: z.string().optional(),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
   request_type: z.string().min(1, 'Request type is required'),
@@ -30,11 +33,14 @@ type TimeOffFormData = z.infer<typeof timeOffSchema>
 interface TimeOffRequestFormProps {
   onSubmit: (data: TimeOffFormData) => Promise<void>
   isLoading?: boolean
+  // Staff an admin may book leave for directly (already approved); omit for a plain request form.
+  bookableStaff?: User[]
 }
 
 const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
   onSubmit,
-  isLoading = false
+  isLoading = false,
+  bookableStaff
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -47,6 +53,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
   } = useForm<TimeOffFormData>({
     resolver: zodResolver(timeOffSchema),
     defaultValues: {
+      user_id: '',
       start_date: '',
       end_date: '',
       request_type: '',
@@ -58,6 +65,9 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
 
   const startDate = watch('start_date')
   const endDate = watch('end_date')
+  const isBooking = !!watch('user_id')
+  // Booked leave may be recorded after the fact (e.g. sickness), so past dates are allowed.
+  const minStartDate = isBooking ? undefined : new Date().toISOString().split('T')[0]
 
   // Calculate duration
   const calculateDuration = () => {
@@ -88,13 +98,39 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Request Time Off</CardTitle>
+        <CardTitle>{bookableStaff ? 'Request or Book Time Off' : 'Request Time Off'}</CardTitle>
         <p className="text-sm text-neutral-600">
-          Submit a request for time off, vacation, or other leave
+          {bookableStaff
+            ? 'Submit your own request, or book leave directly for a staff member'
+            : 'Submit a request for time off, vacation, or other leave'}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+          {bookableStaff && (
+            <div>
+              <label htmlFor="time-off-user" className="block text-sm font-medium text-neutral-800 mb-1">
+                Leave For
+              </label>
+              <select id="time-off-user" {...register('user_id')} className="input w-full">
+                <option value="">Myself (submit a request)</option>
+                {bookableStaff
+                  .filter((s) => s.is_active !== false)
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+              </select>
+              {isBooking && (
+                <p className="mt-1 text-xs text-neutral-600">
+                  Booked leave is approved immediately and marks the staff member unavailable.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Date Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -105,7 +141,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
                 {...register('start_date')}
                 type="date"
                 className="input w-full"
-                min={new Date().toISOString().split('T')[0]}
+                min={minStartDate}
               />
               {errors.start_date && (
                 <p className="mt-1 text-sm text-danger-600">{errors.start_date.message}</p>
@@ -120,7 +156,7 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
                 {...register('end_date')}
                 type="date"
                 className="input w-full"
-                min={startDate || new Date().toISOString().split('T')[0]}
+                min={startDate || minStartDate}
               />
               {errors.end_date && (
                 <p className="mt-1 text-sm text-danger-600">{errors.end_date.message}</p>
@@ -229,7 +265,9 @@ const TimeOffRequestForm: React.FC<TimeOffRequestFormProps> = ({
               loading={isSubmitting}
               disabled={isSubmitting || isLoading}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Request'}
+              {isSubmitting
+                ? (isBooking ? 'Booking...' : 'Submitting...')
+                : (isBooking ? 'Book Leave' : 'Submit Request')}
             </Button>
           </div>
         </form>

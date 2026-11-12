@@ -176,6 +176,34 @@ const AvailabilityPage: React.FC = () => {
     }
   })
 
+  // Admins book leave directly for a staff member (created already approved)
+  const bookTimeOffMutation = useMutation({
+    mutationFn: async (data: Record<string, unknown>) => {
+      try {
+        return await timeOffApi.book(data)
+      } catch (error: any) {
+        const body = error.response?.data
+        if (error.response?.status === 409 && body?.code === 'HOME_LEAVE_LIMIT') {
+          if (window.confirm(`${body.details}\n\nBook anyway as an admin override?`)) {
+            return await timeOffApi.book(data, true)
+          }
+          return null
+        }
+        throw error
+      }
+    },
+    onSuccess: (result) => {
+      if (!result) return
+      queryClient.invalidateQueries({ queryKey: ['timeOffRequests'] })
+      queryClient.invalidateQueries({ queryKey: ['availabilities'] })
+      toast.success('Leave booked and approved — availability updated')
+      setActiveTab('requests')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.details || error.response?.data?.error || 'Failed to book leave', { duration: 8000 })
+    }
+  })
+
   // Approve time-off request mutation
   const approveTimeOffMutation = useMutation({
     mutationFn: async (requestId: string) => {
@@ -267,6 +295,12 @@ const AvailabilityPage: React.FC = () => {
 
   // Handle submitting time-off request
   const handleSubmitTimeOff = async (data: any) => {
+    if (data.user_id && permissions.canApproveTimeOff) {
+      // mutateAsync rejects on error; the toast is already shown, but keep the form filled.
+      const booked = await bookTimeOffMutation.mutateAsync(data)
+      if (!booked) throw new Error('Booking cancelled')
+      return
+    }
     await submitTimeOffMutation.mutateAsync({
       ...data,
       user_id: user?.id
@@ -532,7 +566,8 @@ const AvailabilityPage: React.FC = () => {
       {activeTab === 'submit' && (
         <TimeOffRequestForm
           onSubmit={handleSubmitTimeOff}
-          isLoading={submitTimeOffMutation.isPending}
+          isLoading={submitTimeOffMutation.isPending || bookTimeOffMutation.isPending}
+          bookableStaff={permissions.canApproveTimeOff ? staff.filter((s) => s.id !== user?.id) : undefined}
         />
       )}
 
