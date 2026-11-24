@@ -3,7 +3,7 @@ import { format, parseISO, addDays } from 'date-fns'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { XMarkIcon, CalendarIcon, ClockIcon, UsersIcon, ExclamationTriangleIcon, CheckCircleIcon, ViewColumnsIcon, ListBulletIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
-import { Timetable } from '@/types'
+import { Timetable, timetableStatusLabel, isEditableTimetableDraft } from '@/types'
 import { homesApi, timetablesApi } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -14,6 +14,10 @@ interface TimetableViewModalProps {
   timetable: Timetable
   userFilter?: boolean // If true, only show shifts assigned to current user
   onDeleteRotas?: (timetable: Timetable) => Promise<void> | void
+  /** Open the given week (week_start_date) of a draft in the Rota Editor. */
+  onEditDraft?: (timetable: Timetable, weekStartDate?: string) => void
+  /** Discard a generated draft (its draft assignments) so it can be regenerated. */
+  onDiscardDraft?: (timetable: Timetable) => Promise<void> | void
 }
 
 const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
@@ -21,7 +25,9 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
   onClose,
   timetable,
   userFilter = false,
-  onDeleteRotas
+  onDeleteRotas,
+  onEditDraft,
+  onDiscardDraft
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(0)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -363,11 +369,16 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
             <p className="text-sm text-neutral-700 dark:text-neutral-400 mt-1">
               {format(parseISO(timetable.start_date), 'MMM d, yyyy')} - {format(parseISO(timetable.end_date), 'MMM d, yyyy')}
             </p>
+            {!userFilter && isEditableTimetableDraft(timetable) && (
+              <p className="text-sm text-neutral-700 dark:text-neutral-400 mt-1">
+                Draft: staff can't see these assignments until the timetable is published.
+              </p>
+            )}
           </div>
           <div className="flex items-center space-x-3">
             <Badge variant={getStatusBadgeVariant(timetable.status)}>
               {getStatusIcon(timetable.status)}
-              <span className="ml-1 capitalize">{timetable.status}</span>
+              <span className="ml-1">{timetableStatusLabel(timetable)}</span>
             </Badge>
             <Button
               variant="outline"
@@ -681,6 +692,19 @@ const TimetableViewModal: React.FC<TimetableViewModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-neutral-300 dark:border-neutral-700">
+          {onDiscardDraft && isEditableTimetableDraft(timetable) && (
+            <Button variant="outline" onClick={() => onDiscardDraft(timetable)}>
+              Discard draft
+            </Button>
+          )}
+          {onEditDraft && isEditableTimetableDraft(timetable) && (
+            <Button
+              variant="outline"
+              onClick={() => onEditDraft(timetable, currentWeek?.week_start_date)}
+            >
+              Edit this week in Rota Editor
+            </Button>
+          )}
           {onDeleteRotas &&
             (timetable.status === 'generated' || timetable.status === 'archived') && (
             <Button

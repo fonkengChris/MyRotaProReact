@@ -358,6 +358,10 @@ export interface StaffAssignment {
   clock_in_time?: string | null
   clock_out_time?: string | null
   attendance_status?: AttendanceStatus
+  /** Unpublished auto-generated assignment: only rota editors see it, staff aren't told yet. */
+  is_draft?: boolean
+  /** The timetable whose publish allocates this draft; null for Rota Editor drafts. */
+  draft_timetable_id?: string | null
 }
 
 export type RestExceptionStatus = 'none' | 'pending' | 'confirmed'
@@ -900,6 +904,26 @@ export interface Timetable {
   accessible_by_users: string[]
   created_at: string
   updated_at: string
+}
+
+/**
+ * Generated timetables are drafts until published: their assignments are hidden from staff.
+ * 'draft' covers both "not generated yet" and "generated but has conflicts to fix".
+ */
+export function timetableStatusLabel(timetable: Pick<Timetable, 'status' | 'generation_completed_at'>): string {
+  switch (timetable.status) {
+    case 'draft': return timetable.generation_completed_at ? 'Draft – has conflicts' : 'Not generated'
+    case 'generating': return 'Generating'
+    case 'generated': return 'Draft – ready to publish'
+    case 'published': return 'Published'
+    case 'archived': return 'Archived'
+    default: return timetable.status
+  }
+}
+
+/** A generated timetable whose draft can still be edited in the Rota Editor. */
+export function isEditableTimetableDraft(timetable: Pick<Timetable, 'status' | 'generation_completed_at'>): boolean {
+  return timetable.status === 'generated' || (timetable.status === 'draft' && !!timetable.generation_completed_at)
 }
 
 export interface WeeklyRota {

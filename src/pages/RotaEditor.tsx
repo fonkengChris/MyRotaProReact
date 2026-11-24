@@ -131,6 +131,7 @@ const RotaEditor: React.FC = () => {
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), selectedHomeId],
     queryFn: () => shiftsApi.getAll({
+      include_drafts: true,
       home_id: ensureStringHomeId(selectedHomeId),
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
@@ -144,6 +145,7 @@ const RotaEditor: React.FC = () => {
   const { data: allHomesShifts = [], isLoading: allHomesShiftsLoading } = useQuery({
     queryKey: ['shifts', 'week', format(currentWeekStart, 'yyyy-MM-dd'), 'all-homes'],
     queryFn: () => shiftsApi.getAll({
+      include_drafts: true,
       start_date: format(currentWeekStart, 'yyyy-MM-dd'),
       end_date: format(currentWeekEnd, 'yyyy-MM-dd')
     }),
@@ -256,7 +258,7 @@ const RotaEditor: React.FC = () => {
       
       if (result.data?.success) {
         // Show success message with employment type distribution if available
-        let successMessage = 'Rota auto generated successfully!'
+        let successMessage = 'Draft rota generated. Staff won\'t see it until you publish the week.'
         
         if (result.summary) {
           successMessage += ` ${result.summary}`
@@ -327,7 +329,7 @@ const RotaEditor: React.FC = () => {
       
       if (result.data?.success) {
         // Show success message with employment type distribution if available
-        let successMessage = `Rota auto generated successfully for ${selectedHomesForAI.length} home(s)!`
+        let successMessage = `Draft rota generated for ${selectedHomesForAI.length} home(s). Staff won't see it until each week is published.`
         
         if (result.summary) {
           successMessage += ` ${result.summary}`
@@ -460,6 +462,7 @@ const RotaEditor: React.FC = () => {
     const sorted = [...dates].sort()
     try {
       const existing = await shiftsApi.getAll({
+      include_drafts: true,
         home_id: homeId,
         start_date: sorted[0],
         end_date: sorted[sorted.length - 1]
@@ -684,6 +687,7 @@ const RotaEditor: React.FC = () => {
       
       // Get all background shifts for the current week (1-to-1s are managed individually)
       const weekShifts = await shiftsApi.getAll({
+      include_drafts: true,
         home_id: ensureStringHomeId(selectedHomeId),
         start_date: format(currentWeekStart, 'yyyy-MM-dd'),
         end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
@@ -718,6 +722,7 @@ const RotaEditor: React.FC = () => {
       
       // Get all background shifts for the current week (1-to-1s are managed individually)
       const weekShifts = await shiftsApi.getAll({
+      include_drafts: true,
         home_id: ensureStringHomeId(selectedHomeId),
         start_date: format(currentWeekStart, 'yyyy-MM-dd'),
         end_date: format(currentWeekEnd, 'yyyy-MM-dd'),
@@ -759,6 +764,55 @@ const RotaEditor: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['conflicts'] })
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to copy this week')
+    }
+  }
+
+  // Draft (unpublished auto-generated) assignments in this home's week. Rota Editor drafts are
+  // published here; timetable drafts are published with their timetable.
+  const draftAssignments = shifts.flatMap((shift) => (shift.assigned_staff || []).filter((a) => a.is_draft))
+  const rotaDraftCount = draftAssignments.filter((a) => !a.draft_timetable_id).length
+  const timetableDraftCount = draftAssignments.length - rotaDraftCount
+  const [isPublishingDrafts, setIsPublishingDrafts] = useState(false)
+
+  const handlePublishDrafts = async () => {
+    if (!window.confirm(`Publish ${rotaDraftCount} draft assignment(s)? Staff will see them on their schedules and be notified.`)) return
+    setIsPublishingDrafts(true)
+    try {
+      const result = await shiftsApi.publishDrafts(
+        ensureStringHomeId(selectedHomeId),
+        format(currentWeekStart, 'yyyy-MM-dd')
+      )
+      toast.success(`Published ${result.assignments_published} assignment(s). Staff have been notified.`)
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['timetables'] })
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to publish drafts')
+    } finally {
+      setIsPublishingDrafts(false)
+    }
+  }
+
+  const [isDiscardingDrafts, setIsDiscardingDrafts] = useState(false)
+
+  const handleDiscardDrafts = async () => {
+    const timetableNote = timetableDraftCount > 0
+      ? ` This includes ${timetableDraftCount} from a draft timetable.`
+      : ''
+    if (!window.confirm(`Discard ${draftAssignments.length} draft assignment(s) for this week?${timetableNote} Published assignments are kept. This cannot be undone.`)) return
+    setIsDiscardingDrafts(true)
+    try {
+      const result = await shiftsApi.discardDrafts(
+        ensureStringHomeId(selectedHomeId),
+        format(currentWeekStart, 'yyyy-MM-dd')
+      )
+      toast.success(`Discarded ${result.assignments_discarded} draft assignment(s)`)
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+      queryClient.invalidateQueries({ queryKey: ['conflicts'] })
+      queryClient.invalidateQueries({ queryKey: ['timetables'] })
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to discard drafts')
+    } finally {
+      setIsDiscardingDrafts(false)
     }
   }
 
@@ -976,6 +1030,48 @@ const RotaEditor: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['conflicts'] })
           }}
         />
+      )}
+
+      {/* Draft banner: auto-generated assignments staff can't see yet */}
+      {isValidHomeId && draftAssignments.length > 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="font-medium text-neutral-950">
+                Draft: {draftAssignments.length} assignment(s) not yet visible to staff
+              </p>
+              <p className="text-sm text-neutral-700">
+                {timetableDraftCount > 0 && (
+                  <>
+                    {timetableDraftCount} belong to a draft timetable and are allocated when it is published
+                    {user.role === 'admin' && (
+                      <> from <button type="button" className="underline" onClick={() => navigate('/timetables')}>Timetables</button></>
+                    )}
+                    .{' '}
+                  </>
+                )}
+                {rotaDraftCount > 0 && (
+                  user.role === 'admin'
+                    ? 'Review and edit the draft, then publish the week to allocate staff and notify them.'
+                    : 'Review and edit the draft; an admin publishes it to allocate staff.'
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {permissions.canManageRotas && (
+                <Button variant="outline" size="sm" onClick={handleDiscardDrafts} disabled={isDiscardingDrafts || isPublishingDrafts}>
+                  {isDiscardingDrafts ? 'Discarding…' : 'Discard draft'}
+                </Button>
+              )}
+              {user.role === 'admin' && rotaDraftCount > 0 && (
+                <Button variant="primary" size="sm" onClick={handlePublishDrafts} disabled={isPublishingDrafts || isDiscardingDrafts}>
+                  <DocumentArrowUpIcon className="h-4 w-4 mr-2" />
+                  {isPublishingDrafts ? 'Publishing…' : 'Publish week'}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Rota Status and Actions - Only show when home is selected */}

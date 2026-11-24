@@ -534,7 +534,7 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                   return (
                                     <div
                                       key={`${shift.id}-${assignment.user_id}-${index}`}
-                                      className="flex items-center justify-between bg-white rounded px-2 py-1 border"
+                                      className={`flex items-center justify-between bg-white rounded px-2 py-1 border ${assignment.is_draft ? 'border-dashed' : ''}`}
                                     >
                                       <div className="flex items-center space-x-1">
                                         <UserIcon className="h-3 w-3 text-neutral-600" />
@@ -545,6 +545,11 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                           <span className="text-neutral-600" title="Covered by their background shift — no extra hours">
                                             (covered)
                                           </span>
+                                        )}
+                                        {assignment.is_draft && (
+                                          <Badge variant="neutral" className="text-[10px] px-1 py-0" title="Draft: not visible to staff until the week is published">
+                                            Draft
+                                          </Badge>
                                         )}
                                         {isAwaitingApproval(assignment) && (
                                           <Badge variant="warning" className="text-[10px] px-1 py-0" title={pendingReason(assignment)}>

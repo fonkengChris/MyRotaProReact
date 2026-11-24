@@ -12,3 +12,6 @@
 .env.local
 .env.development.local
 .env.test.local.env
+
+# Markdown notes (incl. scheduler-updates.md) stay local
+*.md

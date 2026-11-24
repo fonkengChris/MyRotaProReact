@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { useAuth, usePermissions } from '@/hooks/useAuth'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -14,12 +15,13 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline'
 import { timetablesApi, homesApi, rotasApi } from '@/lib/api'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, startOfWeek } from 'date-fns'
 import toast from 'react-hot-toast'
-import { Timetable, TimetableCreateRequest } from '@/types'
+import { Timetable, TimetableCreateRequest, timetableStatusLabel, isEditableTimetableDraft } from '@/types'
 import TimetableCreateModal from '@/components/TimetableCreateModal'
 import TimetableViewModal from '@/components/TimetableViewModal'
 
@@ -27,6 +29,7 @@ const Timetables: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth()
   const permissions = usePermissions()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -92,7 +95,7 @@ const Timetables: React.FC = () => {
         const status = await timetablesApi.getStatus(timetableId)
         
         if (status.status === 'generated') {
-          toast.success('Timetable generation completed successfully!')
+          toast.success('Draft timetable generated. Review it in the Rota Editor, then publish to allocate staff.')
           queryClient.invalidateQueries({ queryKey: ['timetables'] })
           return
         } else if (status.status === 'draft' && status.generation_errors.length > 0) {
@@ -129,12 +132,35 @@ const Timetables: React.FC = () => {
     poll()
   }
 
-  // Handle publish timetable
-  const handlePublishTimetable = async (timetable: Timetable) => {
+  // Open the draft's first week in the Rota Editor (the timetable's first home preselected).
+  const openDraftInRotaEditor = (timetable: Timetable, weekStartDate?: string) => {
+    const weekStart = format(startOfWeek(parseISO(weekStartDate || timetable.start_date), { weekStartsOn: 1 }), 'yyyy-MM-dd')
+    const home = getTimetableHomePdfEntries(timetable)[0]?.id
+    navigate(`/rota/${weekStart}${home ? `?home=${home}` : ''}`)
+  }
+
+  // Discard the generated draft: its draft assignments go and the timetable can be generated again.
+  const handleDiscardDraft = async (timetable: Timetable) => {
+    if (!window.confirm(`Discard the draft for "${timetable.name}"? Its draft assignments are removed (published assignments are kept) and the timetable goes back to not generated. This cannot be undone.`)) return
     try {
-      await timetablesApi.publish(timetable.id)
-      toast.success('Timetable published successfully')
+      const result = await timetablesApi.discardDraft(timetable.id)
+      setIsViewModalOpen(false)
+      toast.success(`Draft discarded (${result.assignments_discarded} assignment(s) removed). You can generate it again.`)
       queryClient.invalidateQueries({ queryKey: ['timetables'] })
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to discard draft')
+    }
+  }
+
+  // Allocate & publish: the draft assignments go live and staff are notified.
+  const handlePublishTimetable = async (timetable: Timetable) => {
+    if (!window.confirm(`Allocate and publish "${timetable.name}"? Staff will see these shifts on their schedules and be notified.`)) return
+    try {
+      const result = await timetablesApi.publish(timetable.id)
+      toast.success(`Timetable published. ${result.assignments_published ?? 0} assignment(s) allocated and staff notified.`)
+      queryClient.invalidateQueries({ queryKey: ['timetables'] })
+      queryClient.invalidateQueries({ queryKey: ['shifts'] })
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to publish timetable')
     }
@@ -512,7 +538,7 @@ const Timetables: React.FC = () => {
                   </div>
                   <Badge variant={getStatusBadgeVariant(timetable.status)} className="ml-2">
                     {getStatusIcon(timetable.status)}
-                    <span className="ml-1 capitalize">{timetable.status}</span>
+                    <span className="ml-1">{timetableStatusLabel(timetable)}</span>
                   </Badge>
                 </div>
               </CardHeader>
@@ -593,6 +619,27 @@ const Timetables: React.FC = () => {
                             </Button>
                           )}
 
+                          {isEditableTimetableDraft(timetable) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDraftInRotaEditor(timetable)}
+                            >
+                              <PencilSquareIcon className="h-4 w-4 mr-1" />
+                              Edit draft
+                            </Button>
+                          )}
+
+                          {isEditableTimetableDraft(timetable) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDiscardDraft(timetable)}
+                            >
+                              Discard draft
+                            </Button>
+                          )}
+
                           {timetable.status === 'generated' && (
                             <Button
                               variant="success"
@@ -600,7 +647,7 @@ const Timetables: React.FC = () => {
                               onClick={() => handlePublishTimetable(timetable)}
                             >
                               <CheckCircleIcon className="h-4 w-4 mr-1" />
-                              Publish
+                              Allocate &amp; publish
                             </Button>
                           )}
 
@@ -681,6 +728,8 @@ const Timetables: React.FC = () => {
           onClose={() => setIsViewModalOpen(false)}
           timetable={selectedTimetable}
           onDeleteRotas={handleDeleteGeneratedRotas}
+          onEditDraft={openDraftInRotaEditor}
+          onDiscardDraft={handleDiscardDraft}
         />
       )}
     </div>

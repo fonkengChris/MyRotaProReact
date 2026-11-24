@@ -280,6 +280,12 @@ export const servicesApi = {
 }
 
 // Shifts API
+export interface PublishDraftsResult {
+  assignments_published: number
+  /** Set when the week also holds drafts of an unpublished timetable (published from Timetables). */
+  timetable: { id: string; name: string } | null
+}
+
 export interface DuplicateWeekResult {
   target_week_start: string
   source_shifts: number
@@ -307,6 +313,8 @@ export const shiftsApi = {
     service_user_id?: string
     /** `one_to_one` → only 1-to-1 shifts; `background` → everything else. */
     kind?: 'background' | 'one_to_one'
+    /** Include draft (unpublished) assignments; honoured for rota editors only. */
+    include_drafts?: boolean
   }): Promise<Shift[]> => {
     const response = await api.get<Shift[]>('/shifts', { params })
     return response.data
@@ -376,6 +384,18 @@ export const shiftsApi = {
   // Copy a week's allocated shifts and staff to the following week.
   duplicateWeek: async (homeId: string, weekStart: string): Promise<DuplicateWeekResult> => {
     const response = await api.post<DuplicateWeekResult>('/shifts/duplicate-week', { home_id: homeId, week_start: weekStart })
+    return response.data
+  },
+
+  // Allocate a home's week of Rota Editor drafts (admin). Timetable drafts publish with their timetable.
+  publishDrafts: async (homeId: string, weekStart: string): Promise<PublishDraftsResult> => {
+    const response = await api.post<PublishDraftsResult>('/shifts/publish-drafts', { home_id: homeId, week_start: weekStart })
+    return response.data
+  },
+
+  // Remove a home's week of draft assignments (rota editors). Live assignments are kept.
+  discardDrafts: async (homeId: string, weekStart: string): Promise<{ assignments_discarded: number }> => {
+    const response = await api.post<{ assignments_discarded: number }>('/shifts/discard-drafts', { home_id: homeId, week_start: weekStart })
     return response.data
   },
 
@@ -905,7 +925,14 @@ export const timetablesApi = {
   },
 
   // Publish timetable
-  publish: async (id: string): Promise<Timetable> => {
+  // Throw away the generated draft (its draft assignments) so the timetable can be regenerated.
+  discardDraft: async (id: string): Promise<Timetable & { assignments_discarded: number }> => {
+    const response = await api.post(`/timetables/${id}/discard-draft`);
+    return response.data;
+  },
+
+  // Allocate & publish: the timetable's draft assignments go live and staff are notified.
+  publish: async (id: string): Promise<Timetable & { assignments_published?: number }> => {
     const response = await api.post(`/timetables/${id}/publish`);
     return response.data;
   },
