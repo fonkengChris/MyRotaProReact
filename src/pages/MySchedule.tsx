@@ -15,7 +15,7 @@ import WeekNavigator from '@/components/common/WeekNavigator'
 import ClockInOutCard from '@/components/ClockInOutCard'
 import { shiftsApi, homesApi, servicesApi } from '@/lib/api'
 import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from 'date-fns'
-import { extractUserDefaultHomeId, Location, Shift, StaffAssignment, extractServiceId, formatShiftTypeLabel } from '@/types'
+import { extractUserDefaultHomeId, Location, Shift, StaffAssignment, extractServiceId, extractServiceName, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks } from '@/lib/shiftHours'
 
 // How early (minutes) staff may clock in — mirrors ClockInOutCard / server EARLY_CLOCK_IN_MINUTES.
@@ -139,6 +139,11 @@ const MySchedule: React.FC = () => {
 
   // Get service name by ID
   const getServiceName = (serviceId: string | { id: string; name: string; category: string }): string => {
+    // The shifts API populates service_id, so this covers shifts at any home; the
+    // services list below only holds the user's default home's services.
+    const populatedName = extractServiceName(serviceId)
+    if (populatedName) return populatedName
+
     const serviceIdStr = extractServiceId(serviceId)
     if (serviceIdStr) {
       const service = services?.find(s => s.id === serviceIdStr)
