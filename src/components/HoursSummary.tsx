@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { shiftsApi, usersApi, homesApi } from '@/lib/api'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
-import { BreakPolicy, Shift, User, formatShiftTypeLabel } from '@/types'
+import { BreakPolicy, Shift, StaffAssignment, User, formatShiftTypeLabel } from '@/types'
 import { computeShiftPaidWithBreaks, countSleepNights, getShiftHourBreakdown, isCoveredByBackground, shiftHomeId } from '@/lib/shiftHours'
 
 function aggregateUserShiftHours(userShifts: Shift[], breakPolicyByHomeId: Map<string, BreakPolicy | undefined>) {
@@ -38,6 +38,34 @@ function aggregateUserShiftHours(userShifts: Shift[], breakPolicyByHomeId: Map<s
   return { totalHours, sleepNights, paidHours, breakDeductions: totalBreakDeductions }
 }
 
+function userAssignment(shift: Shift, userId: string): StaffAssignment | undefined {
+  return shift.assigned_staff?.find((assignment) => assignment.user_id === userId)
+}
+
+// A user's shifts for the week, with or without their draft (unpublished) assignments.
+function shiftsForUser(shifts: Shift[], userId: string, includeDrafts: boolean) {
+  return shifts.filter((shift) => {
+    const assignment = userAssignment(shift, userId)
+    return !!assignment && (includeDrafts || !assignment.is_draft)
+  })
+}
+
+function buildUserHours(
+  user: User,
+  shifts: Shift[],
+  includeDrafts: boolean,
+  breakPolicyByHomeId: Map<string, BreakPolicy | undefined>
+): UserHours {
+  const userShifts = shiftsForUser(shifts, user.id, includeDrafts)
+  const hours = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
+  const draftShifts = userShifts.filter((shift) => userAssignment(shift, user.id)?.is_draft).length
+  // Paid hours the drafts add on top of the published rota (0 when drafts are hidden).
+  const draftPaidHours = draftShifts > 0
+    ? hours.paidHours - aggregateUserShiftHours(shiftsForUser(shifts, user.id, false), breakPolicyByHomeId).paidHours
+    : 0
+  return { user, ...hours, totalShifts: userShifts.length, shifts: userShifts, draftShifts, draftPaidHours }
+}
+
 interface HoursSummaryProps {
   homeId?: string
   userId?: string // For individual user view
@@ -53,6 +81,8 @@ interface UserHours {
   breakDeductions: number
   totalShifts: number
   shifts: Shift[]
+  draftShifts: number
+  draftPaidHours: number
 }
 
 const HoursSummary: React.FC<HoursSummaryProps> = ({ 
@@ -63,6 +93,10 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 }) => {
   const [selectedWeek, setSelectedWeek] = useState(() => new Date())
   const { canViewRotas } = usePermissions()
+  // Rota editors also get draft (auto-generated, unpublished) assignments, so whoever is
+  // drawing up a rota can check hours against the draft before it is published.
+  const canSeeDrafts = isAdminView && !!canViewRotas
+  const [includeDrafts, setIncludeDrafts] = useState(true)
 
   // Admins and key workers see every home they can reach; the server applies a key worker's
   // home scope, so they don't need a home of their own.
@@ -73,12 +107,13 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
 
   // Fetch shifts for the selected week
   const { data: shifts = [], isLoading: shiftsLoading, error: shiftsError } = useQuery({
-    queryKey: ['shifts', 'hours-summary', format(weekStart, 'yyyy-MM-dd'), homeId, userId, userRole],
+    queryKey: ['shifts', 'hours-summary', format(weekStart, 'yyyy-MM-dd'), homeId, userId, userRole, canSeeDrafts],
     queryFn: () => shiftsApi.getAll({
       home_id: seesAcrossHomes ? undefined : homeId, // Others need homeId
       user_id: !isAdminView ? userId : undefined, // For individual users, filter by user_id
       start_date: format(weekStart, 'yyyy-MM-dd'),
-      end_date: format(weekEnd, 'yyyy-MM-dd')
+      end_date: format(weekEnd, 'yyyy-MM-dd'),
+      include_drafts: canSeeDrafts || undefined,
     }),
     enabled: seesAcrossHomes || isAdminView || (!!userId && !!homeId), // Always for those who see across homes, or if admin view, or if individual user with homeId
     select: (data) => Array.isArray(data) ? data : []
@@ -120,78 +155,31 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
     return map
   }, [homes])
 
+  const weekDraftCount = useMemo(
+    () => shifts.reduce((n, shift) => n + (shift.assigned_staff || []).filter((a) => a.is_draft).length, 0),
+    [shifts]
+  )
+  const showDrafts = canSeeDrafts && includeDrafts
+
   // Calculate hours for each user
   const calculateUserHours = useMemo((): UserHours[] => {
     if (isAdminView) {
-      return staff.map(staffMember => {
-        const userShifts = shifts.filter(shift => 
-          shift.assigned_staff?.some(assignment => 
-            assignment.user_id === staffMember.id
-          )
-        )
-        
-        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
-        
-        return {
-          user: staffMember,
-          totalHours,
-          sleepNights,
-          paidHours,
-          breakDeductions,
-          totalShifts: userShifts.length,
-          shifts: userShifts
-        }
-      }).sort((a, b) => b.totalHours - a.totalHours) // Sort by hours descending
-    } else {
-      // Individual user view
-      if (!userId) return []
-      
-      // For individual user view without homeId, use shifts directly (filtered by user_id)
-      if (!homeId) {
-        const userShifts = shifts.filter(shift => 
-          shift.assigned_staff?.some(assignment => 
-            assignment.user_id === userId
-          )
-        )
-        
-        const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
-        
-        return [{
-          user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
-          totalHours,
-          sleepNights,
-          paidHours,
-          breakDeductions,
-          totalShifts: userShifts.length,
-          shifts: userShifts
-        }]
-      }
-      
-      const userShifts = shifts.filter(shift => 
-        shift.assigned_staff?.some(assignment => 
-          assignment.user_id === userId
-        )
-      )
-      
-      const { totalHours, sleepNights, paidHours, breakDeductions } = aggregateUserShiftHours(userShifts, breakPolicyByHomeId)
-      
-      return [{
-        user: userData || ({ id: userId, name: 'Unknown User', role: userRole } as User),
-        totalHours,
-        sleepNights,
-        paidHours,
-        breakDeductions,
-        totalShifts: userShifts.length,
-        shifts: userShifts
-      }]
+      return staff
+        .map((staffMember) => buildUserHours(staffMember, shifts, showDrafts, breakPolicyByHomeId))
+        .sort((a, b) => b.totalHours - a.totalHours) // Sort by hours descending
     }
-  }, [isAdminView, staff, shifts, userId, homeId, userData, userRole, breakPolicyByHomeId])
+    // Individual user view (their own published shifts)
+    if (!userId) return []
+    const user = userData || ({ id: userId, name: 'Unknown User', role: userRole } as User)
+    return [buildUserHours(user, shifts, false, breakPolicyByHomeId)]
+  }, [isAdminView, staff, shifts, showDrafts, userId, userData, userRole, breakPolicyByHomeId])
 
   const userHours = calculateUserHours
   const totalHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.totalHours, 0), [userHours])
   const totalSleepNights = useMemo(() => userHours.reduce((sum, uh) => sum + uh.sleepNights, 0), [userHours])
   const totalPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.paidHours, 0), [userHours])
   const totalBreakDeductions = useMemo(() => userHours.reduce((sum, uh) => sum + uh.breakDeductions, 0), [userHours])
+  const totalDraftPaidHours = useMemo(() => userHours.reduce((sum, uh) => sum + uh.draftPaidHours, 0), [userHours])
 
   // Navigation functions
   const goToPreviousWeek = () => {
@@ -381,6 +369,30 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
         </CardContent>
       </Card>
 
+      {/* Draft assignments this week: rota editors can count them in or leave them out */}
+      {canSeeDrafts && weekDraftCount > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-warning-400 bg-warning-50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-warning-700 dark:bg-warning-900/20">
+          <div>
+            <p className="text-sm font-medium text-warning-800 dark:text-warning-300">
+              {weekDraftCount} draft assignment(s) this week, not yet published
+            </p>
+            <p className="text-xs text-neutral-700 dark:text-neutral-400 mt-0.5">
+              {includeDrafts
+                ? 'Hours below include the draft, so you can adjust it before publishing. Staff and payroll only see published hours.'
+                : 'Showing published hours only.'}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button variant={includeDrafts ? 'primary' : 'outline'} size="sm" onClick={() => setIncludeDrafts(true)}>
+              Include drafts
+            </Button>
+            <Button variant={includeDrafts ? 'outline' : 'primary'} size="sm" onClick={() => setIncludeDrafts(false)}>
+              Published only
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <Card>
@@ -453,6 +465,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                 <p className="text-2xl font-semibold text-success-600">
                   {totalPaidHours.toFixed(1)}h
                 </p>
+                {totalDraftPaidHours > 0 && (
+                  <p className="text-xs text-warning-700 dark:text-warning-400 mt-0.5">
+                    incl. {totalDraftPaidHours.toFixed(1)}h draft
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -560,6 +577,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                           <p className="text-xl font-bold text-success-600">
                             {userHour.paidHours.toFixed(1)}h
                           </p>
+                          {userHour.draftShifts > 0 && (
+                            <p className="text-xs text-warning-700 dark:text-warning-400">
+                              incl. {userHour.draftPaidHours.toFixed(1)}h draft
+                            </p>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">Shifts</p>
@@ -578,7 +600,8 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {userHour.shifts.map((shift) => {
                           const br = getShiftHourBreakdown(shift)
-                          const cardClass = "block rounded p-2 text-sm bg-primary-100 border border-primary-300 dark:bg-primary-900/25 dark:border-primary-800"
+                          const isDraft = !!userAssignment(shift, userHour.user.id)?.is_draft
+                          const cardClass = `block rounded p-2 text-sm bg-primary-100 border border-primary-300 dark:bg-primary-900/25 dark:border-primary-800 ${isDraft ? 'border-dashed' : ''}`
                           const rotaHomeId = shiftHomeId(shift)
                           const rotaLink = canViewRotas && rotaHomeId
                             ? `/rota/${format(startOfWeek(new Date(`${shift.date}T00:00:00`), { weekStartsOn: 1 }), 'yyyy-MM-dd')}?home=${rotaHomeId}&shift=${shift.id}`
@@ -606,6 +629,11 @@ const HoursSummary: React.FC<HoursSummaryProps> = ({
                                 <Badge variant="secondary" className="text-xs mt-1">
                                   {formatShiftTypeLabel(shift.shift_type)}
                                 </Badge>
+                                {isDraft && (
+                                  <Badge variant="warning" className="text-xs mt-1 ml-1">
+                                    Draft
+                                  </Badge>
+                                )}
                                 {isCoveredByBackground(shift, userHour.shifts) && (
                                   <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
                                     Covered by background shift — 0h extra
