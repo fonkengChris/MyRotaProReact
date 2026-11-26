@@ -534,11 +534,12 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                   return (
                                     <div
                                       key={`${shift.id}-${assignment.user_id}-${index}`}
-                                      className={`flex items-center justify-between bg-white rounded px-2 py-1 border ${assignment.is_draft ? 'border-dashed' : ''}`}
+                                      className={`flex items-center justify-between gap-1 bg-white rounded px-2 py-1 border ${assignment.is_draft ? 'border-dashed' : ''}`}
                                     >
-                                      <div className="flex items-center space-x-1">
-                                        <UserIcon className="h-3 w-3 text-neutral-600" />
-                                        <span className="text-neutral-800">
+                                      {/* Name and badges wrap so the remove button always stays visible. */}
+                                      <div className="flex flex-wrap items-center gap-1 min-w-0 flex-1">
+                                        <UserIcon className="h-3 w-3 shrink-0 text-neutral-600" />
+                                        <span className="text-neutral-800 break-words min-w-0">
                                           {staffMember?.name || 'Unknown Staff'}
                                         </span>
                                         {oneToOne && isCoveredByBackground(shift, shiftsOf(assignment.user_id)) && (
@@ -561,7 +562,9 @@ const RotaGrid: React.FC<RotaGridProps> = ({
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          className="h-4 w-4 p-0"
+                                          className="h-4 w-4 p-0 shrink-0"
+                                          title="Remove from shift"
+                                          aria-label={`Remove ${staffMember?.name || 'staff'} from shift`}
                                           onClick={() => handleUnassignStaff(shift.id, assignment.user_id)}
                                         >
                                           ×
