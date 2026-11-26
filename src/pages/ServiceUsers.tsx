@@ -86,7 +86,7 @@ function useOneToOneSummaries(): Map<string, OneToOneSummary> {
 
   const { data: shifts = [] } = useQuery({
     queryKey: ['shifts', 'one_to_one', weekStart, rangeEnd],
-    queryFn: () => shiftsApi.getAll({ kind: 'one_to_one', start_date: weekStart, end_date: rangeEnd }),
+    queryFn: () => shiftsApi.getAll({ include_drafts: true, kind: 'one_to_one', start_date: weekStart, end_date: rangeEnd }),
     select: (data) => (Array.isArray(data) ? data : []),
   })
 

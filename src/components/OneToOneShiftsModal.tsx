@@ -84,7 +84,7 @@ const OneToOneShiftsModal: React.FC<OneToOneShiftsModalProps> = ({ isOpen, onClo
   const { data: upcoming = [], isLoading: upcomingLoading } = useQuery({
     queryKey: ['shifts', 'one_to_one', 'service_user', serviceUser?.id, today, upcomingEnd],
     queryFn: () =>
-      shiftsApi.getAll({ service_user_id: serviceUser!.id, start_date: today, end_date: upcomingEnd }),
+      shiftsApi.getAll({ include_drafts: true, service_user_id: serviceUser!.id, start_date: today, end_date: upcomingEnd }),
     enabled: isOpen && !!serviceUser,
     select: (data) =>
       (Array.isArray(data) ? data : [])
@@ -101,6 +101,7 @@ const OneToOneShiftsModal: React.FC<OneToOneShiftsModalProps> = ({ isOpen, onClo
     queryKey: ['shifts', 'home', homeId, homeShiftsStart, homeShiftsEnd],
     queryFn: () =>
       shiftsApi.getAll({
+        include_drafts: true,
         home_id: homeId,
         start_date: homeShiftsStart,
         end_date: format(addDays(new Date(`${homeShiftsEnd}T00:00:00`), 1), 'yyyy-MM-dd'),
@@ -348,6 +349,7 @@ const OneToOneShiftsModal: React.FC<OneToOneShiftsModalProps> = ({ isOpen, onClo
                           </p>
                           <p className="text-xs text-neutral-600 dark:text-neutral-400">
                             {assignment ? staffName(assignment.user_id) : 'Unassigned'}
+                            {assignment?.is_draft && ' · draft (not yet published)'}
                             {covered && ' · covered by background shift'}
                             {shift.notes ? ` · ${shift.notes}` : ''}
                           </p>
